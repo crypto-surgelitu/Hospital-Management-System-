@@ -1,9 +1,49 @@
-<?php 
+<?php
 require_once '../../config/db.php';
 require_once '../../config/auth.php';
 require_once '../../config/helpers.php';
+
 requireLogin();
-require_once '../../includes/header.php'; 
+requireRole(['pharmacy', 'admin']);
+
+$where = 'WHERE 1=1';
+$params = [];
+
+$patient_id = intval($_GET['patient_id'] ?? 0);
+$date_from = trim($_GET['date_from'] ?? '');
+$date_to = trim($_GET['date_to'] ?? '');
+
+if ($patient_id) {
+    $where .= ' AND dis.patient_id = ?';
+    $params[] = $patient_id;
+}
+
+if (!empty($date_from)) {
+    $where .= ' AND dis.dispense_date >= ?';
+    $params[] = $date_from;
+}
+
+if (!empty($date_to)) {
+    $where .= ' AND dis.dispense_date <= ?';
+    $params[] = $date_to;
+}
+
+$stmt = $pdo->prepare("
+    SELECT dis.*, p.full_name as patient_name, d.drug_name, d.unit, u.full_name as pharmacist_name
+    FROM dispensing dis
+    JOIN patients p ON dis.patient_id = p.patient_id
+    JOIN drugs d ON dis.drug_id = d.drug_id
+    JOIN users u ON dis.pharmacist_id = u.user_id
+    $where
+    ORDER BY dis.dispense_date DESC
+");
+$stmt->execute($params);
+$dispensing = $stmt->fetchAll();
+
+$flash_success = $_SESSION['flash_success'] ?? null;
+unset($_SESSION['flash_success']);
+
+require_once '../../includes/header.php';
 ?>
 
 <!-- Flatpickr CSS -->

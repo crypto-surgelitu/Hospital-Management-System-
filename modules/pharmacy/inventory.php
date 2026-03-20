@@ -1,9 +1,19 @@
-<?php 
+<?php
 require_once '../../config/db.php';
 require_once '../../config/auth.php';
 require_once '../../config/helpers.php';
+
 requireLogin();
-require_once '../../includes/header.php'; 
+requireRole(['pharmacy', 'admin']);
+
+$stmt = $pdo->prepare("SELECT * FROM drugs WHERE is_active = 1 ORDER BY drug_name ASC");
+$stmt->execute();
+$drugs = $stmt->fetchAll();
+
+$flash_success = $_SESSION['flash_success'] ?? null;
+unset($_SESSION['flash_success']);
+
+require_once '../../includes/header.php';
 ?>
 
 <div class="flex h-screen overflow-hidden">

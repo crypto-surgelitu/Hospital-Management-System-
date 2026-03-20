@@ -1,9 +1,22 @@
-<?php 
+<?php
 require_once '../../config/db.php';
 require_once '../../config/auth.php';
 require_once '../../config/helpers.php';
+
 requireLogin();
-require_once '../../includes/header.php'; 
+requireRole(['pharmacy', 'admin']);
+
+$stmt = $pdo->prepare("SELECT drug_id, drug_name, quantity_in_stock, unit FROM drugs WHERE is_active = 1 AND quantity_in_stock > 0 ORDER BY drug_name ASC");
+$stmt->execute();
+$drugs = $stmt->fetchAll();
+
+$errors = $_SESSION['errors'] ?? [];
+unset($_SESSION['errors']);
+
+$old = $_SESSION['old'] ?? [];
+unset($_SESSION['old']);
+
+require_once '../../includes/header.php';
 ?>
 
 <div class="flex h-screen overflow-hidden">
@@ -20,7 +33,7 @@ require_once '../../includes/header.php';
         <main class="flex-1 overflow-y-auto p-4 lg:p-8 bg-surface no-scrollbar">
             <div class="max-w-6xl mx-auto animate-fade-up">
                 
-                <form id="dispense-form" method="POST" action="#" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <form id="dispense-form" method="POST" action="modules/pharmacy/actions/dispense.php" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     <!-- ACTION: see contracts/backend-s04.md -->
 
                     <!-- LEFT: Patient Selection -->

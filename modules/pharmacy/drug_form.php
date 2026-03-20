@@ -1,23 +1,29 @@
-<?php 
+<?php
 require_once '../../config/db.php';
 require_once '../../config/auth.php';
 require_once '../../config/helpers.php';
-requireLogin();
-require_once '../../includes/header.php'; 
 
-// Mocking Edit Mode for demonstration
+requireLogin();
+requireRole(['pharmacy', 'admin']);
+
 $is_edit = isset($_GET['id']);
 $page_title = $is_edit ? "Edit Drug" : "Add New Drug";
-$drug = $is_edit ? [
-    'drug_name' => 'Amoxicillin 500mg',
-    'generic_name' => 'Amoxicillin Trihydrate',
-    'category' => 'Antibiotic',
-    'unit' => 'Tablets',
-    'quantity_in_stock' => 45,
-    'reorder_level' => 50,
-    'expiry_date' => '2026-06-15',
-    'unit_price' => 15.00
-] : null;
+$drug = null;
+
+if ($is_edit) {
+    $id = intval($_GET['id']);
+    $stmt = $pdo->prepare("SELECT * FROM drugs WHERE drug_id = ? AND is_active = 1");
+    $stmt->execute([$id]);
+    $drug = $stmt->fetch();
+}
+
+$errors = $_SESSION['errors'] ?? [];
+unset($_SESSION['errors']);
+
+$old = $_SESSION['old'] ?? [];
+unset($_SESSION['old']);
+
+require_once '../../includes/header.php';
 ?>
 
 <!-- Flatpickr CSS -->
@@ -31,7 +37,7 @@ $drug = $is_edit ? [
     <div class="flex-1 flex flex-col min-w-0 lg:pl-[260px]">
         <!-- Topbar -->
         <?php require_once '../../includes/topbar.php'; ?>
-        <script>document.getElementById('page-title').textContent = '<?php echo $page_title; ?>';</script>
+        <script>document.getElementById('page-title').textContent = '<?= $is_edit ? "Edit Drug" : "Add New Drug" ?>';</script>
 
         <!-- Content -->
         <main class="flex-1 overflow-y-auto p-4 lg:p-8 bg-surface no-scrollbar">
@@ -41,7 +47,7 @@ $drug = $is_edit ? [
                 <nav class="flex items-center gap-2 mb-8 text-sm font-medium">
                     <a href="inventory.php" class="text-slate-400 hover:text-emerald-600 transition-colors">Pharmacy Inventory</a>
                     <i class="bi bi-chevron-right text-[10px] text-slate-300"></i>
-                    <span class="text-ink-900"><?php echo $page_title; ?></span>
+                    <span class="text-ink-900"><?= $is_edit ? 'Edit Drug' : 'Add New Drug' ?></span>
                 </nav>
 
                 <!-- Form Card -->
@@ -52,13 +58,13 @@ $drug = $is_edit ? [
                                 <i class="bi bi-capsule text-2xl"></i>
                             </div>
                             <div>
-                                <h3 class="font-display font-bold text-xl text-ink-900"><?php echo $page_title; ?></h3>
+                                <h3 class="font-display font-bold text-xl text-ink-900"><?= $is_edit ? 'Edit Drug' : 'Add New Drug' ?></h3>
                                 <p class="text-xs text-slate-400 font-medium">Capture detailed pharmaceutical product specifications</p>
                             </div>
                         </div>
 
-                        <!-- ACTION: see contracts/backend-s04.md -->
-                        <form id="drug-form-<?php echo $is_edit ? 'edit' : 'add'; ?>" method="POST" action="#" class="space-y-8">
+<!-- ACTION: see contracts/backend-s04.md -->
+<form id="drug-form-<?= $is_edit ? 'edit' : 'add' ?>" method="POST" action="<?= $is_edit ? 'modules/pharmacy/actions/update_drug.php' : 'modules/pharmacy/actions/add_drug.php' ?>" class="space-y-8">
                             
                             <?php if($is_edit): ?>
                                 <input type="hidden" name="drug_id" value="<?php echo $_GET['id']; ?>">
