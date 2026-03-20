@@ -1,0 +1,127 @@
+<!-- 
+    HMS Meru - Demo Shell 
+    This file demonstrates how the sidebar, topbar, and content area work together.
+    In production, use header.php, sidebar.php, and topbar.php.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS Meru - Layout Demo</title>
+    
+    <!-- CDNs (Same as in header.php) -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { DEFAULT: '#00C9A7', dark: '#006B58' },
+                        ink: { 900: '#080C14', 800: '#0D1220', 700: '#181C24' },
+                        surface: { DEFAULT: '#F0F2F7', card: '#FFFFFF', dim: '#D8DADF' }
+                    },
+                    fontFamily: {
+                        display: ['Syne', 'sans-serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif']
+                    },
+                    borderRadius: { 'custom': '10px', 'card': '16px' }
+                }
+            }
+        }
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .ghost-border { border: 1px solid rgba(186, 202, 195, 0.2); }
+    </style>
+</head>
+<body class="bg-surface font-sans text-ink-900 antialiased overflow-hidden">
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- SIDEBAR (includes/sidebar.php) -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-[260px] bg-ink-900 text-white transition-transform duration-300 transform -translate-x-full lg:translate-x-0 flex flex-col no-scrollbar overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary rounded-custom flex items-center justify-center text-ink-900 font-display font-bold text-xl">M</div>
+                    <div>
+                        <h2 class="font-display font-bold text-lg leading-none tracking-tight">HMS Meru</h2>
+                        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Meru Level 5</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="flex-1 px-4 py-2 space-y-6">
+                <div>
+                    <h3 class="px-2 mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">Clinical Focus</h3>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="#" class="flex items-center gap-3 px-3 py-2.5 bg-ink-800 text-white border-l-4 border-primary rounded-custom rounded-l-none font-medium">
+                                <i class="bi bi-grid-1x2 text-primary"></i>
+                                <span class="text-sm">Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-400 hover:text-white rounded-custom transition-all">
+                                <i class="bi bi-person-heart"></i>
+                                <span class="text-sm">Patients</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            <div class="mt-auto p-4 border-t border-ink-800">
+                <div class="flex items-center gap-3 px-2">
+                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-white uppercase ring-2 ring-primary/20 ring-offset-2 ring-offset-ink-900">JD</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold truncate">Dr. Jane Doe</p>
+                        <p class="text-[10px] text-slate-500 font-medium uppercase truncate">Medical Officer</p>
+                    </div>
+                    <i class="bi bi-box-arrow-right text-lg text-slate-400"></i>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="flex-1 flex flex-col min-w-0 lg:pl-[260px]">
+            <!-- TOPBAR (includes/topbar.php) -->
+            <header class="h-[60px] bg-white border-b border-surface-dim flex items-center justify-between px-4 lg:px-8">
+                <div class="flex items-center gap-4">
+                    <button onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')" class="lg:hidden p-2 text-ink-900 hover:bg-surface rounded-custom">
+                        <i class="bi bi-list text-2xl"></i>
+                    </button>
+                    <h1 class="font-display font-bold text-lg lg:text-xl text-ink-900 tracking-tight">Clinical Dashboard</h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="p-2 text-slate-400 hover:text-primary transition-all rounded-custom hover:bg-surface relative">
+                        <i class="bi bi-bell text-xl"></i>
+                        <span class="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 border-2 border-white rounded-full"></span>
+                    </div>
+                    <div class="flex items-center gap-3 px-3 py-1.5 rounded-full border border-surface-dim hover:border-primary transition-all cursor-pointer">
+                        <div class="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs italic">JD</div>
+                        <span class="hidden sm:block text-xs font-bold text-ink-900">Dr. Jane Doe</span>
+                        <i class="bi bi-chevron-down text-[10px] text-slate-400"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- PAGE CONTENT -->
+            <main class="flex-1 overflow-y-auto p-4 lg:p-8 no-scrollbar bg-surface">
+                <div class="max-w-7xl mx-auto">
+                    <!-- Placeholder Card -->
+                    <div class="bg-white rounded-card ghost-border p-8 h-[600px] flex flex-col items-center justify-center text-center">
+                        <div class="w-16 h-16 bg-surface rounded-full flex items-center justify-center text-slate-300 mb-4">
+                            <i class="bi bi-window-sidebar text-3xl"></i>
+                        </div>
+                        <h2 class="text-xl font-display font-bold text-ink-900 mb-2">Content Workspace</h2>
+                        <p class="text-slate-500 max-w-sm">This is where the clinical data and modules will be rendered. The sidebar and topbar remain fixed or scrollable independently.</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+</body>
+</html>
