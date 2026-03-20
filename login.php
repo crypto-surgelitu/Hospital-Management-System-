@@ -1,4 +1,9 @@
-<?php require_once 'includes/header.php'; ?>
+<?php 
+session_start();
+$loginError = $_SESSION['login_error'] ?? null;
+if ($loginError) unset($_SESSION['login_error']);
+require_once 'includes/header.php'; 
+?>
 
 <main class="min-h-screen flex animate-fade-up">
     <!-- Left: Hero Panel (Desktop) -->
@@ -52,15 +57,21 @@
                 </div>
             </div>
 
-            <!-- Welcome Text -->
-            <div class="mb-10">
-                <h2 class="text-3xl font-display font-extrabold text-ink-900 mb-2">Welcome Back</h2>
-                <p class="text-slate-500 font-medium">Please enter your clinical credentials to continue.</p>
-            </div>
+<!-- Welcome Text -->
+  <div class="mb-10">
+    <h2 class="text-3xl font-display font-extrabold text-ink-900 mb-2">Welcome Back</h2>
+    <p class="text-slate-500 font-medium">Please enter your clinical credentials to continue.</p>
+  </div>
 
-            <!-- Login Form -->
+  <?php if ($loginError): ?>
+  <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-custom">
+    <p class="text-sm text-red-600 font-medium"><?= htmlspecialchars($loginError) ?></p>
+  </div>
+  <?php endif; ?>
+
+  <!-- Login Form -->
             <!-- ACTION: Minimax wires this — see backend-s00.md -->
-            <form id="login-form" method="POST" action="#" class="space-y-6">
+            <form id="login-form" method="POST" action="modules/auth/login.php" class="space-y-6">
                 <!-- Username -->
                 <div>
                     <label for="username" class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 pl-1">Staff Username</label>
