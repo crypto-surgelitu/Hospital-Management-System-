@@ -1,0 +1,16 @@
+-- Lab Test Types Reference
+-- These are used in the dropdown in modules/laboratory/request.php
+-- Types are stored as free text in lab_tests.test_type
+
+-- Full Blood Count (FBC)
+-- Malaria RDT
+-- HIV Test
+-- Urinalysis
+-- Blood Glucose (Fasting)
+-- Liver Function Tests (LFT)
+-- Renal Function Tests (RFT)
+-- Widal Test
+-- Sputum AFB
+-- Pregnancy Test (UPT)
+-- Stool Analysis
+-- CD4 Count

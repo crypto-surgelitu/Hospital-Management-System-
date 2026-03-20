@@ -1,9 +1,37 @@
-<?php 
+<?php
 require_once '../../config/db.php';
 require_once '../../config/auth.php';
 require_once '../../config/helpers.php';
+
 requireLogin();
-require_once '../../includes/header.php'; 
+requireRole(['lab', 'admin']);
+
+$id = intval($_GET['id'] ?? 0);
+
+if (!$id) {
+    header('Location: queue.php');
+    exit;
+}
+
+$stmt = $pdo->prepare("
+    SELECT lt.*, p.full_name as patient_name, p.patient_id, u.full_name as doctor_name
+    FROM lab_tests lt
+    JOIN patients p ON lt.patient_id = p.patient_id
+    JOIN users u ON lt.requested_by = u.user_id
+    WHERE lt.test_id = ?
+");
+$stmt->execute([$id]);
+$test = $stmt->fetch();
+
+if (!$test) {
+    header('Location: queue.php');
+    exit;
+}
+
+$flash_error = $_SESSION['flash_error'] ?? null;
+unset($_SESSION['flash_error']);
+
+require_once '../../includes/header.php';
 ?>
 
 <div class="flex h-screen overflow-hidden">

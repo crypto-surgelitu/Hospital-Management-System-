@@ -1,9 +1,34 @@
-<?php 
+<?php
 require_once '../../config/db.php';
 require_once '../../config/auth.php';
 require_once '../../config/helpers.php';
+
 requireLogin();
-require_once '../../includes/header.php'; 
+requireRole(['lab', 'admin']);
+
+$stmt = $pdo->prepare("
+    SELECT lt.*, p.full_name as patient_name, p.patient_id, u.full_name as doctor_name, lt.date_requested, lt.created_at
+    FROM lab_tests lt
+    JOIN patients p ON lt.patient_id = p.patient_id
+    JOIN users u ON lt.requested_by = u.user_id
+    WHERE lt.status IN ('Pending', 'Processing')
+    ORDER BY lt.date_requested ASC, lt.created_at ASC
+");
+$stmt->execute();
+$queue = $stmt->fetchAll();
+
+$completed_today = $pdo->prepare("SELECT COUNT(*) FROM lab_tests WHERE status = 'Completed' AND date_processed = CURDATE()");
+$completed_today->execute();
+$completed_today = $completed_today->fetchColumn();
+
+$pending_count = count(array_filter($queue, fn($t) => $t['status'] === 'Pending'));
+$processing_count = count(array_filter($queue, fn($t) => $t['status'] === 'Processing'));
+
+$flash_success = $_SESSION['flash_success'] ?? null;
+$flash_error = $_SESSION['flash_error'] ?? null;
+unset($_SESSION['flash_success'], $_SESSION['flash_error']);
+
+require_once '../../includes/header.php';
 ?>
 
 <style>

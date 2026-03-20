@@ -1,9 +1,18 @@
-<?php 
+<?php
 require_once '../../config/db.php';
 require_once '../../config/auth.php';
 require_once '../../config/helpers.php';
+
 requireLogin();
-require_once '../../includes/header.php'; 
+requireRole(['doctor', 'admin']);
+
+$errors = $_SESSION['errors'] ?? [];
+unset($_SESSION['errors']);
+
+$old = $_SESSION['old'] ?? [];
+unset($_SESSION['old']);
+
+require_once '../../includes/header.php';
 ?>
 
 <div class="flex h-screen overflow-hidden">

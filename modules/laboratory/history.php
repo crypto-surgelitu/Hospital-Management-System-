@@ -1,9 +1,50 @@
-<?php 
+<?php
 require_once '../../config/db.php';
 require_once '../../config/auth.php';
 require_once '../../config/helpers.php';
+
 requireLogin();
-require_once '../../includes/header.php'; 
+
+$where = 'WHERE 1=1';
+$params = [];
+
+$patient_id = intval($_GET['patient_id'] ?? 0);
+$status = trim($_GET['status'] ?? '');
+$date_from = trim($_GET['date_from'] ?? '');
+$date_to = trim($_GET['date_to'] ?? '');
+
+if ($patient_id) {
+    $where .= ' AND lt.patient_id = ?';
+    $params[] = $patient_id;
+}
+
+if (!empty($status) && in_array($status, ['Pending', 'Processing', 'Completed'])) {
+    $where .= ' AND lt.status = ?';
+    $params[] = $status;
+}
+
+if (!empty($date_from)) {
+    $where .= ' AND lt.date_requested >= ?';
+    $params[] = $date_from;
+}
+
+if (!empty($date_to)) {
+    $where .= ' AND lt.date_requested <= ?';
+    $params[] = $date_to;
+}
+
+$stmt = $pdo->prepare("
+    SELECT lt.*, p.full_name as patient_name, p.patient_id, u.full_name as doctor_name
+    FROM lab_tests lt
+    JOIN patients p ON lt.patient_id = p.patient_id
+    JOIN users u ON lt.requested_by = u.user_id
+    $where
+    ORDER BY lt.date_requested DESC, lt.created_at DESC
+");
+$stmt->execute($params);
+$tests = $stmt->fetchAll();
+
+require_once '../../includes/header.php';
 ?>
 
 <!-- Flatpickr CSS -->
