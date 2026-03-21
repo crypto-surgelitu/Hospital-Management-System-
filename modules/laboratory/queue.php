@@ -50,6 +50,23 @@ require_once '../../includes/header.php';
     <div class="flex-1 flex flex-col min-w-0 lg:pl-[260px]">
         <!-- Topbar -->
         <?php require_once '../../includes/topbar.php'; ?>
+        
+        <!-- Flash Messages -->
+        <div class="no-print">
+            <?php if (!empty($_SESSION['flash_success'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-green-50 border border-green-200 rounded-btn text-green-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?>
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($_SESSION['flash_error'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-red-50 border border-red-200 rounded-btn text-red-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
         <script>document.getElementById('page-title').textContent = 'Test Queue';</script>
 
         <!-- Content -->
@@ -354,11 +371,13 @@ function processTest(id, btn) {
     const border = card.querySelector('.urgency-border');
     const badge = card.querySelector('.status-badge');
     
-    // ACTION: see contracts/backend-s03.md
-    btn.disabled = true;
-    btn.innerHTML = '<div class="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>';
-
-    setTimeout(() => {
+    fetch('api/process.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id })
+    })
+    .then(res => res.json())
+    .then(data => {
         if (border) {
             border.className = 'w-1.5 self-stretch bg-violet-500';
             card.classList.remove('pulse-urgent');
@@ -376,7 +395,8 @@ function processTest(id, btn) {
                 <i class="bi bi-clipboard2-check"></i>
             </a>
         `;
-    }, 800);
+    });
+
 }
 
 function toggleCompleted() {

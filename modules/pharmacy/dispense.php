@@ -27,14 +27,30 @@ require_once '../../includes/header.php';
     <div class="flex-1 flex flex-col min-w-0 lg:pl-[260px]">
         <!-- Topbar -->
         <?php require_once '../../includes/topbar.php'; ?>
+        
+        <!-- Flash Messages -->
+        <div class="no-print">
+            <?php if (!empty($_SESSION['flash_success'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-green-50 border border-green-200 rounded-btn text-green-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?>
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($_SESSION['flash_error'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-red-50 border border-red-200 rounded-btn text-red-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
         <script>document.getElementById('page-title').textContent = 'Dispense Drug';</script>
 
         <!-- Content -->
         <main class="flex-1 overflow-y-auto p-4 lg:p-8 bg-surface no-scrollbar">
             <div class="max-w-6xl mx-auto animate-fade-up">
                 
-                <form id="dispense-form" method="POST" action="modules/pharmacy/actions/dispense.php" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <!-- ACTION: see contracts/backend-s04.md -->
+                <form id="dispense-form" method="POST" action="actions/dispense.php" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                     <!-- LEFT: Patient Selection -->
                     <div class="lg:col-span-4 space-y-6">
@@ -192,24 +208,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const hiddenPatientId = document.getElementById('selected-patient-id');
 
     patientInput.addEventListener('keyup', () => {
-        if (patientInput.value.length >= 2) resultsDiv.classList.remove('hidden');
-        else resultsDiv.classList.add('hidden');
+        const query = patientInput.value.trim();
+        if (query.length >= 2) {
+            fetch('../patients/api/search.php?q=' + encodeURIComponent(query))
+                .then(res => res.json())
+                .then(data => {
+                    resultsDiv.innerHTML = '';
+                    if (data.length > 0) {
+                        data.forEach(patient => {
+                            const div = document.createElement('div');
+                            div.className = 'p-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors patient-item';
+                            div.innerHTML = `
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold">${patient.full_name.charAt(0)}</div>
+                                    <div>
+                                        <p class="text-xs font-bold text-ink-900">${patient.full_name}</p>
+                                        <p class="text-[10px] text-slate-400 font-mono italic">P-${patient.patient_id.toString().padStart(5, '0')} • ${patient.phone}</p>
+                                    </div>
+                                </div>
+                            `;
+                            div.onclick = () => selectPatient(patient);
+                            resultsDiv.appendChild(div);
+                        });
+                        resultsDiv.classList.remove('hidden');
+                    } else {
+                        resultsDiv.classList.add('hidden');
+                    }
+                });
+        } else {
+            resultsDiv.classList.add('hidden');
+        }
     });
 
-    document.querySelectorAll('.patient-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const name = item.getAttribute('data-name');
-            const id = item.getAttribute('data-id');
-            const phone = item.getAttribute('data-phone');
-            hiddenPatientId.value = id;
-            document.getElementById('pmc-name').textContent = name;
-            document.getElementById('pmc-details').textContent = `P-00${id} • ${phone}`;
-            document.getElementById('pmc-avatar').textContent = name.split(' ').map(n => n[0]).join('');
-            miniCard.classList.remove('hidden');
-            searchContainer.classList.add('hidden');
-            resultsDiv.classList.add('hidden');
-        });
-    });
+    function selectPatient(patient) {
+        hiddenPatientId.value = patient.patient_id;
+        document.getElementById('pmc-name').textContent = patient.full_name;
+        document.getElementById('pmc-details').textContent = `P-${patient.patient_id.toString().padStart(5, '0')} • ${patient.phone}`;
+        document.getElementById('pmc-avatar').textContent = patient.full_name.split(' ').map(n => n[0]).join('');
+        miniCard.classList.remove('hidden');
+        searchContainer.classList.add('hidden');
+        resultsDiv.classList.add('hidden');
+    }
+
 
     clearBtn.addEventListener('click', () => {
         hiddenPatientId.value = '';

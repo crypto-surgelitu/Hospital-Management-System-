@@ -29,6 +29,23 @@ require_once '../../includes/header.php';
     <div class="flex-1 flex flex-col min-w-0 lg:pl-[260px]">
         <!-- Topbar -->
         <?php require_once '../../includes/topbar.php'; ?>
+        
+        <!-- Flash Messages -->
+        <div class="no-print">
+            <?php if (!empty($_SESSION['flash_success'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-green-50 border border-green-200 rounded-btn text-green-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?>
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($_SESSION['flash_error'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-red-50 border border-red-200 rounded-btn text-red-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
         <script>document.getElementById('page-title').textContent = 'Book Appointment';</script>
 
         <!-- Content -->
@@ -45,8 +62,7 @@ require_once '../../includes/header.php';
                 <!-- Booking Card -->
                 <div class="bg-white rounded-card ghost-border shadow-card overflow-hidden">
                     <div class="p-6 lg:p-10">
-                        <!-- ACTION: see contracts/backend-s02.md -->
-                        <form id="book-form" method="POST" action="#" class="space-y-8">
+                        <form id="book-form" method="POST" action="actions/book.php" class="space-y-8">
                             
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
                                 
@@ -190,33 +206,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const hiddenPatientId = document.getElementById('selected-patient-id');
 
     patientInput.addEventListener('keyup', () => {
-        if (patientInput.value.length > 2) {
-            // Mocking AJAX fetch
-            resultsDiv.classList.remove('hidden');
+        const query = patientInput.value.trim();
+        if (query.length > 2) {
+            fetch('../patients/api/search.php?q=' + encodeURIComponent(query))
+                .then(res => res.json())
+                .then(data => {
+                    resultsDiv.innerHTML = '';
+                    if (data.length > 0) {
+                        data.forEach(patient => {
+                            const div = document.createElement('div');
+                            div.className = 'p-2 border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors patient-item';
+                            div.innerHTML = `
+                                <div class="flex items-center gap-3">
+                                    <div class="avatar-circle w-8 h-8 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-[10px] font-bold">${patient.full_name.charAt(0)}</div>
+                                    <div>
+                                        <p class="text-xs font-bold text-ink-900">${patient.full_name}</p>
+                                        <p class="text-[10px] text-slate-400 font-mono">P-${patient.patient_id.toString().padStart(5, '0')} • ${patient.phone}</p>
+                                    </div>
+                                </div>
+                            `;
+                            div.onclick = () => selectPatient(patient);
+                            resultsDiv.appendChild(div);
+                        });
+                        resultsDiv.classList.remove('hidden');
+                    } else {
+                        resultsDiv.classList.add('hidden');
+                    }
+                });
         } else {
             resultsDiv.classList.add('hidden');
         }
     });
 
-    document.querySelectorAll('.patient-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const name = item.getAttribute('data-name');
-            const id = item.getAttribute('data-id');
-            const phone = item.getAttribute('data-phone');
+    function selectPatient(patient) {
+        hiddenPatientId.value = patient.patient_id;
+        document.getElementById('pmc-name').textContent = patient.full_name;
+        document.getElementById('pmc-details').textContent = `P-${patient.patient_id.toString().padStart(5, '0')} • ${patient.phone}`;
+        document.getElementById('pmc-avatar').textContent = patient.full_name.split(' ').map(n => n[0]).join('');
+        miniCard.classList.remove('hidden');
+        patientInput.parentElement.classList.add('hidden');
+        resultsDiv.classList.add('hidden');
+    }
 
-            // Set hidden field
-            hiddenPatientId.value = id;
-
-            // Show Mini Card
-            document.getElementById('pmc-name').textContent = name;
-            document.getElementById('pmc-details').textContent = `P-00${id} • ${phone}`;
-            document.getElementById('pmc-avatar').textContent = name.split(' ').map(n => n[0]).join('');
-            
-            miniCard.classList.remove('hidden');
-            patientInput.parentElement.classList.add('hidden');
-            resultsDiv.classList.add('hidden');
-        });
-    });
 
     clearBtn.addEventListener('click', () => {
         hiddenPatientId.value = '';
@@ -255,17 +286,17 @@ document.addEventListener('DOMContentLoaded', () => {
         slotGrid.classList.add('hidden');
         slotPlaceholder.classList.remove('hidden');
 
-        // Mocking slots AJAX
-        // URL: /* ENDPOINT: see contracts/backend-s02.md */
-        setTimeout(() => {
-            loadingSpinner.classList.add('hidden');
-            slotPlaceholder.classList.add('hidden');
-            slotGrid.classList.remove('hidden');
-            renderMockSlots();
-        }, 800);
+        fetch(`api/slots.php?doctor_id=${doctorSelect.value}&date=${dateInput.value}`)
+            .then(res => res.json())
+            .then(data => {
+                loadingSpinner.classList.add('hidden');
+                slotPlaceholder.classList.add('hidden');
+                slotGrid.classList.remove('hidden');
+                renderSlots(data.available, data.taken);
+            });
     }
 
-    function renderMockSlots() {
+    function renderSlots(slots, taken) {
         const slots = [
             "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", 
             "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", 

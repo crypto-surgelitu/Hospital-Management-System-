@@ -25,6 +25,23 @@ require_once '../../includes/header.php';
     <div class="flex-1 flex flex-col min-w-0 lg:pl-[260px]">
         <!-- Topbar -->
         <?php require_once '../../includes/topbar.php'; ?>
+        
+        <!-- Flash Messages -->
+        <div class="no-print">
+            <?php if (!empty($_SESSION['flash_success'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-green-50 border border-green-200 rounded-btn text-green-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?>
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($_SESSION['flash_error'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-red-50 border border-red-200 rounded-btn text-red-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
         <script>document.getElementById('page-title').textContent = 'Patients';</script>
 
         <!-- Content -->
@@ -236,8 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         spinner.classList.remove('hidden');
         
-        // Mocking fetch 
-        // URL: /* ENDPOINT: see contracts/backend-s01.md */
+        fetch('api/search.php?q=' + encodeURIComponent(query))
         setTimeout(() => {
             spinner.classList.add('hidden');
             // Mock result replacement
@@ -268,8 +284,11 @@ document.addEventListener('DOMContentLoaded', () => {
             row.style.opacity = '0.5';
             row.style.pointerEvents = 'none';
             
-            // Mocking POST
-            // URL: /* ENDPOINT: see contracts/backend-s01.md */
+            fetch('api/delete.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id })
+            })
             setTimeout(() => {
                 row.classList.add('transition-all', 'duration-500', 'transform', 'scale-95', 'opacity-0');
                 setTimeout(() => row.remove(), 500);

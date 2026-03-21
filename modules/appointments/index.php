@@ -53,6 +53,23 @@ require_once '../../includes/header.php';
     <div class="flex-1 flex flex-col min-w-0 lg:pl-[260px]">
         <!-- Topbar -->
         <?php require_once '../../includes/topbar.php'; ?>
+        
+        <!-- Flash Messages -->
+        <div class="no-print">
+            <?php if (!empty($_SESSION['flash_success'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-green-50 border border-green-200 rounded-btn text-green-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?>
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($_SESSION['flash_error'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-red-50 border border-red-200 rounded-btn text-red-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
         <script>document.getElementById('page-title').textContent = 'Appointments';</script>
 
         <!-- Content -->
@@ -259,18 +276,20 @@ function markComplete(id, btn) {
         const row = btn.closest('tr');
         const badge = row.querySelector('.status-badge');
         
-        // Mocking AJAX 
-        // URL: /* ENDPOINT: see contracts/backend-s02.md */
-        btn.disabled = true;
-        btn.innerHTML = '<div class="w-3 h-3 border-2 border-slate-300 border-t-violet-600 rounded-full animate-spin"></div>';
-
-        setTimeout(() => {
+        fetch('api/update_status.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id, status: 'Completed' })
+        })
+        .then(res => res.json())
+        .then(data => {
             badge.textContent = 'Completed';
             badge.classList.remove('bg-blue-50', 'text-blue-600');
             badge.classList.add('bg-green-50', 'text-green-600');
             row.setAttribute('data-status', 'Completed');
             btn.parentElement.innerHTML = '<a href="view.php?id=' + id + '" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-violet-600 hover:border-violet-600 transition-all"><i class="bi bi-eye"></i></a>';
-        }, 800);
+        });
+
     }
 }
 </script>

@@ -24,6 +24,23 @@ require_once '../../includes/header.php';
     <div class="flex-1 flex flex-col min-w-0 lg:pl-[260px]">
         <!-- Topbar -->
         <?php require_once '../../includes/topbar.php'; ?>
+        
+        <!-- Flash Messages -->
+        <div class="no-print">
+            <?php if (!empty($_SESSION['flash_success'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-green-50 border border-green-200 rounded-btn text-green-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?>
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($_SESSION['flash_error'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-red-50 border border-red-200 rounded-btn text-red-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
         <script>document.getElementById('page-title').textContent = 'Drug Inventory';</script>
 
         <!-- Content -->
@@ -216,12 +233,17 @@ function processInventory() {
 
 function deleteDrug(id, btn) {
     if (confirm('Are you sure you want to delete this drug from inventory?')) {
-        // AJAX: /* ENDPOINT: see contracts/backend-s04.md */
-        btn.innerHTML = '<div class="w-3 h-3 border-2 border-red-300 border-t-red-600 rounded-full animate-spin"></div>';
-        setTimeout(() => {
+        fetch('api/delete_drug.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        })
+        .then(res => res.json())
+        .then(data => {
             btn.closest('tr').classList.add('opacity-0', 'transition-all', 'duration-500');
             setTimeout(() => btn.closest('tr').remove(), 500);
-        }, 800);
+        });
+
     }
 }
 

@@ -96,7 +96,7 @@
                 <p class="text-sm font-bold truncate"><?php echo $_SESSION['full_name'] ?? 'HMS Staff Member'; ?></p>
                 <p class="text-[10px] text-slate-500 font-medium uppercase truncate"><?php echo $_SESSION['role'] ?? 'Authenticated'; ?></p>
             </div>
-            <a href="logout.php" title="Logout" class="text-slate-400 hover:text-white transition-colors">
+            <a href="/HMS/modules/auth/logout.php" title="Logout" class="text-slate-400 hover:text-white transition-colors">
                 <i class="bi bi-box-arrow-right text-lg"></i>
             </a>
         </div>

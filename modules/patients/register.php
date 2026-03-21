@@ -22,6 +22,23 @@ require_once '../../includes/header.php';
     <div class="flex-1 flex flex-col min-w-0 lg:pl-[260px]">
         <!-- Topbar -->
         <?php require_once '../../includes/topbar.php'; ?>
+        
+        <!-- Flash Messages -->
+        <div class="no-print">
+            <?php if (!empty($_SESSION['flash_success'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-green-50 border border-green-200 rounded-btn text-green-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?>
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($_SESSION['flash_error'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-red-50 border border-red-200 rounded-btn text-red-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
         <script>document.getElementById('page-title').textContent = 'Register Patient';</script>
 
         <!-- Content -->
@@ -38,8 +55,7 @@ require_once '../../includes/header.php';
                 <!-- Registration Card -->
                 <div class="bg-white rounded-card ghost-border shadow-card overflow-hidden">
                     <div class="p-6 lg:p-10">
-                        <!-- ACTION: see contracts/backend-s01.md -->
-                        <form id="register-form" method="POST" action="#" class="space-y-10">
+                        <form id="register-form" method="POST" action="actions/register.php" class="space-y-10">
                             
                             <!-- Section 1: Personal Details -->
                             <div>

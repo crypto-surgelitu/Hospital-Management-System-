@@ -37,6 +37,23 @@ require_once '../../includes/header.php';
     <div class="flex-1 flex flex-col min-w-0 lg:pl-[260px]">
         <!-- Topbar -->
         <?php require_once '../../includes/topbar.php'; ?>
+        
+        <!-- Flash Messages -->
+        <div class="no-print">
+            <?php if (!empty($_SESSION['flash_success'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-green-50 border border-green-200 rounded-btn text-green-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?>
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($_SESSION['flash_error'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-red-50 border border-red-200 rounded-btn text-red-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
         <script>document.getElementById('page-title').textContent = '<?= $is_edit ? "Edit Drug" : "Add New Drug" ?>';</script>
 
         <!-- Content -->
@@ -63,8 +80,7 @@ require_once '../../includes/header.php';
                             </div>
                         </div>
 
-<!-- ACTION: see contracts/backend-s04.md -->
-<form id="drug-form-<?= $is_edit ? 'edit' : 'add' ?>" method="POST" action="<?= $is_edit ? 'modules/pharmacy/actions/update_drug.php' : 'modules/pharmacy/actions/add_drug.php' ?>" class="space-y-8">
+<form id="drug-form-<?= $is_edit ? 'edit' : 'add' ?>" method="POST" action="<?= $is_edit ? 'actions/update_drug.php' : 'actions/add_drug.php' ?>" class="space-y-8">
                             
                             <?php if($is_edit): ?>
                                 <input type="hidden" name="drug_id" value="<?php echo $_GET['id']; ?>">

@@ -41,6 +41,23 @@ require_once '../../includes/header.php';
     <div class="flex-1 flex flex-col min-w-0 lg:pl-[260px]">
         <!-- Topbar -->
         <?php require_once '../../includes/topbar.php'; ?>
+        
+        <!-- Flash Messages -->
+        <div class="no-print">
+            <?php if (!empty($_SESSION['flash_success'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-green-50 border border-green-200 rounded-btn text-green-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?>
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($_SESSION['flash_error'])): ?>
+                <div class="mx-7 mt-4 p-4 bg-red-50 border border-red-200 rounded-btn text-red-700 text-sm font-medium flex items-center gap-2">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <?php echo sanitize($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
         <script>document.getElementById('page-title').textContent = 'Appointment Details';</script>
 
         <!-- Content -->
@@ -151,9 +168,13 @@ function saveNotes() {
     btn.disabled = true;
     btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Saving...';
 
-    // Mocking AJAX
-    // URL: /* ENDPOINT: see contracts/backend-s02.md */
-    setTimeout(() => {
+    fetch('api/save_notes.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: appointmentId, notes: notes })
+    })
+    .then(res => res.json())
+    .then(data => {
         btn.innerHTML = '<i class="bi bi-check2"></i> Saved';
         btn.className = 'px-6 py-2 bg-green-50 text-green-600 font-bold text-xs rounded-lg transition-all flex items-center gap-2';
         setTimeout(() => {
@@ -161,7 +182,8 @@ function saveNotes() {
             btn.innerHTML = '<i class="bi bi-journal-text"></i> Save Notes';
             btn.className = 'px-6 py-2 bg-slate-100 text-slate-600 font-bold text-xs rounded-lg hover:bg-slate-200 transition-all flex items-center gap-2';
         }, 2000);
-    }, 1000);
+    });
+
 }
 
 function updateStatus(status, btn) {
@@ -169,13 +191,18 @@ function updateStatus(status, btn) {
         btn.disabled = true;
         const statusBadge = document.getElementById('appointment-status');
 
-        // Mocking AJAX
-        // URL: /* ENDPOINT: see contracts/backend-s02.md */
-        setTimeout(() => {
+        fetch('api/update_status.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: appointmentId, status: status })
+        })
+        .then(res => res.json())
+        .then(data => {
             statusBadge.textContent = status;
             statusBadge.className = 'px-3 py-1.5 rounded-full bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-wider';
             btn.parentElement.classList.add('hidden');
-        }, 800);
+        });
+
     }
 }
 
@@ -184,13 +211,18 @@ function cancelAppointment(btn) {
         btn.disabled = true;
         const statusBadge = document.getElementById('appointment-status');
 
-        // Mocking AJAX
-        // URL: /* ENDPOINT: see contracts/backend-s02.md */
-        setTimeout(() => {
+        fetch('api/update_status.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: appointmentId, status: 'Cancelled' })
+        })
+        .then(res => res.json())
+        .then(data => {
             statusBadge.textContent = 'Cancelled';
             statusBadge.className = 'px-3 py-1.5 rounded-full bg-red-50 text-red-500 text-[10px] font-bold uppercase tracking-wider';
             btn.parentElement.classList.add('hidden');
-        }, 800);
+        });
+
     }
 }
 </script>
