@@ -19,14 +19,14 @@ $reorder_level = intval($_POST['reorder_level'] ?? 0);
 $unit_price = floatval($_POST['unit_price'] ?? 0);
 
 if (!$drug_id) {
-    header('Location: /modules/pharmacy/inventory.php');
+    header('Location: /hms/modules/pharmacy/inventory.php');
     exit;
 }
 
 $check = $pdo->prepare("SELECT drug_id FROM drugs WHERE drug_id = ? AND is_active = 1");
 $check->execute([$drug_id]);
 if (!$check->fetch()) {
-    header('Location: /modules/pharmacy/inventory.php');
+    header('Location: /hms/modules/pharmacy/inventory.php');
     exit;
 }
 
@@ -58,7 +58,7 @@ if (!empty($expiry_date)) {
 if (!empty($errors)) {
     $_SESSION['errors'] = $errors;
     $_SESSION['old'] = $_POST;
-    header('Location: /modules/pharmacy/drug_form.php?id=' . $drug_id);
+    header('Location: /hms/modules/pharmacy/drug_form.php?id=' . $drug_id);
     exit;
 }
 
@@ -81,5 +81,5 @@ $stmt->execute([
 ]);
 
 $_SESSION['flash_success'] = 'Drug updated successfully.';
-header('Location: /modules/pharmacy/inventory.php?success=updated');
+header('Location: /hms/modules/pharmacy/inventory.php?success=updated');
 exit;

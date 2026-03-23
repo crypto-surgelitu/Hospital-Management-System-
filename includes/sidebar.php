@@ -72,7 +72,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="pharmacy.php" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-custom transition-all duration-200 hover:bg-ink-800 text-slate-300 hover:text-white group">
+                    <a href="/hms/modules/pharmacy/inventory.php" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-custom transition-all duration-200 hover:bg-ink-800 text-slate-300 hover:text-white group">
                         <i class="bi bi-capsule text-lg"></i>
                         <span class="text-sm font-medium">Pharmacy</span>
                     </a>

@@ -44,7 +44,7 @@ if (empty($items)) {
 if (!empty($errors)) {
     $_SESSION['errors'] = $errors;
     $_SESSION['old'] = $_POST;
-    header('Location: /modules/billing/create.php');
+    header('Location: /hms/modules/billing/create.php');
     exit;
 }
 
@@ -89,10 +89,10 @@ try {
     $pdo->rollBack();
     $_SESSION['flash_error'] = 'Failed to create invoice. Please try again.';
     $_SESSION['old'] = $_POST;
-    header('Location: /modules/billing/create.php');
+    header('Location: /hms/modules/billing/create.php');
     exit;
 }
 
 $_SESSION['flash_success'] = 'Invoice created successfully.';
-header('Location: /modules/billing/view.php?id=' . $bill_id);
+header('Location: /hms/modules/billing/view.php?id=' . $bill_id);
 exit;

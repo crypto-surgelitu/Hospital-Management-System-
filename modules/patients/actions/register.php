@@ -7,7 +7,7 @@ requireLogin();
 requireRole(['admin', 'receptionist']);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: /modules/patients/index.php');
+    header('Location: /hms/modules/patients/index.php');
     exit;
 }
 
@@ -68,7 +68,7 @@ if (!empty($national_id)) {
 if (!empty($errors)) {
     $_SESSION['errors'] = $errors;
     $_SESSION['old'] = $_POST;
-    header('Location: /modules/patients/register.php');
+    header('Location: /hms/modules/patients/register.php');
     exit;
 }
 
@@ -87,5 +87,5 @@ $stmt->execute([
 ]);
 
 $_SESSION['flash_success'] = 'Patient registered successfully.';
-header('Location: /modules/patients/index.php');
+header('Location: /hms/modules/patients/index.php');
 exit;

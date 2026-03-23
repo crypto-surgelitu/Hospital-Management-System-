@@ -14,13 +14,13 @@ $allowed_statuses = ['Pending', 'Processing', 'Completed'];
 
 if (!$test_id || !in_array($status, $allowed_statuses)) {
     $_SESSION['flash_error'] = 'Invalid request.';
-    header('Location: /modules/laboratory/queue.php');
+    header('Location: /hms/modules/laboratory/queue.php');
     exit;
 }
 
 if ($status === 'Completed' && empty($result)) {
     $_SESSION['flash_error'] = 'Result text is required to mark as Completed.';
-    header('Location: /modules/laboratory/result.php?id=' . $test_id);
+    header('Location: /hms/modules/laboratory/result.php?id=' . $test_id);
     exit;
 }
 
@@ -40,5 +40,5 @@ $stmt->execute([
 ]);
 
 $_SESSION['flash_success'] = 'Test result saved successfully.';
-header('Location: /modules/laboratory/queue.php?success=saved');
+header('Location: /hms/modules/laboratory/queue.php?success=saved');
 exit;

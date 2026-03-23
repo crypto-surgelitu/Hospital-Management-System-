@@ -59,7 +59,7 @@ if (empty($errors)) {
 if (!empty($errors)) {
     $_SESSION['errors'] = $errors;
     $_SESSION['old'] = $_POST;
-    header('Location: /modules/appointments/book.php');
+    header('Location: /hms/modules/appointments/book.php');
     exit;
 }
 
@@ -70,5 +70,5 @@ $stmt = $pdo->prepare("
 $stmt->execute([$patient_id, $doctor_id, $date, $time, $reason ?: null]);
 
 $_SESSION['flash_success'] = 'Appointment booked successfully.';
-header('Location: /modules/appointments/index.php');
+header('Location: /hms/modules/appointments/index.php');
 exit;
