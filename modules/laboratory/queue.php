@@ -7,12 +7,12 @@ requireLogin();
 requireRole(['lab', 'admin']);
 
 $stmt = $pdo->prepare("
-    SELECT lt.*, p.full_name as patient_name, p.patient_id, u.full_name as doctor_name, lt.date_requested, lt.created_at
+    SELECT lt.*, p.full_name as patient_name, p.patient_id, u.full_name as doctor_name, lt.date_requested, lt.date_requested
     FROM lab_tests lt
     JOIN patients p ON lt.patient_id = p.patient_id
     JOIN users u ON lt.requested_by = u.user_id
     WHERE lt.status IN ('Pending', 'Processing')
-    ORDER BY lt.date_requested ASC, lt.created_at ASC
+    ORDER BY lt.date_requested ASC, lt.date_requested ASC
 ");
 $stmt->execute();
 $queue = $stmt->fetchAll();

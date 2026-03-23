@@ -65,7 +65,7 @@
             <h3 class="px-2 mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">Hospital Services</h3>
             <ul class="space-y-1">
                 <li>
-                    <a href="lab.php" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-custom transition-all duration-200 hover:bg-ink-800 text-slate-300 hover:text-white group relative">
+                    <a href="/hms/modules/laboratory/queue.php" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-custom transition-all duration-200 hover:bg-ink-800 text-slate-300 hover:text-white group relative">
                         <i class="bi bi-flask text-lg"></i>
                         <span class="text-sm font-medium">Lab Tests</span>
                         <span data-badge="lab" class="absolute right-3 top-1/2 -translate-y-1/2 min-w-[18px] h-[18px] flex items-center justify-center bg-primary text-ink-900 text-[10px] font-bold rounded-full hidden"></span>
