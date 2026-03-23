@@ -85,30 +85,30 @@ require_once '../../includes/header.php';
                 
                 <!-- Summary Totals Bar -->
                 <div class="bg-white rounded-card ghost-border shadow-sm p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6" 
-                     id="billing-stats" data-outstanding="48200" data-paid-today="12800" data-total="87">
+                     id="billing-stats" data-outstanding="<?= $totals['outstanding'] ?>" data-paid-today="<?= $totals['paid_today'] ?>" data-total="<?= $totals['total'] ?>">
                     <div class="flex-1 flex flex-col items-center md:items-start">
                         <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Total Outstanding</p>
-                        <h3 class="text-2xl font-display font-extrabold text-red-500" id="stat-outstanding">KES 0</h3>
+                        <h3 class="text-2xl font-display font-extrabold text-red-500" id="stat-outstanding"><?= formatKES($totals['outstanding']) ?></h3>
                     </div>
                     <div class="hidden md:block w-px h-12 bg-slate-100"></div>
                     <div class="flex-1 flex flex-col items-center">
                         <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Paid Today</p>
-                        <h3 class="text-2xl font-display font-extrabold text-emerald-500" id="stat-paid">KES 0</h3>
+                        <h3 class="text-2xl font-display font-extrabold text-emerald-500" id="stat-paid"><?= formatKES($totals['paid_today']) ?></h3>
                     </div>
                     <div class="hidden md:block w-px h-12 bg-slate-100"></div>
                     <div class="flex-1 flex flex-col items-center md:items-end text-right">
                         <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Total Invoices</p>
-                        <h3 class="text-2xl font-display font-extrabold text-ink-900" id="stat-total">0</h3>
+                        <h3 class="text-2xl font-display font-extrabold text-ink-900" id="stat-total"><?= $totals['total'] ?></h3>
                     </div>
                 </div>
 
                 <!-- Tab Bar & Actions -->
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div class="flex items-center bg-white p-1 rounded-xl ghost-border overflow-x-auto no-scrollbar">
-                        <button onclick="filterBilling('All', this)" class="px-6 py-2.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-amber-500 text-white shadow-lg shadow-amber-100 transition-all tab-btn active">All (87)</button>
-                        <button onclick="filterBilling('Unpaid', this)" class="px-6 py-2.5 text-[10px] font-bold uppercase tracking-wider rounded-lg text-slate-500 hover:bg-slate-50 transition-all tab-btn">Unpaid (KES 48,200)</button>
-                        <button onclick="filterBilling('Partial', this)" class="px-6 py-2.5 text-[10px] font-bold uppercase tracking-wider rounded-lg text-slate-500 hover:bg-slate-50 transition-all tab-btn">Partial (3)</button>
-                        <button onclick="filterBilling('Paid', this)" class="px-6 py-2.5 text-[10px] font-bold uppercase tracking-wider rounded-lg text-slate-500 hover:bg-slate-50 transition-all tab-btn">Paid (72)</button>
+                        <button onclick="filterBilling('All', this)" class="px-6 py-2.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-amber-500 text-white shadow-lg shadow-amber-100 transition-all tab-btn active">All (<?= $counts['All'] ?>)</button>
+                        <button onclick="filterBilling('Unpaid', this)" class="px-6 py-2.5 text-[10px] font-bold uppercase tracking-wider rounded-lg text-slate-500 hover:bg-slate-50 transition-all tab-btn">Unpaid (<?= $counts['Unpaid'] ?? 0 ?>)</button>
+                        <button onclick="filterBilling('Partial', this)" class="px-6 py-2.5 text-[10px] font-bold uppercase tracking-wider rounded-lg text-slate-500 hover:bg-slate-50 transition-all tab-btn">Partial (<?= $counts['Partial'] ?? 0 ?>)</button>
+                        <button onclick="filterBilling('Paid', this)" class="px-6 py-2.5 text-[10px] font-bold uppercase tracking-wider rounded-lg text-slate-500 hover:bg-slate-50 transition-all tab-btn">Paid (<?= $counts['Paid'] ?? 0 ?>)</button>
                     </div>
                     <a href="create.php" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#F59E0B] text-white font-display font-bold rounded-custom hover:bg-[#D97706] transition-all shadow-lg shadow-amber-100">
                         <i class="bi bi-plus-circle"></i>
@@ -132,69 +132,37 @@ require_once '../../includes/header.php';
                                 </tr>
                             </thead>
                             <tbody id="billing-table-body" class="divide-y divide-surface-dim">
-                                <!-- INV-00247 (Unpaid) -->
-                                <tr class="hover:bg-slate-50/50 transition-colors billing-row" data-status="Unpaid">
+                                <?php if (empty($bills)): ?>
+                                <tr><td colspan="7" class="px-6 py-12 text-center text-slate-400">No billing records found</td></tr>
+                                <?php else: foreach ($bills as $b): 
+                                    $status_color = match($b['payment_status']) {
+                                        'Paid' => 'emerald',
+                                        'Partial' => 'amber',
+                                        'Unpaid' => 'red',
+                                        default => 'slate'
+                                    };
+                                ?>
+                                <tr class="hover:bg-slate-50/50 transition-colors billing-row" data-status="<?= $b['payment_status'] ?>">
                                     <td class="px-6 py-5">
-                                        <span class="text-[11px] font-mono font-bold text-slate-400">INV-00247</span>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-ink-900">John Kamau</span>
-                                            <span class="text-[10px] font-mono text-slate-400 uppercase">P-00124</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">20/03/2026</td>
-                                    <td class="px-6 py-5 text-sm font-bold text-ink-900">KES 1,450</td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-400">KES 0</td>
-                                    <td class="px-6 py-5">
-                                        <span class="px-2.5 py-1 rounded-full bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-wider">Unpaid</span>
-                                    </td>
-                                    <td class="px-6 py-5 text-right">
-                                        <a href="view.php?id=247" class="text-xs font-bold text-amber-600 hover:text-amber-800 transition-colors">Details</a>
-                                    </td>
-                                </tr>
-                                <!-- INV-00246 (Partial) -->
-                                <tr class="hover:bg-slate-50/50 transition-colors billing-row" data-status="Partial">
-                                    <td class="px-6 py-5">
-                                        <span class="text-[11px] font-mono font-bold text-slate-400">INV-00246</span>
+                                        <span class="text-[11px] font-mono font-bold text-slate-400">INV-<?= str_pad($b['bill_id'], 5, '0', STR_PAD_LEFT) ?></span>
                                     </td>
                                     <td class="px-6 py-5">
                                         <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-ink-900">Grace Wanjiku</span>
-                                            <span class="text-[10px] font-mono text-slate-400 uppercase">P-00123</span>
+                                            <span class="text-sm font-bold text-ink-900"><?= htmlspecialchars($b['patient_name']) ?></span>
+                                            <span class="text-[10px] font-mono text-slate-400 uppercase"><?= formatPatientID($b['patient_id']) ?></span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">19/03/2026</td>
-                                    <td class="px-6 py-5 text-sm font-bold text-ink-900">KES 3,200</td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">KES 1,600</td>
+                                    <td class="px-6 py-5 text-sm text-slate-500"><?= formatDate($b['bill_date']) ?></td>
+                                    <td class="px-6 py-5 text-sm font-bold text-ink-900"><?= formatKES($b['total_amount']) ?></td>
+                                    <td class="px-6 py-5 text-sm font-medium text-slate-400"><?= formatKES($b['amount_paid']) ?></td>
                                     <td class="px-6 py-5">
-                                        <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-wider">Partial</span>
+                                        <span class="px-2.5 py-1 rounded-full bg-<?= $status_color ?>-50 text-<?= $status_color ?>-600 text-[10px] font-bold uppercase tracking-wider"><?= $b['payment_status'] ?></span>
                                     </td>
                                     <td class="px-6 py-5 text-right">
-                                        <a href="view.php?id=246" class="text-xs font-bold text-amber-600 hover:text-amber-800 transition-colors">Details</a>
+                                        <a href="/hms/modules/billing/view.php?id=<?= $b['bill_id'] ?>" class="text-xs font-bold text-amber-600 hover:text-amber-800 transition-colors">Details</a>
                                     </td>
                                 </tr>
-                                <!-- INV-00245 (Paid) -->
-                                <tr class="hover:bg-slate-50/50 transition-colors billing-row" data-status="Paid">
-                                    <td class="px-6 py-5">
-                                        <span class="text-[11px] font-mono font-bold text-slate-400">INV-00245</span>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-ink-900">Brian Ochieng</span>
-                                            <span class="text-[10px] font-mono text-slate-400 uppercase">P-00122</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">18/03/2026</td>
-                                    <td class="px-6 py-5 text-sm font-bold text-ink-900">KES 800</td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">KES 800</td>
-                                    <td class="px-6 py-5">
-                                        <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider">Paid</span>
-                                    </td>
-                                    <td class="px-6 py-5 text-right">
-                                        <a href="view.php?id=245" class="text-xs font-bold text-amber-600 hover:text-amber-800 transition-colors">Details</a>
-                                    </td>
-                                </tr>
+                                <?php endforeach; endif; ?>
                             </tbody>
                         </table>
                     </div>

@@ -117,155 +117,72 @@ require_once '../../includes/header.php';
 
                 <!-- Queue Cards Container -->
                 <div id="queue-container" class="space-y-4 mb-12">
-                    
-                    <!-- Card 1 (Urgent - Hardcoded 5h ago) -->
-                    <div class="bg-white rounded-card ghost-border shadow-card overflow-hidden queue-card" data-requested-at="<?php echo date('c', strtotime('-5 hours')); ?>">
-                        <div class="flex items-center gap-0">
-                            <div class="w-1.5 self-stretch urgency-border"></div>
-                            <div class="flex-1 p-5 flex flex-wrap items-center justify-between gap-4">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                                        <i class="bi bi-droplet text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <div class="flex items-center gap-2">
-                                            <h4 class="text-sm font-bold text-ink-900">John Kamau</h4>
-                                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-tighter">P-00124</span>
-                                        </div>
-                                        <p class="text-[10px] text-slate-500 font-medium">Requested by Dr. Ochieng</p>
-                                    </div>
-                                </div>
-                                <div class="flex-1 md:px-8">
-                                    <div class="flex items-center gap-3">
-                                        <h3 class="text-lg font-display font-bold text-ink-900">Full Blood Count (FBC)</h3>
-                                        <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-wider status-badge">Pending</span>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-6">
-                                    <div class="text-right">
-                                        <p class="text-[10px] font-bold uppercase tracking-widest text-cyan-600 mb-0.5 elapsed-time">--</p>
-                                        <p class="text-[9px] text-slate-400 font-medium uppercase tracking-tighter">Waiting Time</p>
-                                    </div>
-                                    <button onclick="processTest(1, this)" class="px-5 py-2.5 bg-cyan-500 text-white text-xs font-bold rounded-lg hover:bg-cyan-600 transition-all shadow-md shadow-cyan-100 flex items-center gap-2">
-                                        Process Test
-                                        <i class="bi bi-arrow-right"></i>
-                                    </button>
-                                </div>
-                            </div>
+                    <?php if (empty($queue)): ?>
+                    <div class="bg-white rounded-card ghost-border p-12 text-center">
+                        <div class="w-16 h-16 bg-slate-50 text-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="bi bi-inbox text-3xl"></i>
                         </div>
+                        <p class="text-slate-400 font-medium tracking-tight">The test queue is currently empty</p>
                     </div>
-
-                    <!-- Card 2 (Moderate - Hardcoded 1h 45m ago) -->
-                    <div class="bg-white rounded-card ghost-border shadow-card overflow-hidden queue-card" data-requested-at="<?php echo date('c', strtotime('-105 minutes')); ?>">
+                    <?php else: foreach ($queue as $t): 
+                        $is_processing = $t['status'] === 'Processing';
+                        $status_badge_class = $is_processing ? 'bg-violet-50 text-violet-600' : 'bg-amber-50 text-amber-600';
+                        $icon_class = match($t['test_type']) {
+                            'Full Blood Count (FBC)', 'FBC' => 'bi-droplet',
+                            'Malaria RDT', 'Malaria' => 'bi-virus',
+                            'Urinalysis' => 'bi-palette',
+                            'Blood Glucose' => 'bi-activity',
+                            default => 'bi-clipboard-pulse'
+                        };
+                    ?>
+                    <div class="bg-white rounded-card ghost-border shadow-card overflow-hidden queue-card" 
+                         data-requested-at="<?= $t['date_requested'] ?>T00:00:00">
                         <div class="flex items-center gap-0">
-                            <div class="w-1.5 self-stretch urgency-border"></div>
+                            <div class="w-1.5 self-stretch <?= $is_processing ? 'bg-violet-500' : 'urgency-border' ?>"></div>
                             <div class="flex-1 p-5 flex flex-wrap items-center justify-between gap-4">
                                 <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                                        <i class="bi bi-virus text-xl"></i>
+                                    <div class="w-12 h-12 rounded-xl <?= $is_processing ? 'bg-violet-50 text-violet-500' : 'bg-slate-50 text-slate-400' ?> flex items-center justify-center">
+                                        <i class="bi <?= $icon_class ?> text-xl"></i>
                                     </div>
                                     <div>
                                         <div class="flex items-center gap-2">
-                                            <h4 class="text-sm font-bold text-ink-900">Grace Wanjiku</h4>
-                                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-tighter">P-00123</span>
+                                            <h4 class="text-sm font-bold text-ink-900"><?= htmlspecialchars($t['patient_name']) ?></h4>
+                                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-tighter"><?= formatPatientID($t['patient_id']) ?></span>
                                         </div>
-                                        <p class="text-[10px] text-slate-500 font-medium">Requested by Dr. Mutua</p>
+                                        <p class="text-[10px] text-slate-500 font-medium">Requested by Dr. <?= htmlspecialchars(explode(' ', $t['doctor_name'])[1] ?? $t['doctor_name']) ?></p>
                                     </div>
                                 </div>
                                 <div class="flex-1 md:px-8">
                                     <div class="flex items-center gap-3">
-                                        <h3 class="text-lg font-display font-bold text-ink-900">Malaria RDT</h3>
-                                        <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-wider status-badge">Pending</span>
+                                        <h3 class="text-lg font-display font-bold text-ink-900"><?= htmlspecialchars($t['test_type']) ?></h3>
+                                        <span class="px-2 py-0.5 rounded <?= $status_badge_class ?> text-[10px] font-bold uppercase tracking-wider status-badge"><?= $t['status'] ?></span>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-6">
-                                    <div class="text-right">
-                                        <p class="text-[10px] font-bold uppercase tracking-widest text-cyan-600 mb-0.5 elapsed-time">--</p>
-                                        <p class="text-[9px] text-slate-400 font-medium uppercase tracking-tighter">Waiting Time</p>
-                                    </div>
-                                    <button onclick="processTest(2, this)" class="px-5 py-2.5 bg-cyan-500 text-white text-xs font-bold rounded-lg hover:bg-cyan-600 transition-all shadow-md shadow-cyan-100 flex items-center gap-2">
-                                        Process Test
-                                        <i class="bi bi-arrow-right"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card 3 (Fresh - Hardcoded 18m ago) -->
-                    <div class="bg-white rounded-card ghost-border shadow-card overflow-hidden queue-card" data-requested-at="<?php echo date('c', strtotime('-18 minutes')); ?>">
-                        <div class="flex items-center gap-0">
-                            <div class="w-1.5 self-stretch urgency-border"></div>
-                            <div class="flex-1 p-5 flex flex-wrap items-center justify-between gap-4">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                                        <i class="bi bi-palette text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <div class="flex items-center gap-2">
-                                            <h4 class="text-sm font-bold text-ink-900">Brian Ochieng</h4>
-                                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-tighter">P-00122</span>
-                                        </div>
-                                        <p class="text-[10px] text-slate-500 font-medium">Requested by Dr. Ochieng</p>
-                                    </div>
-                                </div>
-                                <div class="flex-1 md:px-8">
-                                    <div class="flex items-center gap-3">
-                                        <h3 class="text-lg font-display font-bold text-ink-900">Urinalysis</h3>
-                                        <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-wider status-badge">Pending</span>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-6">
-                                    <div class="text-right">
-                                        <p class="text-[10px] font-bold uppercase tracking-widest text-cyan-600 mb-0.5 elapsed-time">--</p>
-                                        <p class="text-[9px] text-slate-400 font-medium uppercase tracking-tighter">Waiting Time</p>
-                                    </div>
-                                    <button onclick="processTest(3, this)" class="px-5 py-2.5 bg-cyan-500 text-white text-xs font-bold rounded-lg hover:bg-cyan-600 transition-all shadow-md shadow-cyan-100 flex items-center gap-2">
-                                        Process Test
-                                        <i class="bi bi-arrow-right"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card 4 (Processing) -->
-                    <div class="bg-white rounded-card ghost-border shadow-card overflow-hidden queue-card" data-requested-at="<?php echo date('c', strtotime('-45 minutes')); ?>">
-                        <div class="flex items-center gap-0">
-                            <div class="w-1.5 self-stretch bg-violet-500"></div>
-                            <div class="flex-1 p-5 flex flex-wrap items-center justify-between gap-4">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center text-violet-500">
-                                        <i class="bi bi-activity text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <div class="flex items-center gap-2">
-                                            <h4 class="text-sm font-bold text-ink-900">Auma Otieno</h4>
-                                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-tighter">P-00121</span>
-                                        </div>
-                                        <p class="text-[10px] text-slate-500 font-medium">Requested by Dr. Mutua</p>
-                                    </div>
-                                </div>
-                                <div class="flex-1 md:px-8">
-                                    <div class="flex items-center gap-3">
-                                        <h3 class="text-lg font-display font-bold text-ink-900">Blood Glucose</h3>
-                                        <span class="px-2 py-0.5 rounded bg-violet-50 text-violet-600 text-[10px] font-bold uppercase tracking-wider status-badge">Processing</span>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-6">
+                                    <?php if ($is_processing): ?>
                                     <div class="text-right">
                                         <p class="text-[10px] font-bold uppercase tracking-widest text-violet-600 mb-0.5">Active</p>
                                         <p class="text-[9px] text-slate-400 font-medium uppercase tracking-tighter">In Progress</p>
                                     </div>
-                                    <a href="result.php?id=4" class="px-5 py-2.5 bg-violet-500 text-white text-xs font-bold rounded-lg hover:bg-violet-600 transition-all shadow-md shadow-violet-100 flex items-center gap-2">
+                                    <a href="/hms/modules/laboratory/result.php?id=<?= $t['test_id'] ?>" class="px-5 py-2.5 bg-violet-500 text-white text-xs font-bold rounded-lg hover:bg-violet-600 transition-all shadow-md shadow-violet-100 flex items-center gap-2">
                                         Enter Result
                                         <i class="bi bi-clipboard2-check"></i>
                                     </a>
+                                    <?php else: ?>
+                                    <div class="text-right">
+                                        <p class="text-[10px] font-bold uppercase tracking-widest text-cyan-600 mb-0.5 elapsed-time">--</p>
+                                        <p class="text-[9px] text-slate-400 font-medium uppercase tracking-tighter">Waiting Time</p>
+                                    </div>
+                                    <button onclick="processTest(<?= $t['test_id'] ?>, this)" class="px-5 py-2.5 bg-cyan-500 text-white text-xs font-bold rounded-lg hover:bg-cyan-600 transition-all shadow-md shadow-cyan-100 flex items-center gap-2">
+                                        Process Test
+                                        <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
                     </div>
-
+                    <?php endforeach; endif; ?>
                 </div>
 
                 <!-- Completed Today Section -->

@@ -196,62 +196,163 @@ require_once '../../includes/header.php';
                                         </tr>
                                     <?php endforeach; endif; ?>
                             </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-                            <script>
-                                function processInventory() {
-                                    const bars = document.querySelectorAll('.stock-bar');
-                                    const cells = document.querySelectorAll('.expiry-cell');
-                                    const today = new Date();
+            <script>
+                function processInventory() {
+                    const bars = document.querySelectorAll('.stock-bar');
+                    const cells = document.querySelectorAll('.expiry-cell');
+                    const today = new Date();
 
-                                    bars.forEach(bar => {
-                                        const qty = parseInt(bar.getAttribute('data-qty'));
-                                        const reorder = parseInt(bar.getAttribute('data-reorder'));
-                                        const percent = Math.min((qty / (reorder * 5)) * 100, 100);
+                    bars.forEach(bar => {
+                        const qty = parseInt(bar.getAttribute('data-qty'));
+                        const reorder = parseInt(bar.getAttribute('data-reorder'));
+                        const percent = Math.min((qty / (reorder * 5)) * 100, 100);
 
-                                        bar.style.width = percent + '%';
-                                        if (percent > 60) bar.classList.add('bg-green-500');
-                                        else if (percent >= 20) bar.classList.add('bg-amber-500');
-                                        else bar.classList.add('bg-red-500');
+                        bar.style.width = percent + '%';
+                        if (percent > 60) bar.classList.add('bg-green-500');
+                        else if (percent >= 20) bar.classList.add('bg-amber-500');
+                        else bar.classList.add('bg-red-500');
 
-                                        // Row highlight if below reorder level
-                                        if (qty < reorder) {
-                                            bar.closest('tr').classList.add('bg-red-50/40');
-                                        }
-                                    });
+                        // Row highlight if below reorder level
+                        if (qty < reorder) {
+                            bar.closest('tr').classList.add('bg-red-50/40');
+                        }
+                    });
 
-                                    cells.forEach(cell => {
-                                        const expiry = new Date(cell.getAttribute('data-expiry'));
-                                        const diffTime = expiry - today;
-                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    cells.forEach(cell => {
+                        const expiry = new Date(cell.getAttribute('data-expiry'));
+                        const diffTime = expiry - today;
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-                                        if (diffDays <= 30) {
-                                            cell.classList.add('text-red-600');
-                                        } else if (diffDays <= 60) {
-                                            cell.classList.add('text-amber-500');
-                                        }
-                                    });
-                                }
+                        if (diffDays <= 30) {
+                            cell.classList.add('text-red-600');
+                        } else if (diffDays <= 60) {
+                            cell.classList.add('text-amber-500');
+                        }
+                    });
+                }
 
-                                function deleteDrug(id, btn) {
-                                    if (confirm('Are you sure you want to delete this drug from inventory?')) {
-                                        fetch('api/delete_drug.php', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ id: id })
-                                        })
-                                            .then(res => res.json())
-                                            .then(data => {
-                                                btn.closest('tr').classList.add('opacity-0', 'transition-all', 'duration-500');
-                                                setTimeout(() => btn.closest('tr').remove(), 500);
-                                            });
+                // Debounce function to limit API calls
+                function debounce(func, delay = 300) {
+                    let timeout;
+                    return function(...args) {
+                        const context = this;
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => func.apply(context, args), delay);
+                    };
+                }
 
+                const searchInput = document.getElementById('search-input');
+                const tableBody = document.getElementById('inventory-table-body');
+                const spinner = document.getElementById('search-spinner');
+
+                const handleSearch = debounce(() => {
+                    const query = searchInput.value.trim();
+                    if (query.length < 1) {
+                        location.reload(); // Reload to show all drugs if search is cleared
+                        return;
+                    }
+                    
+                    spinner.classList.remove('hidden');
+                    
+                    fetch('/hms/modules/pharmacy/api/search.php?q=' + encodeURIComponent(query))
+                        .then(res => res.json())
+                        .then(data => {
+                            spinner.classList.add('hidden');
+                            tableBody.innerHTML = '';
+                            
+                            if (data.length === 0) {
+                                tableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400 font-medium">No matching drugs found</td></tr>';
+                                return;
+                            }
+                            
+                            data.forEach(drug => {
+                                const statusClass = drug.quantity_in_stock <= drug.reorder_level ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600';
+                                const expiryDate = drug.expiry_date ? new Date(drug.expiry_date) : null;
+                                const today = new Date();
+                                let expiryClass = 'text-slate-500';
+                                if (expiryDate) {
+                                    const diffTime = expiryDate - today;
+                                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                    if (diffDays <= 30) {
+                                        expiryClass = 'text-red-600';
+                                    } else if (diffDays <= 60) {
+                                        expiryClass = 'text-amber-500';
                                     }
                                 }
 
-                                // Init
-                                processInventory();
-                            </script>
+                                const row = `
+                                    <tr class="hover:bg-slate-50/50 transition-colors ${drug.quantity_in_stock <= drug.reorder_level ? 'bg-red-50/30' : ''}">
+                                        <td class="px-6 py-5">
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-bold text-ink-900">${drug.drug_name}</span>
+                                                <span class="text-[10px] text-slate-400 font-medium">Generic: ${drug.generic_name || '—'}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-5 text-sm text-slate-600 font-medium">${drug.category || '—'}</td>
+                                        <td class="px-6 py-5">
+                                            <div class="flex flex-col gap-1.5">
+                                                <span class="text-sm font-bold text-ink-900">
+                                                    ${drug.quantity_in_stock} <span class="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">${drug.unit || ''}</span>
+                                                </span>
+                                                <div class="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                                    <div class="h-1.5 rounded-full stock-bar" data-qty="${drug.quantity_in_stock}" data-reorder="${drug.reorder_level}" style="width: ${Math.min((drug.quantity_in_stock / (drug.reorder_level * 5)) * 100, 100)}%; background-color: ${drug.quantity_in_stock <= drug.reorder_level ? '#ef4444' : (drug.quantity_in_stock <= drug.reorder_level * 2 ? '#f59e0b' : '#10b981')};"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-5 text-sm font-mono text-slate-500">${drug.reorder_level}</td>
+                                        <td class="px-6 py-5 text-sm font-bold ${expiryClass} expiry-cell" data-expiry="${drug.expiry_date || ''}">
+                                            ${drug.expiry_date ? new Date(drug.expiry_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
+                                        </td>
+                                        <td class="px-6 py-5 text-sm font-bold text-ink-900">KES ${parseFloat(drug.unit_price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                        <td class="px-6 py-5 text-right">
+                                            <div class="flex items-center justify-end gap-2">
+                                                <a href="/hms/modules/pharmacy/drug_form.php?id=${drug.drug_id}"
+                                                    class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-emerald-600 hover:border-emerald-600 transition-all"><i
+                                                        class="bi bi-pencil-square"></i></a>
+                                                <button onclick="deleteDrug(${drug.drug_id}, this)"
+                                                    class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-red-600 hover:border-red-600 transition-all"><i
+                                                        class="bi bi-trash3"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                                tableBody.insertAdjacentHTML('beforeend', row);
+                            });
+                        })
+                        .catch(error => {
+                            spinner.classList.add('hidden');
+                            console.error('Error during search:', error);
+                            tableBody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-red-500 font-medium">Error searching for drugs. Please try again.</td></tr>';
+                        });
+                });
 
-                            </body>
+                searchInput.addEventListener('input', handleSearch);
 
-                            </html>
+                function deleteDrug(id, btn) {
+                    if (confirm('Are you sure you want to delete this drug from inventory?')) {
+                        fetch('api/delete_drug.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: id })
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                btn.closest('tr').classList.add('opacity-0', 'transition-all', 'duration-500');
+                                setTimeout(() => btn.closest('tr').remove(), 500);
+                            });
+
+                    }
+                }
+
+                // Init
+                processInventory();
+            </script>
+
+            </body>
+
+            </html>

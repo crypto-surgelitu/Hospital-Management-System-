@@ -134,106 +134,52 @@ require_once '../../includes/header.php';
                                 </tr>
                             </thead>
                             <tbody id="appointment-table-body" class="divide-y divide-surface-dim">
-                                <!-- Grace Wanjiku (Today) -->
-                                <tr class="appointment-row hover:bg-slate-50/50 transition-colors border-l-4 border-amber-400" data-status="Scheduled" data-day="Today">
+                                <?php if (empty($appointments)): ?>
+                                <tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">No appointments found</td></tr>
+                                <?php else: foreach ($appointments as $a): 
+                                    $is_today = $a['appointment_date'] === $today;
+                                    $status_color = match($a['status']) {
+                                        'Scheduled' => 'blue',
+                                        'Completed' => 'green',
+                                        'Cancelled' => 'red',
+                                        default => 'slate'
+                                    };
+                                    $border_class = $is_today && $a['status'] === 'Scheduled' ? 'border-l-4 border-amber-400' : '';
+                                ?>
+                                <tr class="appointment-row hover:bg-slate-50/50 transition-colors <?= $border_class ?>" 
+                                    data-status="<?= $a['status'] ?>" 
+                                    <?= $is_today ? 'data-day="Today"' : '' ?>>
                                     <td class="px-6 py-5">
                                         <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-ink-900">Grace Wanjiku</span>
-                                            <span class="text-[10px] font-mono text-slate-400">P-00123</span>
+                                            <span class="text-sm font-bold text-ink-900"><?= htmlspecialchars($a['patient_name']) ?></span>
+                                            <span class="text-[10px] font-mono text-slate-400"><?= formatPatientID($a['patient_id']) ?></span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5">
-                                        <span class="text-sm font-medium text-slate-600">Dr. Ochieng</span>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-ink-900">20/03/2026</span>
-                                            <span class="text-xs text-slate-400">09:00</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <span class="text-sm text-slate-600">Headache</span>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <span class="px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider status-badge">Scheduled</span>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <a href="view.php?id=1" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-violet-600 hover:border-violet-600 transition-all"><i class="bi bi-eye"></i></a>
-                                            <button onclick="markComplete(1, this)" class="px-3 py-1.5 border border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:border-green-500 hover:text-green-600 transition-all">Mark Complete</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <!-- John Kamau (Today) -->
-                                <tr class="appointment-row hover:bg-slate-50/50 transition-colors border-l-4 border-amber-400" data-status="Scheduled" data-day="Today">
-                                    <td class="px-6 py-5">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-ink-900">John Kamau</span>
-                                            <span class="text-[10px] font-mono text-slate-400">P-00124</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <span class="text-sm font-medium text-slate-600">Dr. Ochieng</span>
+                                        <span class="text-sm font-medium text-slate-600">Dr. <?= htmlspecialchars(explode(' ', $a['doctor_name'])[1] ?? $a['doctor_name']) ?></span>
                                     </td>
                                     <td class="px-6 py-5">
                                         <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-ink-900">20/03/2026</span>
-                                            <span class="text-xs text-slate-400">10:30</span>
+                                            <span class="text-sm font-bold text-ink-900"><?= formatDate($a['appointment_date']) ?></span>
+                                            <span class="text-xs text-slate-400"><?= substr($a['appointment_time'], 0, 5) ?></span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5">
-                                        <span class="text-sm text-slate-600">Follow-up</span>
+                                        <span class="text-sm text-slate-600"><?= htmlspecialchars($a['reason'] ?? '—') ?></span>
                                     </td>
                                     <td class="px-6 py-5">
-                                        <span class="px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider status-badge">Scheduled</span>
+                                        <span class="px-2.5 py-1 rounded-full bg-<?= $status_color ?>-50 text-<?= $status_color ?>-600 text-[10px] font-bold uppercase tracking-wider status-badge"><?= $a['status'] ?></span>
                                     </td>
                                     <td class="px-6 py-5">
                                         <div class="flex items-center justify-end gap-2 text-right">
-                                            <a href="view.php?id=2" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-violet-600 hover:border-violet-600 transition-all"><i class="bi bi-eye"></i></a>
-                                            <button onclick="markComplete(2, this)" class="px-3 py-1.5 border border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:border-green-500 hover:text-green-600 transition-all">Mark Complete</button>
+                                            <a href="/hms/modules/appointments/view.php?id=<?= $a['appointment_id'] ?>" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-violet-600 hover:border-violet-600 transition-all"><i class="bi bi-eye"></i></a>
+                                            <?php if ($a['status'] === 'Scheduled'): ?>
+                                            <button onclick="markComplete(<?= $a['appointment_id'] ?>, this)" class="px-3 py-1.5 border border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:border-green-500 hover:text-green-600 transition-all">Mark Complete</button>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
-                                <!-- Auma Otieno (Completed) -->
-                                <tr class="appointment-row hover:bg-slate-50/50 transition-colors" data-status="Completed">
-                                    <td class="px-6 py-5">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-ink-900">Auma Otieno</span>
-                                            <span class="text-[10px] font-mono text-slate-400">P-00121</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <span class="text-sm font-medium text-slate-600">Dr. Mutua</span>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">19/03/2026 <span class="text-slate-400">14:00</span></td>
-                                    <td class="px-6 py-5 text-sm text-slate-600">Chest pain</td>
-                                    <td class="px-6 py-5">
-                                        <span class="px-2.5 py-1 rounded-full bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-wider">Completed</span>
-                                    </td>
-                                    <td class="px-6 py-5 text-right">
-                                        <a href="view.php?id=3" class="w-8 h-8 inline-flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-violet-600 hover:border-violet-600 transition-all"><i class="bi bi-eye"></i></a>
-                                    </td>
-                                </tr>
-                                <!-- Brian Ochieng (Cancelled) -->
-                                <tr class="appointment-row hover:bg-slate-50/50 transition-colors" data-status="Cancelled">
-                                    <td class="px-6 py-5">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-ink-900">Brian Ochieng</span>
-                                            <span class="text-[10px] font-mono text-slate-400">P-00122</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <span class="text-sm font-medium text-slate-600">Dr. Ochieng</span>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">18/03/2026 <span class="text-slate-400">08:30</span></td>
-                                    <td class="px-6 py-5 text-sm text-slate-600">Malaria symptoms</td>
-                                    <td class="px-6 py-5">
-                                        <span class="px-2.5 py-1 rounded-full bg-red-50 text-red-500 text-[10px] font-bold uppercase tracking-wider">Cancelled</span>
-                                    </td>
-                                    <td class="px-6 py-5 text-right">
-                                        <a href="view.php?id=4" class="w-8 h-8 inline-flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-violet-600 hover:border-violet-600 transition-all"><i class="bi bi-eye"></i></a>
-                                    </td>
-                                </tr>
+                                <?php endforeach; endif; ?>
                             </tbody>
                         </table>
                     </div>

@@ -111,104 +111,41 @@ require_once '../../includes/header.php';
                                 </tr>
                             </thead>
                             <tbody id="patient-table-body" class="divide-y divide-surface-dim">
-                                <!-- Sample Row 1 -->
+                                <?php if (empty($patients)): ?>
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                                        No patients registered yet
+                                    </td>
+                                </tr>
+                                <?php else: foreach ($patients as $p): ?>
                                 <tr class="hover:bg-slate-50/50 transition-colors group">
                                     <td class="px-6 py-5">
-                                        <span class="font-mono text-sm text-slate-500">P-00124</span>
+                                        <span class="font-mono text-sm text-slate-500"><?= formatPatientID($p['patient_id']) ?></span>
                                     </td>
                                     <td class="px-6 py-5">
                                         <div class="flex items-center gap-3">
-                                            <div class="avatar-circle w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm" data-name="John Kamau">JK</div>
-                                            <span class="text-sm font-bold text-ink-900">John Kamau</span>
+                                            <div class="avatar-circle w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm" data-name="<?= htmlspecialchars($p['full_name']) ?>"><?= getInitials($p['full_name']) ?></div>
+                                            <span class="text-sm font-bold text-ink-900"><?= htmlspecialchars($p['full_name']) ?></span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">Male</td>
-                                    <td class="px-6 py-5 text-sm font-mono text-slate-600">0712 345 678</td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">15/03/2026</td>
+                                    <td class="px-6 py-5 text-sm font-medium text-slate-600"><?= htmlspecialchars($p['gender']) ?></td>
+                                    <td class="px-6 py-5 text-sm font-mono text-slate-600"><?= htmlspecialchars($p['phone'] ?? '—') ?></td>
+                                    <td class="px-6 py-5 text-sm font-medium text-slate-600"><?= formatDate($p['created_at']) ?></td>
                                     <td class="px-6 py-5">
                                         <div class="flex items-center justify-end gap-2 text-right">
-                                            <a href="view.php?id=124" title="View" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-blue-600 hover:border-blue-600 transition-all">
+                                            <a href="/hms/modules/patients/view.php?id=<?= $p['patient_id'] ?>" title="View" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-blue-600 hover:border-blue-600 transition-all">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="edit.php?id=124" title="Edit" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-amber-600 hover:border-amber-600 transition-all">
+                                            <a href="/hms/modules/patients/edit.php?id=<?= $p['patient_id'] ?>" title="Edit" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-amber-600 hover:border-amber-600 transition-all">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <button onclick="deletePatient(124, this)" title="Delete" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-red-600 hover:border-red-600 transition-all">
+                                            <button onclick="deletePatient(<?= $p['patient_id'] ?>, this)" title="Delete" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-red-600 hover:border-red-600 transition-all">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
-                                <!-- Sample Row 2 -->
-                                <tr class="hover:bg-slate-50/50 transition-colors group">
-                                    <td class="px-6 py-5 font-mono text-sm text-slate-500">P-00123</td>
-                                    <td class="px-6 py-5 text-sm font-bold text-ink-900">
-                                        <div class="flex items-center gap-3">
-                                            <div class="avatar-circle w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white" data-name="Grace Wanjiku">GW</div>
-                                            <span>Grace Wanjiku</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">Female</td>
-                                    <td class="px-6 py-5 text-sm font-mono text-slate-600">0723 456 789</td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">14/03/2026</td>
-                                    <td class="px-6 py-5 flex items-center justify-end gap-2">
-                                        <a href="view.php?id=123" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-blue-600 hover:border-blue-600 transition-all"><i class="bi bi-eye"></i></a>
-                                        <a href="edit.php?id=123" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-amber-600 hover:border-amber-600 transition-all"><i class="bi bi-pencil"></i></a>
-                                        <button onclick="deletePatient(123, this)" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-red-600 hover:border-red-600 transition-all"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <!-- More hardcoded samples... -->
-                                <tr class="hover:bg-slate-50/50 transition-colors group">
-                                    <td class="px-6 py-5 font-mono text-sm text-slate-500">P-00122</td>
-                                    <td class="px-6 py-5 text-sm font-bold text-ink-900">
-                                        <div class="flex items-center gap-3">
-                                            <div class="avatar-circle w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white" data-name="Brian Ochieng">BO</div>
-                                            <span>Brian Ochieng</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">Male</td>
-                                    <td class="px-6 py-5 text-sm font-mono text-slate-600">0734 567 890</td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">13/03/2026</td>
-                                    <td class="px-6 py-5 text-right flex items-center justify-end gap-2">
-                                        <a href="view.php?id=122" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-blue-600 hover:border-blue-600 transition-all"><i class="bi bi-eye"></i></a>
-                                        <a href="edit.php?id=122" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-amber-600 hover:border-amber-600 transition-all"><i class="bi bi-pencil"></i></a>
-                                        <button onclick="deletePatient(122, this)" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-red-600 hover:border-red-600 transition-all"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-slate-50/50 transition-colors group">
-                                    <td class="px-6 py-5 font-mono text-sm text-slate-500">P-00121</td>
-                                    <td class="px-6 py-5 text-sm font-bold text-ink-900">
-                                        <div class="flex items-center gap-3">
-                                            <div class="avatar-circle w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white" data-name="Auma Otieno">AO</div>
-                                            <span>Auma Otieno</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">Female</td>
-                                    <td class="px-6 py-5 text-sm font-mono text-slate-600">0745 678 901</td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">12/03/2026</td>
-                                    <td class="px-6 py-5 text-right flex items-center justify-end gap-2">
-                                        <a href="view.php?id=121" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-blue-600 hover:border-blue-600 transition-all"><i class="bi bi-eye"></i></a>
-                                        <a href="edit.php?id=121" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-amber-600 hover:border-amber-600 transition-all"><i class="bi bi-pencil"></i></a>
-                                        <button onclick="deletePatient(121, this)" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-red-600 hover:border-red-600 transition-all"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-slate-50/50 transition-colors group">
-                                    <td class="px-6 py-5 font-mono text-sm text-slate-500">P-00120</td>
-                                    <td class="px-6 py-5 text-sm font-bold text-ink-900">
-                                        <div class="flex items-center gap-3">
-                                            <div class="avatar-circle w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white" data-name="David Mutua">DM</div>
-                                            <span>David Mutua</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">Male</td>
-                                    <td class="px-6 py-5 text-sm font-mono text-slate-600">0756 789 012</td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">11/03/2026</td>
-                                    <td class="px-6 py-5 text-right flex items-center justify-end gap-2">
-                                        <a href="view.php?id=120" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-blue-600 hover:border-blue-600 transition-all"><i class="bi bi-eye"></i></a>
-                                        <a href="edit.php?id=120" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-amber-600 hover:border-amber-600 transition-all"><i class="bi bi-pencil"></i></a>
-                                        <button onclick="deletePatient(120, this)" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-red-600 hover:border-red-600 transition-all"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
+                                <?php endforeach; endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -249,33 +186,74 @@ document.addEventListener('DOMContentLoaded', () => {
     // Search logic
     const handleSearch = debounce(() => {
         const query = searchInput.value.trim();
-        if (query.length < 1) return;
+        if (query.length < 1) {
+            location.reload(); // Reset to initial list
+            return;
+        }
         
         spinner.classList.remove('hidden');
         
-        fetch('api/search.php?q=' + encodeURIComponent(query))
-        setTimeout(() => {
-            spinner.classList.add('hidden');
-            // Mock result replacement
-            console.log("Searching for:", query);
-        }, 1000);
+        fetch('/hms/modules/patients/api/search.php?q=' + encodeURIComponent(query))
+            .then(res => res.json())
+            .then(data => {
+                spinner.classList.add('hidden');
+                tableBody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">No matches found</td></tr>';
+                    return;
+                }
+                
+                data.forEach(p => {
+                    const initials = p.full_name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                    const row = `
+                        <tr class="hover:bg-slate-50/50 transition-colors group">
+                            <td class="px-6 py-5"><span class="font-mono text-sm text-slate-500">P-${String(p.patient_id).padStart(5, '0')}</span></td>
+                            <td class="px-6 py-5">
+                                <div class="flex items-center gap-3">
+                                    <div class="avatar-circle w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm" data-name="${p.full_name}">${initials}</div>
+                                    <span class="text-sm font-bold text-ink-900">${p.full_name}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5 text-sm font-medium text-slate-600">${p.gender}</td>
+                            <td class="px-6 py-5 text-sm font-mono text-slate-600">${p.phone || '—'}</td>
+                            <td class="px-6 py-5 text-sm font-medium text-slate-600">${p.created_at}</td>
+                            <td class="px-6 py-5">
+                                <div class="flex items-center justify-end gap-2 text-right">
+                                    <a href="/hms/modules/patients/view.php?id=${p.patient_id}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-blue-600 hover:border-blue-600 transition-all"><i class="bi bi-eye"></i></a>
+                                    <a href="/hms/modules/patients/edit.php?id=${p.patient_id}" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-amber-600 hover:border-amber-600 transition-all"><i class="bi bi-pencil"></i></a>
+                                    <button onclick="deletePatient(${p.patient_id}, this)" class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-dim text-slate-400 hover:text-red-600 hover:border-red-600 transition-all"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+                
+                // Re-apply avatar colors
+                initAvatars();
+            });
     });
+
+    function initAvatars() {
+        const colors = [
+            'bg-blue-500', 'bg-indigo-500', 'bg-purple-500', 
+            'bg-pink-500', 'bg-rose-500', 'bg-amber-500', 
+            'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500'
+        ];
+        document.querySelectorAll('.avatar-circle').forEach(avatar => {
+            const name = avatar.getAttribute('data-name') || '';
+            const firstLetter = name.charAt(0).toUpperCase();
+            const colorIndex = firstLetter.charCodeAt(0) % colors.length;
+            avatar.className = `avatar-circle w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm ${colors[colorIndex]}`;
+        });
+    }
+
+    initAvatars();
 
     searchInput.addEventListener('keyup', handleSearch);
 
-    // Avatar Color Logic
-    const colors = [
-        'bg-blue-500', 'bg-indigo-500', 'bg-purple-500', 
-        'bg-pink-500', 'bg-rose-500', 'bg-amber-500', 
-        'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500'
-    ];
 
-    document.querySelectorAll('.avatar-circle').forEach(avatar => {
-        const name = avatar.getAttribute('data-name');
-        const firstLetter = name.charAt(0).toUpperCase();
-        const colorIndex = firstLetter.charCodeAt(0) % colors.length;
-        avatar.classList.add(colors[colorIndex]);
-    });
 
     // Delete Logic
     window.deletePatient = (id, btn) => {

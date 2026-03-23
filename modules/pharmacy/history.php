@@ -119,46 +119,40 @@ require_once '../../includes/header.php';
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-surface-dim">
-                                <!-- DS-001 -->
+                                <?php if (empty($dispensing)): ?>
+                                <tr><td colspan="8" class="px-6 py-12 text-center text-slate-400">No dispensing history found</td></tr>
+                                <?php else: foreach ($dispensing as $d): ?>
                                 <tr class="hover:bg-slate-50/50 transition-colors">
                                     <td class="px-6 py-5">
-                                        <span class="text-[11px] font-mono text-slate-400">DS-001</span>
+                                        <span class="text-[11px] font-mono text-slate-400 italic">DS-<?= str_pad($d['dispense_id'], 5, '0', STR_PAD_LEFT) ?></span>
                                     </td>
                                     <td class="px-6 py-5">
                                         <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-ink-900">John Kamau</span>
-                                            <span class="text-[10px] font-mono text-slate-400">P-00124</span>
+                                            <span class="text-sm font-bold text-ink-900"><?= htmlspecialchars($d['patient_name']) ?></span>
+                                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-tighter"><?= formatPatientID($d['patient_id']) ?></span>
                                         </div>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">Amoxicillin 500mg</td>
-                                    <td class="px-6 py-5 text-sm font-bold text-ink-900">10 <span class="text-[10px] font-normal text-slate-400">tabs</span></td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">Jane Mwangi</td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">19/03/2026</td>
-                                    <td class="px-6 py-5 text-xs text-slate-400 font-medium max-w-[200px] truncate">1 tab 3x daily after meals</td>
-                                    <td class="px-6 py-5 text-right">
-                                        <button class="text-xs font-bold text-emerald-500 hover:text-emerald-700 transition-colors">Print Label</button>
-                                    </td>
-                                </tr>
-                                <!-- DS-002 -->
-                                <tr class="hover:bg-slate-50/50 transition-colors">
-                                    <td class="px-6 py-5">
-                                        <span class="text-[11px] font-mono text-slate-400">DS-002</span>
                                     </td>
                                     <td class="px-6 py-5">
                                         <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-ink-900">Grace Wanjiku</span>
-                                            <span class="text-[10px] font-mono text-slate-400">P-00123</span>
+                                            <span class="text-sm font-bold text-ink-900"><?= htmlspecialchars($d['drug_name']) ?></span>
+                                            <span class="text-xs text-slate-500"><?= $d['quantity_dispensed'] ?> <?= htmlspecialchars($d['unit'] ?? '') ?></span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">Paracetamol 500mg</td>
-                                    <td class="px-6 py-5 text-sm font-bold text-ink-900">20 <span class="text-[10px] font-normal text-slate-400">tabs</span></td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">Jane Mwangi</td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">19/03/2026</td>
-                                    <td class="px-6 py-5 text-xs text-slate-400 font-medium max-w-[200px] truncate">2 tabs PRN</td>
+                                    <td class="px-6 py-5 text-sm font-bold text-ink-900"><?= $d['quantity_dispensed'] ?> <span class="text-[10px] font-normal text-slate-400"><?= htmlspecialchars($d['unit'] ?? '') ?></span></td>
+                                    <td class="px-6 py-5 text-sm text-slate-500">
+                                        Ph. <?= htmlspecialchars(explode(' ', $d['pharmacist_name'])[1] ?? $d['pharmacist_name']) ?>
+                                    </td>
+                                    <td class="px-6 py-5 text-sm font-medium text-slate-600"><?= formatDate($d['dispense_date']) ?></td>
+                                    <td class="px-6 py-5">
+                                        <div class="bg-slate-50 rounded px-2 py-1 border border-slate-100/50 max-w-[140px]">
+                                            <p class="text-[10px] text-slate-500 font-medium italic line-clamp-1"><?= htmlspecialchars($d['dosage_instructions'] ?? '--') ?></p>
+                                        </div>
+                                    </td>
                                     <td class="px-6 py-5 text-right">
-                                        <button class="text-xs font-bold text-emerald-500 hover:text-emerald-700 transition-colors">Print Label</button>
+                                        <a href="/hms/modules/pharmacy/view_dispense.php?id=<?= $d['dispense_id'] ?>" class="text-xs font-bold text-emerald-500 hover:text-emerald-700 transition-colors">Details</a>
                                     </td>
                                 </tr>
+                                <?php endforeach; endif; ?>
                             </tbody>
                         </table>
                     </div>

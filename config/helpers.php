@@ -47,3 +47,14 @@ function flashError(string $msg): void {
 function flashSuccess(string $msg): void {
     $_SESSION['flash_success'] = $msg;
 }
+
+function getInitials(string $name): string {
+    $words = explode(' ', trim($name));
+    $initials = '';
+    foreach ($words as $w) {
+        if (!empty($w)) {
+            $initials .= strtoupper(substr($w, 0, 1));
+        }
+    }
+    return substr($initials, 0, 2);
+}

@@ -80,127 +80,45 @@ require_once '../../includes/header.php';
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-surface-dim">
-                                <!-- Admin -->
+                                <?php if (empty($users)): ?>
+                                <tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">No users found</td></tr>
+                                <?php else: foreach ($users as $u): 
+                                    $role_color = match($u['role']) {
+                                        'admin' => 'red',
+                                        'doctor' => 'blue',
+                                        'pharmacist' => 'emerald',
+                                        'lab_tech' => 'violet',
+                                        'receptionist' => 'amber',
+                                        default => 'slate'
+                                    };
+                                    $active = $u['is_active'];
+                                ?>
                                 <tr class="hover:bg-slate-50/50 transition-colors">
                                     <td class="px-6 py-5">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center text-[10px] font-bold">AA</div>
-                                            <span class="text-sm font-bold text-ink-900">Admin Account</span>
+                                            <div class="w-8 h-8 rounded-full bg-<?= $role_color ?>-100 text-<?= $role_color ?>-600 flex items-center justify-center text-[10px] font-bold"><?= getInitials($u['full_name']) ?></div>
+                                            <span class="text-sm font-bold text-ink-900"><?= htmlspecialchars($u['full_name']) ?></span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5">
-                                        <span class="text-xs font-mono text-slate-400">admin</span>
+                                        <span class="text-xs font-mono text-slate-400"><?= htmlspecialchars($u['username']) ?></span>
                                     </td>
                                     <td class="px-6 py-5">
-                                        <span class="bg-ink-800 text-white rounded-pill px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">Admin</span>
+                                        <span class="bg-<?= $role_color ?>-50 text-<?= $role_color ?>-600 border border-<?= $role_color ?>-200 rounded-pill px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"><?= ucfirst(str_replace('_', ' ', $u['role'])) ?></span>
                                     </td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">Administration</td>
+                                    <td class="px-6 py-5 text-sm text-slate-500"><?= htmlspecialchars($u['department'] ?? 'General') ?></td>
                                     <td class="px-6 py-5">
-                                        <button onclick="toggleUserStatus(1, this)" data-active="true" class="w-10 h-5 rounded-full p-1 transition-all bg-green-500 relative">
-                                            <div class="w-3 h-3 bg-white rounded-full shadow-sm transform translate-x-5 transition-transform duration-200"></div>
+                                        <button onclick="toggleUserStatus(<?= $u['user_id'] ?>, this)" data-active="<?= $active ? 'true' : 'false' ?>" class="w-10 h-5 rounded-full p-1 transition-all <?= $active ? 'bg-green-500' : 'bg-slate-200' ?> relative">
+                                            <div class="w-3 h-3 bg-white rounded-full shadow-sm transform <?= $active ? 'translate-x-5' : 'translate-x-0' ?> transition-transform duration-200"></div>
                                         </button>
                                     </td>
                                     <td class="px-6 py-5 text-right">
-                                        <a href="user_form.php?id=1" class="text-xs font-bold text-red-500 hover:text-red-700 transition-colors">Edit</a>
+                                        <a href="user_form.php?id=<?= $u['user_id'] ?>" class="text-xs font-bold text-red-500 hover:text-red-700 transition-colors">Edit</a>
                                     </td>
                                 </tr>
-                                <!-- Doctor -->
-                                <tr class="hover:bg-slate-50/50 transition-colors">
-                                    <td class="px-6 py-5">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">JO</div>
-                                            <span class="text-sm font-bold text-ink-900">Dr. James Ochieng</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <span class="text-xs font-mono text-slate-400">dr.ochieng</span>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <span class="bg-blue-50 text-blue-600 border border-blue-200 rounded-pill px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">Doctor</span>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">General Medicine</td>
-                                    <td class="px-6 py-5">
-                                        <button onclick="toggleUserStatus(2, this)" data-active="true" class="w-10 h-5 rounded-full p-1 transition-all bg-green-500 relative">
-                                            <div class="w-3 h-3 bg-white rounded-full shadow-sm transform translate-x-5 transition-transform duration-200"></div>
-                                        </button>
-                                    </td>
-                                    <td class="px-6 py-5 text-right">
-                                        <a href="user_form.php?id=2" class="text-xs font-bold text-red-500 hover:text-red-700 transition-colors">Edit</a>
-                                    </td>
-                                </tr>
-                                <!-- Pharmacist -->
-                                <tr class="hover:bg-slate-50/50 transition-colors">
-                                    <td class="px-6 py-5">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold">JM</div>
-                                            <span class="text-sm font-bold text-ink-900">Jane Mwangi</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <span class="text-xs font-mono text-slate-400">j.mwangi</span>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <span class="bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-pill px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">Pharmacist</span>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">Pharmacy</td>
-                                    <td class="px-6 py-5">
-                                        <button onclick="toggleUserStatus(3, this)" data-active="true" class="w-10 h-5 rounded-full p-1 transition-all bg-green-500 relative">
-                                            <div class="w-3 h-3 bg-white rounded-full shadow-sm transform translate-x-5 transition-transform duration-200"></div>
-                                        </button>
-                                    </td>
-                                    <td class="px-6 py-5 text-right">
-                                        <a href="user_form.php?id=3" class="text-xs font-bold text-red-500 hover:text-red-700 transition-colors">Edit</a>
-                                    </td>
-                                </tr>
-                                <!-- Lab Tech -->
-                                <tr class="hover:bg-slate-50/50 transition-colors">
-                                    <td class="px-6 py-5">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center text-[10px] font-bold">BO</div>
-                                            <span class="text-sm font-bold text-ink-900">Brian Otieno</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <span class="text-xs font-mono text-slate-400">b.otieno</span>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <span class="bg-cyan-50 text-cyan-600 border border-cyan-200 rounded-pill px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">Lab Tech</span>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">Laboratory</td>
-                                    <td class="px-6 py-5">
-                                        <button onclick="toggleUserStatus(4, this)" data-active="false" class="w-10 h-5 rounded-full p-1 transition-all bg-slate-300 relative">
-                                            <div class="w-3 h-3 bg-white rounded-full shadow-sm transform translate-x-0 transition-transform duration-200"></div>
-                                        </button>
-                                    </td>
-                                    <td class="px-6 py-5 text-right">
-                                        <a href="user_form.php?id=4" class="text-xs font-bold text-red-500 hover:text-red-700 transition-colors">Edit</a>
-                                    </td>
-                                </tr>
-                                <!-- Receptionist -->
-                                <tr class="hover:bg-slate-50/50 transition-colors">
-                                    <td class="px-6 py-5">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-[10px] font-bold">AW</div>
-                                            <span class="text-sm font-bold text-ink-900">Ann Wambui</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <span class="text-xs font-mono text-slate-400">a.wambui</span>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <span class="bg-violet-50 text-violet-600 border border-violet-200 rounded-pill px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">Receptionist</span>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">Reception</td>
-                                    <td class="px-6 py-5">
-                                        <button onclick="toggleUserStatus(5, this)" data-active="true" class="w-10 h-5 rounded-full p-1 transition-all bg-green-500 relative">
-                                            <div class="w-3 h-3 bg-white rounded-full shadow-sm transform translate-x-5 transition-transform duration-200"></div>
-                                        </button>
-                                    </td>
-                                    <td class="px-6 py-5 text-right">
-                                        <a href="user_form.php?id=5" class="text-xs font-bold text-red-500 hover:text-red-700 transition-colors">Edit</a>
-                                    </td>
-                                </tr>
+                                <?php endforeach; endif; ?>
                             </tbody>
+
                         </table>
                     </div>
                 </div>

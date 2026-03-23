@@ -122,74 +122,40 @@ require_once '../../includes/header.php';
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-surface-dim">
-                                <!-- LT-001 (Completed) -->
+                                <?php if (empty($tests)): ?>
+                                <tr><td colspan="8" class="px-6 py-12 text-center text-slate-400">No test history found</td></tr>
+                                <?php else: foreach ($tests as $t): 
+                                    $status_color = match($t['status']) {
+                                        'Pending' => 'amber',
+                                        'Processing' => 'violet',
+                                        'Completed' => 'green',
+                                        default => 'slate'
+                                    };
+                                ?>
                                 <tr class="hover:bg-slate-50/50 transition-colors">
                                     <td class="px-6 py-5">
-                                        <span class="text-[11px] font-mono text-slate-400">LT-001</span>
+                                        <span class="text-[11px] font-mono text-slate-400">LT-<?= str_pad($t['test_id'], 5, '0', STR_PAD_LEFT) ?></span>
                                     </td>
                                     <td class="px-6 py-5">
                                         <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-ink-900">John Kamau</span>
-                                            <span class="text-[10px] font-mono text-slate-400">P-00124</span>
+                                            <span class="text-sm font-bold text-ink-900"><?= htmlspecialchars($t['patient_name']) ?></span>
+                                            <span class="text-[10px] font-mono text-slate-400"><?= formatPatientID($t['patient_id']) ?></span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">FBC</td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">Dr. Ochieng</td>
+                                    <td class="px-6 py-5 text-sm font-medium text-slate-600"><?= htmlspecialchars($t['test_type']) ?></td>
+                                    <td class="px-6 py-5 text-sm text-slate-500">Dr. <?= htmlspecialchars(explode(' ', $t['doctor_name'])[1] ?? $t['doctor_name']) ?></td>
                                     <td class="px-6 py-5">
-                                        <span class="px-2.5 py-1 rounded-full bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-wider">Completed</span>
+                                        <span class="px-2.5 py-1 rounded-full bg-<?= $status_color ?>-50 text-<?= $status_color ?>-600 text-[10px] font-bold uppercase tracking-wider"><?= $t['status'] ?></span>
                                     </td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">19/03/2026</td>
+                                    <td class="px-6 py-5 text-sm text-slate-500"><?= formatDate($t['date_requested'] ?? $t['created_at']) ?></td>
                                     <td class="px-6 py-5">
-                                        <p class="text-[11px] text-slate-400 font-mono line-clamp-1 italic">WBC: 7.2 • RBC: 4.8...</p>
+                                        <p class="text-[11px] text-slate-400 font-mono line-clamp-1 italic"><?= htmlspecialchars($t['result_summary'] ?? '--') ?></p>
                                     </td>
                                     <td class="px-6 py-5 text-right">
-                                        <a href="result.php?id=1" class="text-xs font-bold text-cyan-500 hover:text-cyan-700 transition-colors">View Details</a>
+                                        <a href="/hms/modules/laboratory/result.php?id=<?= $t['test_id'] ?>" class="text-xs font-bold text-cyan-500 hover:text-cyan-700 transition-colors"><?= $t['status'] === 'Completed' ? 'View Details' : ($t['status'] === 'Processing' ? 'Update' : 'Process') ?></a>
                                     </td>
                                 </tr>
-                                <!-- LT-002 (Pending) -->
-                                <tr class="hover:bg-slate-50/50 transition-colors">
-                                    <td class="px-6 py-5">
-                                        <span class="text-[11px] font-mono text-slate-400">LT-002</span>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-ink-900">Grace Wanjiku</span>
-                                            <span class="text-[10px] font-mono text-slate-400">P-00123</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">Malaria RDT</td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">Dr. Mutua</td>
-                                    <td class="px-6 py-5">
-                                        <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-wider">Pending</span>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">20/03/2026</td>
-                                    <td class="px-6 py-5 text-sm text-slate-300 font-medium">--</td>
-                                    <td class="px-6 py-5 text-right">
-                                        <a href="result.php?id=2" class="text-xs font-bold text-cyan-500 hover:text-cyan-700 transition-colors">Process</a>
-                                    </td>
-                                </tr>
-                                <!-- LT-003 (Processing) -->
-                                <tr class="hover:bg-slate-50/50 transition-colors">
-                                    <td class="px-6 py-5">
-                                        <span class="text-[11px] font-mono text-slate-400">LT-003</span>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-ink-900">Brian Ochieng</span>
-                                            <span class="text-[10px] font-mono text-slate-400">P-00122</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm font-medium text-slate-600">Urinalysis</td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">Dr. Ochieng</td>
-                                    <td class="px-6 py-5">
-                                        <span class="px-2.5 py-1 rounded-full bg-violet-50 text-violet-600 text-[10px] font-bold uppercase tracking-wider">Processing</span>
-                                    </td>
-                                    <td class="px-6 py-5 text-sm text-slate-500">20/03/2026</td>
-                                    <td class="px-6 py-5 text-sm text-slate-300 font-medium">--</td>
-                                    <td class="px-6 py-5 text-right">
-                                        <a href="result.php?id=3" class="text-xs font-bold text-cyan-500 hover:text-cyan-700 transition-colors">Update</a>
-                                    </td>
-                                </tr>
+                                <?php endforeach; endif; ?>
                             </tbody>
                         </table>
                     </div>
