@@ -1,7 +1,7 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../config/auth.php';
-require_once '../../config/helpers.php';
+require_once 'C:/xampp/htdocs/hms/config/db.php';
+require_once 'C:/xampp/htdocs/hms/config/auth.php';
+require_once 'C:/xampp/htdocs/hms/config/helpers.php';
 
 requireLogin();
 requireRole(['admin']);
@@ -23,18 +23,18 @@ unset($_SESSION['errors']);
 $old = $_SESSION['old'] ?? [];
 unset($_SESSION['old']);
 
-require_once '../../includes/header.php';
+require_once 'C:/xampp/htdocs/hms/includes/header.php';
 ?>
 
 <body data-role-required="admin">
 <div class="flex h-screen overflow-hidden">
     <!-- Sidebar -->
-    <?php require_once '../../includes/sidebar.php'; ?>
+    <?php require_once 'C:/xampp/htdocs/hms/includes/sidebar.php'; ?>
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col min-w-0 lg:pl-[260px]">
         <!-- Topbar -->
-        <?php require_once '../../includes/topbar.php'; ?>
+        <?php require_once 'C:/xampp/htdocs/hms/includes/topbar.php'; ?>
         <script>document.getElementById('page-title').textContent = '<?php echo $page_title; ?>';</script>
 
         <!-- Content -->

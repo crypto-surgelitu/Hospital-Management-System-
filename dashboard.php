@@ -21,6 +21,6 @@ switch ($_SESSION['role']) {
         break;
     default:
         session_destroy();
-        header('Location: /login.php');
+        header('Location: /hms/login.php');
         exit;
 }

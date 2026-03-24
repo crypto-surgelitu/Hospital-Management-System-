@@ -1,6 +1,6 @@
 <?php
-require_once '../../config/auth.php';
+require_once 'C:/xampp/htdocs/hms/config/auth.php';
 
 session_destroy();
-header('Location: /login.php');
+header('Location: /hms/login.php');
 exit;

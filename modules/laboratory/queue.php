@@ -1,7 +1,7 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../config/auth.php';
-require_once '../../config/helpers.php';
+require_once 'C:/xampp/htdocs/hms/config/db.php';
+require_once 'C:/xampp/htdocs/hms/config/auth.php';
+require_once 'C:/xampp/htdocs/hms/config/helpers.php';
 
 requireLogin();
 requireRole(['lab', 'admin']);
@@ -28,7 +28,7 @@ $flash_success = $_SESSION['flash_success'] ?? null;
 $flash_error = $_SESSION['flash_error'] ?? null;
 unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
-require_once '../../includes/header.php';
+require_once 'C:/xampp/htdocs/hms/includes/header.php';
 ?>
 
 <style>
@@ -44,12 +44,12 @@ require_once '../../includes/header.php';
 
 <div class="flex h-screen overflow-hidden">
     <!-- Sidebar -->
-    <?php require_once '../../includes/sidebar.php'; ?>
+    <?php require_once 'C:/xampp/htdocs/hms/includes/sidebar.php'; ?>
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col min-w-0 lg:pl-[260px]">
         <!-- Topbar -->
-        <?php require_once '../../includes/topbar.php'; ?>
+        <?php require_once 'C:/xampp/htdocs/hms/includes/topbar.php'; ?>
         
         <!-- Flash Messages -->
         <div class="no-print">

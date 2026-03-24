@@ -1,7 +1,7 @@
 <?php
-require_once '../../../config/db.php';
-require_once '../../../config/auth.php';
-require_once '../../../config/helpers.php';
+require_once 'C:/xampp/htdocs/hms/config/db.php';
+require_once 'C:/xampp/htdocs/hms/config/auth.php';
+require_once 'C:/xampp/htdocs/hms/config/helpers.php';
 
 requireLogin();
 requireRole(['admin']);
