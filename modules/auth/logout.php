@@ -2,5 +2,5 @@
 require_once 'C:/xampp/htdocs/hms/config/auth.php';
 
 session_destroy();
-header('Location: /hms/login.php');
+header('Location: /hms/hms/login.php');
 exit;

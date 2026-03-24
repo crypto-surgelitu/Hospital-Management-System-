@@ -7,7 +7,7 @@ requireLogin();
 requireRole(['admin', 'receptionist']);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: /hms/modules/patients/index.php');
+    header('Location: /hms/hms/modules/patients/index.php');
     exit;
 }
 
@@ -23,14 +23,14 @@ $address = trim($_POST['address'] ?? '');
 $national_id = trim($_POST['national_id'] ?? '');
 
 if (!$patient_id) {
-    header('Location: /hms/modules/patients/index.php');
+    header('Location: /hms/hms/modules/patients/index.php');
     exit;
 }
 
 $check = $pdo->prepare("SELECT patient_id FROM patients WHERE patient_id = ? AND is_active = 1");
 $check->execute([$patient_id]);
 if (!$check->fetch()) {
-    header('Location: /hms/modules/patients/index.php');
+    header('Location: /hms/hms/modules/patients/index.php');
     exit;
 }
 
@@ -81,7 +81,7 @@ if (!empty($national_id)) {
 if (!empty($errors)) {
     $_SESSION['errors'] = $errors;
     $_SESSION['old'] = $_POST;
-    header('Location: /hms/modules/patients/edit.php?id=' . $patient_id);
+    header('Location: /hms/hms/modules/patients/edit.php?id=' . $patient_id);
     exit;
 }
 
@@ -102,5 +102,5 @@ $stmt->execute([
 ]);
 
 $_SESSION['flash_success'] = 'Patient updated successfully.';
-header('Location: /hms/modules/patients/view.php?id=' . $patient_id . '&success=updated');
+header('Location: /hms/hms/modules/patients/view.php?id=' . $patient_id . '&success=updated');
 exit;

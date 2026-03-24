@@ -4,7 +4,7 @@ require_once 'C:/xampp/htdocs/hms/config/auth.php';
 require_once 'C:/xampp/htdocs/hms/config/helpers.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: /hms/login.php');
+    header('Location: /hms/hms/login.php');
     exit;
 }
 
@@ -13,7 +13,7 @@ $password = $_POST['password'] ?? '';
 
 if (empty($username) || empty($password)) {
     $_SESSION['login_error'] = 'Please enter your username and password.';
-    header('Location: /hms/login.php');
+    header('Location: /hms/hms/login.php');
     exit;
 }
 
@@ -23,7 +23,7 @@ $user = $stmt->fetch();
 
 if (!$user || !password_verify($password, $user['password_hash'])) {
     $_SESSION['login_error'] = 'Invalid username or password.';
-    header('Location: /hms/login.php');
+    header('Location: /hms/hms/login.php');
     exit;
 }
 
@@ -32,5 +32,5 @@ $_SESSION['user_id'] = $user['user_id'];
 $_SESSION['role'] = $user['role'];
 $_SESSION['full_name'] = $user['full_name'];
 
-header('Location: /dashboard.php');
+header('Location: /hms/hms/dashboard.php');
 exit;

@@ -49,7 +49,7 @@ if (!in_array($role, $allowed_roles)) {
 if (!empty($errors)) {
     $_SESSION['errors'] = $errors;
     $_SESSION['old'] = $_POST;
-    header('Location: /hms/modules/admin/user_form.php');
+    header('Location: /hms/hms/modules/admin/user_form.php');
     exit;
 }
 
@@ -68,5 +68,5 @@ $stmt->execute([
 ]);
 
 $_SESSION['flash_success'] = 'User account created successfully.';
-header('Location: /hms/modules/admin/users.php');
+header('Location: /hms/hms/modules/admin/users.php');
 exit;

@@ -40,7 +40,7 @@ if ($quantity_issued < 1) {
 if (!empty($errors)) {
     $_SESSION['errors'] = $errors;
     $_SESSION['old'] = $_POST;
-    header('Location: /hms/modules/pharmacy/dispense.php');
+    header('Location: /hms/hms/modules/pharmacy/dispense.php');
     exit;
 }
 
@@ -51,7 +51,7 @@ $drug = $stmt->fetch();
 if ($quantity_issued > $drug['quantity_in_stock']) {
     $_SESSION['errors'] = ['quantity' => "Insufficient stock. Available: {$drug['quantity_in_stock']} {$drug['unit']}"];
     $_SESSION['old'] = $_POST;
-    header('Location: /hms/modules/pharmacy/dispense.php');
+    header('Location: /hms/hms/modules/pharmacy/dispense.php');
     exit;
 }
 
@@ -78,10 +78,10 @@ try {
     $pdo->rollBack();
     $_SESSION['errors'] = ['general' => 'Failed to dispense. Please try again.'];
     $_SESSION['old'] = $_POST;
-    header('Location: /hms/modules/pharmacy/dispense.php');
+    header('Location: /hms/hms/modules/pharmacy/dispense.php');
     exit;
 }
 
 $_SESSION['flash_success'] = 'Drug dispensed successfully.';
-header('Location: /hms/modules/pharmacy/history.php?success=dispensed');
+header('Location: /hms/hms/modules/pharmacy/history.php?success=dispensed');
 exit;

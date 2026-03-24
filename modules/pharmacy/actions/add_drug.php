@@ -45,7 +45,7 @@ if (!empty($expiry_date)) {
 if (!empty($errors)) {
     $_SESSION['errors'] = $errors;
     $_SESSION['old'] = $_POST;
-    header('Location: /hms/modules/pharmacy/drug_form.php');
+    header('Location: /hms/hms/modules/pharmacy/drug_form.php');
     exit;
 }
 
@@ -65,5 +65,5 @@ $stmt->execute([
 ]);
 
 $_SESSION['flash_success'] = 'Drug added successfully.';
-header('Location: /hms/modules/pharmacy/inventory.php?success=added');
+header('Location: /hms/hms/modules/pharmacy/inventory.php?success=added');
 exit;

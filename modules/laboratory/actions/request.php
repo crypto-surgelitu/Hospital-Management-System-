@@ -29,7 +29,7 @@ if (empty($test_type)) {
 if (!empty($errors)) {
     $_SESSION['errors'] = $errors;
     $_SESSION['old'] = $_POST;
-    header('Location: /hms/modules/laboratory/request.php');
+    header('Location: /hms/hms/modules/laboratory/request.php');
     exit;
 }
 
@@ -45,5 +45,5 @@ $stmt->execute([
 ]);
 
 $_SESSION['flash_success'] = 'Lab test requested successfully.';
-header('Location: /hms/modules/laboratory/queue.php?success=requested');
+header('Location: /hms/hms/modules/laboratory/queue.php?success=requested');
 exit;
