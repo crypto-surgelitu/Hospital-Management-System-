@@ -16,6 +16,11 @@ async function login(req, res) {
     }
 
     const user = rows[0];
+
+    if (user.is_active === 0) {
+      return res.status(401).json({ success: false, message: 'Account deactivated' });
+    }
+
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
 
     if (!isValidPassword) {

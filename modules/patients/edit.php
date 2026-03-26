@@ -44,15 +44,19 @@ require_once 'C:/xampp/htdocs/hms/includes/header.php';
             <?php if (!empty($_SESSION['flash_success'])): ?>
                 <div class="mx-7 mt-4 p-4 bg-green-50 border border-green-200 rounded-btn text-green-700 text-sm font-medium flex items-center gap-2">
                     <i class="bi bi-check-circle-fill"></i>
-                    <?php echo sanitize($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?>
+                    <?php echo sanitize($_SESSION['flash_success']);
+    unset($_SESSION['flash_success']); ?>
                 </div>
-            <?php endif; ?>
+            <?php
+endif; ?>
             <?php if (!empty($_SESSION['flash_error'])): ?>
                 <div class="mx-7 mt-4 p-4 bg-red-50 border border-red-200 rounded-btn text-red-700 text-sm font-medium flex items-center gap-2">
                     <i class="bi bi-exclamation-circle-fill"></i>
-                    <?php echo sanitize($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?>
+                    <?php echo sanitize($_SESSION['flash_error']);
+    unset($_SESSION['flash_error']); ?>
                 </div>
-            <?php endif; ?>
+            <?php
+endif; ?>
         </div>
 
         <script>document.getElementById('page-title').textContent = 'Edit Patient';</script>
