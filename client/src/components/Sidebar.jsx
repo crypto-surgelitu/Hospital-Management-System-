@@ -35,30 +35,30 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col">
-        <div className="p-6 border-b border-slate-100">
+    <div className="flex min-h-screen bg-[var(--color-surface)]">
+      <aside className="w-64 bg-[var(--color-ink-900)] flex flex-col text-[var(--color-surface-lowest)] shadow-2xl z-20">
+        <div className="p-6 border-b border-white/5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+            <div className="w-10 h-10 bg-[var(--color-primary)] rounded-lg flex items-center justify-center text-white font-bold text-xl ghost-border shadow-lg">
               M
             </div>
             <div>
-              <h1 className="font-bold text-slate-900 leading-none">HMS Meru</h1>
-              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Level 5</span>
+              <h1 className="font-bold text-white leading-none text-lg">HMS Meru</h1>
+              <span className="text-[10px] text-[var(--color-primary-container)] font-bold uppercase tracking-widest">Level 5</span>
             </div>
           </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-2">
           {filteredNavItems.map(item => (
             <NavLink
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                `flex items-center gap-3 px-4 py-3 rounded-[10px] text-sm font-medium transition-all duration-300 ${
                   isActive
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'bg-[var(--color-ink-800)] text-[var(--color-primary-container)] rounded-[10px]'
+                    : 'text-[var(--color-outline-variant)] hover:bg-[var(--color-ink-800)] hover:text-white rounded-[10px]'
                 }`
               }
             >
@@ -68,19 +68,19 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-100">
+        <div className="p-4 border-t border-white/5 bg-[var(--color-ink-900)]">
           <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 font-medium">
+            <div className="w-9 h-9 bg-[var(--color-ink-800)] rounded-full flex items-center justify-center text-[var(--color-primary-container)] font-medium border border-white/10">
               {user?.name?.charAt(0).toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">{user?.name || 'User'}</p>
-              <p className="text-xs text-slate-500">{getRoleLabel(user?.role)}</p>
+              <p className="text-sm font-medium text-white truncate">{user?.name || 'User'}</p>
+              <p className="text-[11px] text-[var(--color-outline-variant)] font-mono uppercase tracking-wider">{getRoleLabel(user?.role)}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-[10px] transition-colors border border-red-500/20"
           >
             <i className="bi bi-box-arrow-right"></i>
             Sign Out
@@ -88,7 +88,7 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      <main className="flex-1 bg-slate-50">
+      <main className="flex-1 p-6 md:p-8 overflow-y-auto w-full max-w-7xl mx-auto z-10">
         <Outlet />
       </main>
     </div>

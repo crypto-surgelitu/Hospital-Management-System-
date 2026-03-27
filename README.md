@@ -2,27 +2,31 @@
 
 A modern, comprehensive Hospital Management System (HMS) built for high-efficiency clinical workflows and staff productivity.
 
-## 🚀 Tech Stack
-- **Backend:** PHP 8+ (Core)
-- **Database:** MySQL with PDO (Secure database access)
-- **Styling:** Tailwind CSS (Modern, high-utility design)
-- **Icons:** Bootstrap Icons (Consistent UI symbols)
-- **Asynchronous Logic:** Vanilla JavaScript & Fetch API (Smooth AJAX transitions)
-- **Components:** Custom Tailwind UI with Flatpickr for date/time management
+## 🚀 Tech Stack (Migrated)
+- **Backend:** Node.js (Express), interacting with MySQL.
+- **Frontend:** React + Vite, powered by Tailwind CSS.
+- **Database:** MySQL.
+- **System Theme:** HMS Meru Design System (Electric Mint & Deep Ink).
 
 ## 📦 Core Modules
-- **Authentication:** Role-based secure login (Admin, Doctor, Nurse, Pharmacist, Lab Tech, Receptionist).
+- **Authentication:** Role-based secure login.
 - **Patient Records:** Registration, search, and medical history maintenance.
-- **Appointments:** Booking system, consultation queue, and doctor notes.
-- **Laboratory:** Test requests, specimen tracking, and result entry.
-- **Pharmacy:** Drug inventory management, stock alerts, and automated dispensing.
-- **Billing:** Automated invoice generation and payment status tracking.
+- **Appointments:** Booking system, consultation queue.
+- **Laboratory:** Test requests, specimen tracking.
+- **Pharmacy:** Drug inventory management.
+- **Billing:** Dynamic invoice generation and payment tracking via React frontend and Express backend APIs.
 - **Admin:** System user management and comprehensive reporting.
 
-## 🛠️ Setup Instructions
-1. **Database:** Import the schema from `sql/schema.sql`.
-2. **Configuration:** Ensure `config/db.php` has correct credentials for your local MySQL instance.
-3. **Launch:** Start a PHP server from the project root.
+## 🛠️ Setup Instructions (New MERN-like Stack)
+1. **Database:** Import the schema from `sql/schema.sql`. Ensure `server/.env` has correct credentials for your local MySQL instance.
+2. **Backend Server:** 
+   - Navigate to the `/server` directory.
+   - Run `npm install` to install Express, MySQL, etc.
+   - Run `npm run dev` to start the backend API on port 5000.
+3. **Frontend Client:**
+   - Navigate to the `/client` directory.
+   - Run `npm install` to install React and Vite dependencies.
+   - Run `npm run dev` to start the client application on port 5173.
 
-## 🧪 Testing Launch
-To launch the project for testing, ensure your local MySQL server is running and the database `hms_db` is created and seeded.
+## 🧪 Testing Status
+Currently, the backend Express server needs to be booted, as connection on port 5000 is refused. Additionally, the Vite frontend seems to have been scaffolded with or overridden by a "SwahiliPot Hub" template and needs to be migrated to the HMS Meru design system to match the intended UI aesthetics.

@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
 
 function Toast({ message, type, onClose }) {
   useEffect(() => {
@@ -22,9 +25,17 @@ function AddDrugModal({ open, onClose, onSubmit, loading }) {
     drug_name: '', generic_name: '', category: '', unit: '', quantity_in_stock: 0, reorder_level: 0, unit_price: ''
   });
 
-  useEffect(() => {
+  const resetForm = useCallback(() => {
     if (open) setForm({ drug_name: '', generic_name: '', category: '', unit: '', quantity_in_stock: 0, reorder_level: 0, unit_price: '' });
   }, [open]);
+
+  useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() => {
+        resetForm();
+      });
+    }
+  }, [open, resetForm]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -94,9 +105,17 @@ function RestockModal({ open, onClose, onSubmit, loading, drug }) {
   const [quantity, setQuantity] = useState('');
   const [reason, setReason] = useState('Restock');
 
-  useEffect(() => {
+  const resetRestock = useCallback(() => {
     if (open) { setQuantity(''); setReason('Restock'); }
-  }, [open, drug]);
+  }, [open]);
+
+  useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() => {
+        resetRestock();
+      });
+    }
+  }, [open, resetRestock]);
 
   const handleSubmit = () => {
     if (!quantity || parseInt(quantity) <= 0) return;
@@ -142,17 +161,29 @@ function RestockModal({ open, onClose, onSubmit, loading, drug }) {
   );
 }
 
-function DispenseModal({ open, onClose, onSubmit, loading, drugs, onSearchPatients, searchResults, onSelectPatient, selectedPatient }) {
+function DispenseModal({ open, onClose, onSubmit, loading, drugs, onSearchPatients: onSearchPatientsProp, searchResults, onSelectPatient, selectedPatient }) {
   const [items, setItems] = useState([{ drug_id: '', quantity: 1, dosage_instructions: '' }]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
+  const resetItems = useCallback(() => {
     if (open) setItems([{ drug_id: '', quantity: 1, dosage_instructions: '' }]);
   }, [open]);
 
   useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() => {
+        resetItems();
+      });
+    }
+  }, [open, resetItems]);
+
+  const onSearchPatients = useCallback((query) => {
+    if (onSearchPatientsProp) onSearchPatientsProp(query);
+  }, [onSearchPatientsProp]);
+
+  useEffect(() => {
     if (searchQuery.length > 2) onSearchPatients(searchQuery);
-  }, [searchQuery]);
+  }, [searchQuery, onSearchPatients]);
 
   const addItem = () => setItems([...items, { drug_id: '', quantity: 1, dosage_instructions: '' }]);
   const removeItem = (idx) => setItems(items.filter((_, i) => i !== idx));
@@ -248,7 +279,7 @@ export default function Pharmacy() {
         setDrugs(res.data.drugs);
         setLowStockCount(res.data.lowStockCount);
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Failed to load inventory' });
     } finally {
       setLoading(false);
@@ -318,97 +349,97 @@ export default function Pharmacy() {
     try {
       const res = await api.get(`/patients/search?q=${encodeURIComponent(q)}`);
       if (res.data.success) setPatientSearch(res.data.patients);
-    } catch (err) { setPatientSearch([]); }
+    } catch { setPatientSearch([]); }
   };
 
   return (
-    <div className="p-6">
+    <div className="animate-in slide-in-from-bottom-4 fade-in duration-500">
       {lowStockCount > 0 && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-          <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-          <span className="text-sm font-medium text-red-700">{lowStockCount} drug(s) are low on stock</span>
+        <div className="mb-6 p-4 bg-[var(--color-error)]/10 border border-[var(--color-error)]/20 rounded-[12px] flex items-center gap-3">
+          <i className="bi bi-exclamation-triangle-fill text-[var(--color-error)] text-lg"></i>
+          <span className="text-sm font-medium text-[var(--color-error)]">{lowStockCount} drug(s) are low on stock</span>
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Pharmacy</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage drug inventory and dispensing</p>
+          <h1 className="text-[2rem] font-bold text-[var(--color-ink-900)] leading-tight tracking-tight">Pharmacy</h1>
+          <p className="text-[var(--color-text-muted)] text-[15px] mt-1 font-medium">Manage drug inventory and dispensing</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           {(isPharmacist || isAdmin) && (
-            <button onClick={() => setAddModal(true)} className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">
-              + Add New Drug
-            </button>
+            <Button onClick={() => setAddModal(true)} icon="bi-plus-lg" variant="secondary">
+              Add New Drug
+            </Button>
           )}
           {isPharmacist && (
-            <button onClick={() => setDispenseModal(true)} className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm font-medium hover:bg-violet-700">
+            <Button onClick={() => setDispenseModal(true)} icon="bi-prescription2">
               Dispense
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
       <div className="mb-6">
-        <div className="flex gap-1 border-b border-slate-200">
-          <button onClick={() => setActiveTab('inventory')} className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'inventory' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+        <div className="flex gap-2 p-1 bg-[var(--color-surface-low)] rounded-[12px] inline-flex">
+          <button onClick={() => setActiveTab('inventory')} className={`px-4 py-2 text-[13px] font-bold uppercase tracking-wider rounded-[10px] transition-all duration-300 ${activeTab === 'inventory' ? 'bg-white text-[var(--color-primary)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-ink-900)]'}`}>
             Inventory
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <Card noPadding className="mb-6">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500">Drug Name</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500">Category</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500">Stock</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500">Unit</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500">Reorder</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500">Price</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500 text-right">Actions</th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-[var(--color-surface-low)] border-b border-black/5">
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Drug Name</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Category</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Stock</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Unit</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Reorder</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Price</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-black/5">
               {loading ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td className="px-4 py-3"><div className="h-4 bg-slate-200 rounded w-32"></div></td>
-                    <td className="px-4 py-3"><div className="h-4 bg-slate-200 rounded w-24"></div></td>
-                    <td className="px-4 py-3"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
-                    <td className="px-4 py-3"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
-                    <td className="px-4 py-3"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
-                    <td className="px-4 py-3"><div className="h-4 bg-slate-200 rounded w-20"></div></td>
-                    <td className="px-4 py-3"><div className="h-4 bg-slate-200 rounded w-24 ml-auto"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-32"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-16"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-16"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-16"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-20"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24 ml-auto"></div></td>
                   </tr>
                 ))
               ) : drugs.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-slate-400">No drugs in inventory</td></tr>
+                <tr><td colSpan={7} className="px-6 py-12 text-center text-[var(--color-text-muted)]">No drugs in inventory</td></tr>
               ) : (
                 drugs.map(drug => (
-                  <tr key={drug.drug_id} className={`hover:bg-slate-50 ${drug.low_stock ? 'bg-red-50/50' : ''}`}>
-                    <td className="px-4 py-3">
+                  <tr key={drug.drug_id} className={`hover:bg-[var(--color-surface-low)] transition-colors ${drug.low_stock ? 'bg-[var(--color-error)]/5' : ''}`}>
+                    <td className="px-6 py-4">
                       <div>
-                        <p className="text-sm font-medium text-slate-900">{drug.drug_name}</p>
-                        <p className="text-xs text-slate-400">{drug.generic_name || '—'}</p>
+                        <p className="text-sm font-semibold text-[var(--color-ink-900)]">{drug.drug_name}</p>
+                        <p className="text-[13px] text-[var(--color-text-muted)] mt-0.5">{drug.generic_name || '—'}</p>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{drug.category || '—'}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-sm font-medium ${drug.low_stock ? 'text-red-600' : 'text-slate-900'}`}>
+                    <td className="px-6 py-4 text-sm text-[var(--color-text-muted)]">{drug.category || '—'}</td>
+                    <td className="px-6 py-4">
+                      <span className={`text-sm font-mono font-bold ${drug.low_stock ? 'text-[var(--color-error)]' : 'text-[var(--color-ink-900)]'}`}>
                         {drug.quantity_in_stock}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-500">{drug.unit || '—'}</td>
-                    <td className="px-4 py-3 text-sm text-slate-500">{drug.reorder_level}</td>
-                    <td className="px-4 py-3 text-sm font-medium text-slate-900">KES {parseFloat(drug.unit_price || 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-6 py-4 text-[13px] text-[var(--color-text-muted)] font-bold">{drug.unit || '—'}</td>
+                    <td className="px-6 py-4 text-[13px] text-[var(--color-text-muted)] font-bold">{drug.reorder_level}</td>
+                    <td className="px-6 py-4 text-sm font-mono font-bold text-[var(--color-primary-container)]">KES {parseFloat(drug.unit_price || 0).toFixed(2)}</td>
+                    <td className="px-6 py-4 text-right">
                       {(isPharmacist || isAdmin) && (
-                        <button onClick={() => setRestockModal({ open: true, drug })} className="px-3 py-1.5 text-xs bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200">
+                        <Button variant="secondary" size="sm" onClick={() => setRestockModal({ open: true, drug })}>
                           Restock
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>
@@ -417,7 +448,7 @@ export default function Pharmacy() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       <AddDrugModal open={addModal} onClose={() => setAddModal(false)} onSubmit={handleAddDrug} loading={actionLoading} />
       <RestockModal open={restockModal.open} onClose={() => setRestockModal({ open: false, drug: null })} onSubmit={handleRestock} loading={actionLoading} drug={restockModal.drug} />

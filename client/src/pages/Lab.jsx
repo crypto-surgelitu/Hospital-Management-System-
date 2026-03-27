@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
 
 function Toast({ message, type, onClose }) {
   useEffect(() => {
@@ -21,7 +24,11 @@ function ResultsModal({ open, onClose, onSubmit, loading, request }) {
   const [results, setResults] = useState('');
 
   useEffect(() => {
-    if (open) setResults(request?.results || '');
+    if (open) {
+      requestAnimationFrame(() => {
+        setResults(request?.results || '');
+      });
+    }
   }, [open, request]);
 
   const handleSubmit = () => {
@@ -59,11 +66,7 @@ function ResultsModal({ open, onClose, onSubmit, loading, request }) {
   );
 }
 
-const priorityColors = {
-  routine: 'bg-slate-100 text-slate-600 border-slate-200',
-  urgent: 'bg-orange-50 text-orange-700 border-orange-200',
-  stat: 'bg-red-50 text-red-700 border-red-200'
-};
+
 
 const priorityLabels = {
   routine: 'Routine',
@@ -77,11 +80,7 @@ function formatDate(dateStr) {
   return date.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function formatDateShort(dateStr) {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  return date.toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-}
+
 
 export default function Lab() {
   const { user } = useAuth();
@@ -93,8 +92,6 @@ export default function Lab() {
   const [resultsModal, setResultsModal] = useState({ open: false, request: null });
 
   const isLab = user?.role === 'lab';
-  const isDoctor = user?.role === 'doctor';
-  const isAdmin = user?.role === 'admin';
 
   const fetchRequests = useCallback(async () => {
     setLoading(true);
@@ -104,7 +101,7 @@ export default function Lab() {
       if (res.data.success) {
         setRequests(res.data.requests);
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Failed to load lab requests' });
     } finally {
       setLoading(false);
@@ -125,7 +122,7 @@ export default function Lab() {
       } else {
         setToast({ type: 'error', message: res.data.message });
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Failed to update specimen status' });
     } finally {
       setActionLoading(false);
@@ -143,7 +140,7 @@ export default function Lab() {
       } else {
         setToast({ type: 'error', message: res.data.message });
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Failed to save results' });
     } finally {
       setActionLoading(false);
@@ -151,87 +148,92 @@ export default function Lab() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="animate-in slide-in-from-bottom-4 fade-in duration-500">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Laboratory</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage lab test requests and results</p>
+          <h1 className="text-[2rem] font-bold text-[var(--color-ink-900)] leading-tight tracking-tight">Laboratory</h1>
+          <p className="text-[var(--color-text-muted)] text-[15px] mt-1 font-medium">Manage lab test requests and results</p>
         </div>
       </div>
 
       <div className="mb-6">
-        <div className="flex gap-1 border-b border-slate-200">
-          <button onClick={() => setActiveTab('pending')} className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pending' ? 'border-cyan-600 text-cyan-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+        <div className="flex gap-2 p-1 bg-[var(--color-surface-low)] rounded-[12px] inline-flex">
+          <button onClick={() => setActiveTab('pending')} className={`px-4 py-2 text-[13px] font-bold uppercase tracking-wider rounded-[10px] transition-all duration-300 ${activeTab === 'pending' ? 'bg-white text-[var(--color-primary)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-ink-900)]'}`}>
             Pending Requests
           </button>
-          <button onClick={() => setActiveTab('completed')} className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'completed' ? 'border-cyan-600 text-cyan-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+          <button onClick={() => setActiveTab('completed')} className={`px-4 py-2 text-[13px] font-bold uppercase tracking-wider rounded-[10px] transition-all duration-300 ${activeTab === 'completed' ? 'bg-white text-[var(--color-primary)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-ink-900)]'}`}>
             Completed Results
           </button>
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
           [...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-slate-200 p-4 animate-pulse">
-              <div className="h-4 bg-slate-200 rounded w-1/3 mb-2"></div>
-              <div className="h-3 bg-slate-200 rounded w-1/2"></div>
-            </div>
+            <Card key={i} className="animate-pulse">
+              <div className="h-5 bg-slate-100 rounded-lg w-1/3 mb-3"></div>
+              <div className="h-4 bg-slate-100 rounded-lg w-1/2"></div>
+            </Card>
           ))
         ) : requests.length === 0 ? (
-          <div className="text-center py-12 text-slate-400">
+          <div className="col-span-full text-center py-16 text-[var(--color-text-muted)] font-medium bg-[var(--color-surface-low)] rounded-[16px] ghost-border">
             {activeTab === 'pending' ? 'No pending lab requests' : 'No completed results'}
           </div>
         ) : (
           requests.map(req => (
-            <div key={req.id} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-3">
+            <Card key={req.id} className="hover:-translate-y-1 transition-transform duration-300 flex flex-col">
+              <div className="flex items-start justify-between mb-4">
                 <div>
-                  <p className="font-semibold text-slate-900">{req.patient_name}</p>
-                  <p className="text-sm text-slate-500">{req.test_type}</p>
+                  <p className="font-bold text-[var(--color-ink-900)] text-base">{req.patient_name}</p>
+                  <p className="text-[13px] font-medium text-[var(--color-text-muted)] mt-0.5">{req.test_type}</p>
                 </div>
-                <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${priorityColors[req.priority]}`}>
+                <Badge variant={req.priority === 'stat' ? 'danger' : req.priority === 'urgent' ? 'warning' : 'default'}>
                   {priorityLabels[req.priority] || req.priority}
-                </span>
+                </Badge>
               </div>
               
-              <div className="text-xs text-slate-400 mb-3">
-                Requested by {req.requested_by_name} • {formatDate(req.created_at)}
+              <div className="flex items-center gap-2 text-[13px] font-bold text-[var(--color-ink-900)] bg-[var(--color-surface-low)] p-2.5 rounded-[10px] mb-3 shadow-inner">
+                <i className="bi bi-person-badge text-[var(--color-text-muted)]"></i>
+                <span className="font-mono">Req: {req.requested_by_name}</span>
+                <span className="mx-1 opacity-40">•</span>
+                <span className="font-mono opacity-80">{formatDate(req.created_at)}</span>
               </div>
 
               {req.notes && (
-                <div className="text-xs text-slate-500 bg-slate-50 p-2 rounded-lg mb-3">
+                <p className="text-[13px] text-[var(--color-text-muted)] mb-4 line-clamp-2 leading-relaxed">
                   {req.notes}
-                </div>
+                </p>
               )}
 
               {activeTab === 'pending' && isLab && (
-                <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                <div className="flex items-center gap-2 pt-4 border-t border-[var(--color-outline-variant)]/30 mt-auto">
                   {!req.specimen_collected ? (
-                    <button onClick={() => handleSpecimenCollect(req.id)} disabled={actionLoading} className="px-3 py-1.5 bg-violet-600 text-white rounded-lg text-xs font-medium hover:bg-violet-700 disabled:opacity-50">
-                      Mark Specimen Collected
-                    </button>
+                    <Button variant="secondary" size="sm" onClick={() => handleSpecimenCollect(req.id)} disabled={actionLoading} className="flex-1 px-3">
+                      Mark Collected
+                    </Button>
                   ) : (
-                    <span className="text-xs text-violet-600 font-medium">Specimen collected • {formatDateShort(req.specimen_collected_at)}</span>
+                    <span className="flex-1 text-[11px] text-[var(--color-primary-container)] font-bold uppercase tracking-wider flex items-center gap-1">
+                      <i className="bi bi-check-circle-fill"></i> Collected
+                    </span>
                   )}
-                  <button onClick={() => setResultsModal({ open: true, request: req })} className="px-3 py-1.5 text-cyan-600 border border-cyan-200 rounded-lg text-xs font-medium hover:bg-cyan-50">
+                  <Button variant="primary" size="sm" onClick={() => setResultsModal({ open: true, request: req })} className="px-4">
                     Enter Results
-                  </button>
+                  </Button>
                 </div>
               )}
 
               {activeTab === 'completed' && (
-                <div className="pt-3 border-t border-slate-100">
-                  <div className="text-xs text-slate-500 mb-1">Results:</div>
-                  <div className="text-sm text-slate-700 bg-slate-50 p-2 rounded-lg font-mono text-xs whitespace-pre-wrap max-h-24 overflow-y-auto">
+                <div className="pt-4 border-t border-[var(--color-outline-variant)]/30 mt-auto">
+                  <div className="text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Results</div>
+                  <div className="text-[13px] text-[var(--color-ink-900)] bg-[var(--color-surface-low)] p-3 rounded-[10px] font-mono whitespace-pre-wrap max-h-32 overflow-y-auto ghost-border">
                     {req.results || 'No results recorded'}
                   </div>
-                  <div className="text-xs text-slate-400 mt-2">
+                  <div className="text-[11px] text-[var(--color-text-muted)] font-bold mt-3 text-right opacity-70">
                     Completed • {formatDate(req.completed_at)}
                   </div>
                 </div>
               )}
-            </div>
+            </Card>
           ))
         )}
       </div>

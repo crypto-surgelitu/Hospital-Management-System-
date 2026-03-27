@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
 
 function Toast({ message, type, onClose }) {
   useEffect(() => {
@@ -37,11 +40,19 @@ function PatientDrawer({ patient, onClose, onUpdate, onDelete, canEdit, canDelet
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState({ full_name: '', phone: '', address: '', emergency_contact: '' });
 
-  useEffect(() => {
+  const resetForm = useCallback(() => {
     if (patient) {
       setForm({ full_name: patient.full_name || '', phone: patient.phone || '', address: patient.address || '', emergency_contact: patient.emergency_contact || '' });
     }
   }, [patient]);
+
+  useEffect(() => {
+    if (patient) {
+      requestAnimationFrame(() => {
+        resetForm();
+      });
+    }
+  }, [patient, resetForm]);
 
   const handleSave = async () => {
     await onUpdate(patient.id, form);
@@ -231,7 +242,7 @@ export default function Patients() {
           setTotalPages(1);
         }
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Failed to load patients' });
     } finally {
       setLoading(false);
@@ -256,7 +267,7 @@ export default function Patients() {
       if (res.data.success) {
         setSelectedPatient(res.data.patient);
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Failed to load patient details' });
     }
   };
@@ -290,7 +301,7 @@ export default function Patients() {
       } else {
         setToast({ type: 'error', message: res.data.message || 'Failed to update patient' });
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Failed to update patient' });
     } finally {
       setActionLoading(false);
@@ -310,7 +321,7 @@ export default function Patients() {
       } else {
         setToast({ type: 'error', message: res.data.message || 'Failed to archive patient' });
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Failed to archive patient' });
     } finally {
       setActionLoading(false);
@@ -320,16 +331,16 @@ export default function Patients() {
   const formatDate = (date) => date ? new Date(date).toLocaleDateString() : '—';
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="animate-in slide-in-from-bottom-4 fade-in duration-500">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Patients</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage patient records</p>
+          <h1 className="text-[2rem] font-bold text-[var(--color-ink-900)] leading-tight tracking-tight">Patients</h1>
+          <p className="text-[var(--color-text-muted)] text-[15px] mt-1 font-medium">Manage patient records</p>
         </div>
         {canCreate && (
-          <button onClick={() => setShowNewModal(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
-            + New Patient
-          </button>
+          <Button onClick={() => setShowNewModal(true)} icon="bi-plus-lg">
+            New Patient
+          </Button>
         )}
       </div>
 
@@ -343,19 +354,19 @@ export default function Patients() {
         />
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <table className="w-full">
+      <Card noPadding className="mb-6">
+        <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Name</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">DOB</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Gender</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Phone</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">National ID</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Actions</th>
+            <tr className="bg-[var(--color-surface-low)] border-b border-black/5">
+              <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Name</th>
+              <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">DOB</th>
+              <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Gender</th>
+              <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Phone</th>
+              <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">National ID</th>
+              <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-black/5">
             {loading ? (
               [...Array(5)].map((_, i) => (
                 <tr key={i} className="border-b border-slate-100">
@@ -366,21 +377,21 @@ export default function Patients() {
               <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400 text-sm">No patients found</td></tr>
             ) : (
               patients.map((p) => (
-                <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer" onClick={() => fetchPatientDetails(p.id)}>
-                  <td className="px-4 py-3 text-sm font-medium text-slate-900">{p.full_name}</td>
-                  <td className="px-4 py-3 text-sm text-slate-500">{formatDate(p.dob)}</td>
-                  <td className="px-4 py-3 text-sm text-slate-500 capitalize">{p.gender || '—'}</td>
-                  <td className="px-4 py-3 text-sm text-slate-500">{p.phone}</td>
-                  <td className="px-4 py-3 text-sm text-slate-500 font-mono">{p.national_id}</td>
-                  <td className="px-4 py-3">
-                    <button onClick={(e) => { e.stopPropagation(); fetchPatientDetails(p.id); }} className="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+                <tr key={p.id} className="hover:bg-[var(--color-surface-low)] transition-colors cursor-pointer group" onClick={() => fetchPatientDetails(p.id)}>
+                  <td className="px-6 py-4 text-sm font-semibold text-[var(--color-ink-900)]">{p.full_name}</td>
+                  <td className="px-6 py-4 text-sm text-[var(--color-text-muted)] font-mono">{formatDate(p.dob)}</td>
+                  <td className="px-6 py-4 text-sm text-[var(--color-text-muted)] capitalize">{p.gender || '—'}</td>
+                  <td className="px-6 py-4 text-sm text-[var(--color-text-muted)] font-mono">{p.phone}</td>
+                  <td className="px-6 py-4 text-sm text-[var(--color-text-muted)] font-mono">{p.national_id}</td>
+                  <td className="px-6 py-4">
+                    <button onClick={(e) => { e.stopPropagation(); fetchPatientDetails(p.id); }} className="text-[var(--color-primary)] hover:text-[var(--color-primary-container)] text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">View Details <i className="bi bi-arrow-right ml-1"></i></button>
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
-      </div>
+      </Card>
 
       {!search && totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">

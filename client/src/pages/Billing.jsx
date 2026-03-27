@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
 
 function Toast({ message, type, onClose }) {
   useEffect(() => {
@@ -23,22 +26,31 @@ function NewInvoiceModal({ open, onClose, onSubmit, loading }) {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [items, setItems] = useState([{ description: '', quantity: 1, unit_price: '' }]);
 
+  const resetForm = useCallback(() => {
+    setPatientSearch('');
+    setSearchResults([]);
+    setSelectedPatient(null);
+    setItems([{ description: '', quantity: 1, unit_price: '' }]);
+  }, []);
+
   useEffect(() => {
     if (open) {
-      setPatientSearch('');
-      setSearchResults([]);
-      setSelectedPatient(null);
-      setItems([{ description: '', quantity: 1, unit_price: '' }]);
+      requestAnimationFrame(() => {
+        resetForm();
+      });
     }
-  }, [open]);
+  }, [open, resetForm]);
 
   useEffect(() => {
     if (patientSearch.length > 2) {
       api.get(`/patients/search?q=${encodeURIComponent(patientSearch)}`).then(res => {
         if (res.data.success) setSearchResults(res.data.patients);
-      }).catch(() => setSearchResults([]));
+      }).catch(() => {
+        setSearchResults([]);
+      });
     } else {
-      setSearchResults([]);
+      const timer = setTimeout(() => setSearchResults([]), 0);
+      return () => clearTimeout(timer);
     }
   }, [patientSearch]);
 
@@ -117,14 +129,22 @@ function PaymentModal({ open, onClose, onSubmit, loading, invoice }) {
   const [payment_method, setPaymentMethod] = useState('cash');
   const [reference_number, setReferenceNumber] = useState('');
 
-  useEffect(() => {
-    if (open && invoice) {
+  const resetPaymentForm = useCallback(() => {
+    if (invoice) {
       const remaining = invoice.total - (invoice.amount_paid || 0);
       setAmount(remaining.toFixed(2));
       setPaymentMethod('cash');
       setReferenceNumber('');
     }
-  }, [open, invoice]);
+  }, [invoice]);
+
+  useEffect(() => {
+    if (open && invoice) {
+      requestAnimationFrame(() => {
+        resetPaymentForm();
+      });
+    }
+  }, [open, invoice, resetPaymentForm]);
 
   const handleSubmit = () => {
     if (!amount || parseFloat(amount) <= 0) return;
@@ -304,12 +324,7 @@ function InvoiceDrawer({ open, onClose, invoice, items, payments, onRecordPaymen
   );
 }
 
-const statusColors = {
-  pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-  paid: 'bg-green-50 text-green-700 border-green-200',
-  partial: 'bg-orange-50 text-orange-700 border-orange-200',
-  waived: 'bg-slate-100 text-slate-600 border-slate-200'
-};
+
 
 export default function Billing() {
   const { user } = useAuth();
@@ -330,7 +345,7 @@ export default function Billing() {
       if (res.data.success) {
         setInvoices(res.data.invoices);
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Failed to load invoices' });
     } finally {
       setLoading(false);
@@ -365,7 +380,7 @@ export default function Billing() {
       if (res.data.success) {
         setDrawer({ open: true, invoice: res.data.invoice, items: res.data.items, payments: res.data.payments });
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Failed to load invoice details' });
     }
   };
@@ -394,62 +409,62 @@ export default function Billing() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="animate-in slide-in-from-bottom-4 fade-in duration-500">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Billing</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage invoices and payments</p>
+          <h1 className="text-[2rem] font-bold text-[var(--color-ink-900)] leading-tight tracking-tight">Billing</h1>
+          <p className="text-[var(--color-text-muted)] text-[15px] mt-1 font-medium">Manage invoices and payments</p>
         </div>
         {(isAdmin || isReceptionist) && (
-          <button onClick={() => setNewInvoiceModal(true)} className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm font-medium hover:bg-violet-700">
-            + New Invoice
-          </button>
+          <Button onClick={() => setNewInvoiceModal(true)} icon="bi-plus-lg">
+            New Invoice
+          </Button>
         )}
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <Card noPadding className="mb-6">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500">Invoice #</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500">Patient</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500">Date</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500">Total</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500">Status</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500 text-right">Actions</th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-[var(--color-surface-low)] border-b border-black/5">
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Invoice #</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Patient</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Date</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Total</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-black/5">
               {loading ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td className="px-4 py-3"><div className="h-4 bg-slate-200 rounded w-24"></div></td>
-                    <td className="px-4 py-3"><div className="h-4 bg-slate-200 rounded w-32"></div></td>
-                    <td className="px-4 py-3"><div className="h-4 bg-slate-200 rounded w-24"></div></td>
-                    <td className="px-4 py-3"><div className="h-4 bg-slate-200 rounded w-20"></div></td>
-                    <td className="px-4 py-3"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
-                    <td className="px-4 py-3"><div className="h-4 bg-slate-200 rounded w-20 ml-auto"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-32"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-20"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-16"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-20 ml-auto"></div></td>
                   </tr>
                 ))
               ) : invoices.length === 0 ? (
-                <tr><td colSpan={6} className="px-4 py-12 text-center text-slate-400">No invoices found</td></tr>
+                <tr><td colSpan={6} className="px-6 py-12 text-center text-[var(--color-text-muted)]">No invoices found</td></tr>
               ) : (
                 invoices.map(inv => (
-                  <tr key={inv.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 text-sm font-medium text-slate-900">{inv.invoice_number}</td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{inv.patient_name}</td>
-                    <td className="px-4 py-3 text-sm text-slate-500">{formatDate(inv.created_at)}</td>
-                    <td className="px-4 py-3 text-sm font-medium text-slate-900">KES {inv.total?.toFixed(2)}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${statusColors[inv.status]}`}>
+                  <tr key={inv.id} className="hover:bg-[var(--color-surface-low)] transition-colors">
+                    <td className="px-6 py-4 text-sm font-mono font-bold text-[var(--color-ink-900)]">{inv.invoice_number}</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-[var(--color-ink-900)]">{inv.patient_name}</td>
+                    <td className="px-6 py-4 text-[13px] text-[var(--color-text-muted)] font-mono">{formatDate(inv.created_at)}</td>
+                    <td className="px-6 py-4 text-sm font-mono font-bold text-[var(--color-primary-container)]">KES {inv.total?.toFixed(2)}</td>
+                    <td className="px-6 py-4">
+                      <Badge variant={inv.status === 'paid' ? 'success' : inv.status === 'pending' ? 'warning' : inv.status === 'partial' ? 'info' : 'default'}>
                         {inv.status}
-                      </span>
+                      </Badge>
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <button onClick={() => openInvoiceDrawer(inv)} className="text-violet-600 hover:text-violet-800 text-sm font-medium">
+                    <td className="px-6 py-4 text-right">
+                      <Button variant="secondary" size="sm" onClick={() => openInvoiceDrawer(inv)}>
                         View
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))
@@ -457,7 +472,7 @@ export default function Billing() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       <NewInvoiceModal open={newInvoiceModal} onClose={() => setNewInvoiceModal(false)} onSubmit={handleCreateInvoice} loading={actionLoading} />
       <InvoiceDrawer open={drawer.open} onClose={() => setDrawer({ open: false, invoice: null, items: [], payments: [] })} invoice={drawer.invoice} items={drawer.items} payments={drawer.payments} onRecordPayment={handleRecordPayment} loading={actionLoading} />

@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
 
 function Toast({ message, type, onClose }) {
   useEffect(() => {
@@ -19,16 +22,12 @@ function Toast({ message, type, onClose }) {
 
 function NewAppointmentModal({ open, onClose, onSubmit, loading }) {
   const [form, setForm] = useState({ patient_id: '', doctor_id: '', appointment_date: '', appointment_time: '', notes: '' });
-  const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [searchPatient, setSearchPatient] = useState('');
   const [patientResults, setPatientResults] = useState([]);
 
   useEffect(() => {
     if (open) {
-      api.get('/patients?limit=100').then(res => {
-        if (res.data.success) setPatients(res.data.patients);
-      });
       api.get('/doctors').then(res => {
         if (res.data.success) setDoctors(res.data.doctors);
       }).catch(() => {});
@@ -41,7 +40,8 @@ function NewAppointmentModal({ open, onClose, onSubmit, loading }) {
         if (res.data.success) setPatientResults(res.data.patients);
       });
     } else {
-      setPatientResults([]);
+      const timer = setTimeout(() => setPatientResults([]), 0);
+      return () => clearTimeout(timer);
     }
   }, [searchPatient]);
 
@@ -135,12 +135,7 @@ function NotesModal({ open, onClose, onSubmit, currentNotes, loading }) {
   );
 }
 
-const statusColors = {
-  pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-  'in-progress': 'bg-blue-50 text-blue-700 border-blue-200',
-  completed: 'bg-green-50 text-green-700 border-green-200',
-  cancelled: 'bg-red-50 text-red-700 border-red-200'
-};
+
 
 export default function Appointments() {
   const { user } = useAuth();
@@ -163,7 +158,7 @@ export default function Appointments() {
       if (res.data.success) {
         setAppointments(res.data.appointments);
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Failed to load appointments' });
     } finally {
       setLoading(false);
@@ -202,7 +197,7 @@ export default function Appointments() {
       } else {
         setToast({ type: 'error', message: res.data.message });
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Failed to update status' });
     } finally {
       setActionLoading(false);
@@ -220,7 +215,7 @@ export default function Appointments() {
       } else {
         setToast({ type: 'error', message: res.data.message });
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Failed to save notes' });
     } finally {
       setActionLoading(false);
@@ -230,57 +225,56 @@ export default function Appointments() {
   const formatTime = (time) => time?.substring(0, 5) || '';
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="animate-in slide-in-from-bottom-4 fade-in duration-500">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Appointments</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage patient appointments</p>
+          <h1 className="text-[2rem] font-bold text-[var(--color-ink-900)] leading-tight tracking-tight">Appointments</h1>
+          <p className="text-[var(--color-text-muted)] text-[15px] mt-1 font-medium">Manage patient appointments</p>
         </div>
         {canCreate && (
-          <button onClick={() => setShowNewModal(true)} className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm font-medium hover:bg-violet-700">
-            + New Appointment
-          </button>
+          <Button onClick={() => setShowNewModal(true)} icon="bi-plus-lg">
+            New Appointment
+          </Button>
         )}
       </div>
 
-      <div className="mb-6 flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-slate-600">Date:</label>
-          <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-sm" />
+      <div className="mb-6 flex items-center gap-4 bg-white p-4 rounded-[16px] ghost-border shadow-sm inline-flex">
+        <div className="flex items-center gap-3">
+          <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">Date</label>
+          <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="px-3 py-2 border border-[var(--color-outline-variant)] rounded-[10px] text-sm focus:ring-[var(--color-primary)] font-mono min-w-[150px]" />
         </div>
-        <button onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])} className="text-sm text-violet-600 hover:underline">Today</button>
+        <div className="w-px h-8 bg-[var(--color-outline-variant)]/30"></div>
+        <button onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])} className="text-sm text-[var(--color-primary)] font-bold hover:text-[var(--color-primary-container)] transition-colors px-2">Today</button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
           [...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-slate-200 p-4 animate-pulse">
-              <div className="h-4 bg-slate-200 rounded w-1/2 mb-2"></div>
-              <div className="h-3 bg-slate-200 rounded w-2/3"></div>
-            </div>
+            <Card key={i} className="animate-pulse">
+              <div className="h-5 bg-slate-100 rounded-lg w-1/2 mb-3"></div>
+              <div className="h-4 bg-slate-100 rounded-lg w-2/3"></div>
+            </Card>
           ))
         ) : appointments.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-slate-400">No appointments for this date</div>
+          <div className="col-span-full text-center py-16 text-[var(--color-text-muted)] font-medium bg-[var(--color-surface-low)] rounded-[16px] ghost-border">No appointments scheduled for this date.</div>
         ) : (
           appointments.map(apt => (
-            <div key={apt.id} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-3">
+            <Card key={apt.id} className="hover:-translate-y-1 transition-transform duration-300 flex flex-col">
+              <div className="flex items-start justify-between mb-4">
                 <div>
-                  <p className="font-semibold text-slate-900">{apt.patient_name}</p>
-                  <p className="text-sm text-slate-500">Dr. {apt.doctor_name}</p>
+                  <p className="font-bold text-[var(--color-ink-900)] text-base">{apt.patient_name}</p>
+                  <p className="text-[13px] font-medium text-[var(--color-text-muted)] mt-0.5">Dr. {apt.doctor_name}</p>
                 </div>
-                <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${statusColors[apt.status]}`}>
-                  {apt.status}
-                </span>
+                <Badge variant={apt.status === 'completed' ? 'success' : apt.status === 'pending' ? 'warning' : apt.status === 'in-progress' ? 'info' : 'danger'}>{apt.status}</Badge>
               </div>
-              <div className="flex items-center gap-2 text-sm text-slate-600 mb-3">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                {formatTime(apt.appointment_time)}
+              <div className="flex items-center gap-2 text-[13px] font-bold text-[var(--color-ink-900)] bg-[var(--color-surface-low)] p-2.5 rounded-[10px] mb-4 shadow-inner">
+                <i className="bi bi-clock text-[var(--color-primary)]"></i>
+                <span className="font-mono">{formatTime(apt.appointment_time)}</span>
               </div>
-              {apt.notes && <p className="text-xs text-slate-500 mb-3 line-clamp-2">{apt.notes}</p>}
-              <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+              {apt.notes && <p className="text-[13px] text-[var(--color-text-muted)] mb-4 line-clamp-2 leading-relaxed">{apt.notes}</p>}
+              <div className="flex items-center gap-2 pt-4 border-t border-[var(--color-outline-variant)]/30 mt-auto">
                 {canUpdateStatus && (
-                  <select value={apt.status} onChange={e => handleStatusChange(apt.id, e.target.value)} disabled={actionLoading} className="flex-1 px-2 py-1.5 text-xs border border-slate-200 rounded-lg">
+                  <select value={apt.status} onChange={e => handleStatusChange(apt.id, e.target.value)} disabled={actionLoading} className="flex-1 px-3 py-2 text-[13px] font-medium border border-[var(--color-outline-variant)] rounded-[10px] bg-white focus:ring-[var(--color-primary)] cursor-pointer">
                     <option value="pending">Pending</option>
                     <option value="in-progress">In Progress</option>
                     <option value="completed">Completed</option>
@@ -288,12 +282,12 @@ export default function Appointments() {
                   </select>
                 )}
                 {isDoctor && apt.doctor_id === user.user_id && (
-                  <button onClick={() => setNotesModal({ open: true, appointment: apt })} className="px-2 py-1.5 text-xs text-violet-600 border border-violet-200 rounded-lg hover:bg-violet-50">
+                  <Button size="sm" variant="secondary" onClick={() => setNotesModal({ open: true, appointment: apt })}>
                     Notes
-                  </button>
+                  </Button>
                 )}
               </div>
-            </div>
+            </Card>
           ))
         )}
       </div>

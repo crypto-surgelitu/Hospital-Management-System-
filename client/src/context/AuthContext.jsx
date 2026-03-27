@@ -1,29 +1,30 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useContext } from 'react';
 import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-
-  useEffect(() => {
-    const storedToken = localStorage.getItem('hms_token');
-    if (storedToken) {
-      try {
-        const decoded = jwtDecode(storedToken);
-        const currentTime = Date.now() / 1000;
-        if (decoded.exp && decoded.exp < currentTime) {
-          localStorage.removeItem('hms_token');
-        } else {
-          setToken(storedToken);
-          setUser(decoded);
-        }
-      } catch {
+function getInitialState() {
+  const storedToken = localStorage.getItem('hms_token');
+  if (storedToken) {
+    try {
+      const decoded = jwtDecode(storedToken);
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp && decoded.exp < currentTime) {
         localStorage.removeItem('hms_token');
+        return { token: null, user: null };
       }
+      return { token: storedToken, user: decoded };
+    } catch {
+      localStorage.removeItem('hms_token');
+      return { token: null, user: null };
     }
-  }, []);
+  }
+  return { token: null, user: null };
+}
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(() => getInitialState().user);
+  const [token, setToken] = useState(() => getInitialState().token);
 
   const login = (userData, authToken) => {
     localStorage.setItem('hms_token', authToken);
