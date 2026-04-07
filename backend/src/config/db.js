@@ -19,7 +19,12 @@ async function testConnection() {
     connection.release();
     console.log('✅ Database connected successfully');
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
+    console.error('❌ Database connection failed:', error);
+    if (error.code === 'ECONNREFUSED') {
+      console.error('   Hint: Is MySQL server running on localhost?');
+    } else if (error.code === 'ER_BAD_DB_ERROR') {
+      console.error(`   Hint: Database '${process.env.DB_NAME}' does not exist.`);
+    }
     process.exit(1);
   }
 }

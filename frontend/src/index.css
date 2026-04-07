@@ -43,12 +43,11 @@
   }
 }
 
-@layer utilities {
-  .ghost-border {
-    border: 1px solid color-mix(in srgb, var(--color-outline-variant) 20%, transparent);
-  }
-  
-  .glass-panel {
-    @apply bg-surface-lowest/80 backdrop-blur-md ghost-border;
-  }
+@utility ghost-border {
+  border: 1px solid color-mix(in srgb, var(--color-outline-variant) 20%, transparent);
+}
+
+@utility glass-panel {
+  @apply bg-surface-lowest/80 backdrop-blur-md;
+  border: 1px solid color-mix(in srgb, var(--color-outline-variant) 20%, transparent);
 }
