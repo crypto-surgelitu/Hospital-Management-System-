@@ -28,7 +28,7 @@ function NewAppointmentModal({ open, onClose, onSubmit, loading }) {
 
   useEffect(() => {
     if (open) {
-      api.get('/doctors').then(res => {
+      api.get('/admin/doctors').then(res => {
         if (res.data.success) setDoctors(res.data.doctors);
       }).catch(() => {});
     }

@@ -3,7 +3,7 @@ const { pool } = require('../config/db');
 async function getInventory(req, res) {
   try {
     const [drugs] = await pool.query(`
-      SELECT * FROM drugs 
+      SELECT * FROM pharmacy_inventory 
       WHERE is_active = 1 
       ORDER BY drug_name ASC
     `);
@@ -44,7 +44,7 @@ async function addDrug(req, res) {
     }
 
     const [existing] = await pool.query(
-      'SELECT drug_id FROM drugs WHERE drug_name = ? AND is_active = 1',
+      'SELECT drug_id FROM pharmacy_inventory WHERE drug_name = ? AND is_active = 1',
       [drug_name]
     );
 
@@ -53,12 +53,12 @@ async function addDrug(req, res) {
     }
 
     const [result] = await pool.query(
-      `INSERT INTO drugs (drug_name, generic_name, category, quantity_in_stock, unit, reorder_level, unit_price, is_active)
+      `INSERT INTO pharmacy_inventory (drug_name, generic_name, category, quantity_in_stock, unit, reorder_level, unit_price, is_active)
        VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
       [drug_name, generic_name || null, category || null, quantity_in_stock || 0, unit || null, reorder_level || 0, unit_price]
     );
 
-    const [newDrug] = await pool.query('SELECT * FROM drugs WHERE drug_id = ?', [result.insertId]);
+    const [newDrug] = await pool.query('SELECT * FROM pharmacy_inventory WHERE drug_id = ?', [result.insertId]);
 
     res.status(201).json({ success: true, drug: newDrug[0] });
   } catch (error) {
@@ -78,7 +78,7 @@ async function updateStock(req, res) {
     }
 
     const [[drug]] = await pool.query(
-      'SELECT quantity_in_stock FROM drugs WHERE drug_id = ? AND is_active = 1',
+      'SELECT quantity_in_stock FROM pharmacy_inventory WHERE drug_id = ? AND is_active = 1',
       [id]
     );
 
@@ -92,17 +92,17 @@ async function updateStock(req, res) {
     }
 
     await pool.query(
-      'UPDATE drugs SET quantity_in_stock = ? WHERE drug_id = ?',
+      'UPDATE pharmacy_inventory SET quantity_in_stock = ? WHERE drug_id = ?',
       [newQuantity, id]
     );
 
     await pool.query(
-      `INSERT INTO pharmacy_transactions (drug_id, quantity_change, reason, performed_by, created_at)
+      `INSERT INTO stock_log (drug_id, quantity_change, reason, performed_by, created_at)
        VALUES (?, ?, ?, ?, NOW())`,
       [id, quantity_change, reason, performed_by]
     );
 
-    const [[updatedDrug]] = await pool.query('SELECT * FROM drugs WHERE drug_id = ?', [id]);
+    const [[updatedDrug]] = await pool.query('SELECT * FROM pharmacy_inventory WHERE drug_id = ?', [id]);
 
     res.json({ success: true, drug: updatedDrug });
   } catch (error) {
@@ -124,6 +124,14 @@ async function dispenseMedication(req, res) {
     try {
       await connection.beginTransaction();
 
+      // Create the dispense record
+      const [dispenseResult] = await connection.query(
+        `INSERT INTO dispensing (patient_id, pharmacist_id, created_at)
+         VALUES (?, ?, NOW())`,
+        [patient_id, pharmacist_id]
+      );
+
+      const dispense_id = dispenseResult.insertId;
       const dispensedItems = [];
       const errors = [];
 
@@ -136,7 +144,7 @@ async function dispenseMedication(req, res) {
         }
 
         const [[drug]] = await connection.query(
-          'SELECT drug_id, quantity_in_stock, drug_name FROM drugs WHERE drug_id = ? AND is_active = 1',
+          'SELECT drug_id, quantity_in_stock, drug_name FROM pharmacy_inventory WHERE drug_id = ? AND is_active = 1',
           [drug_id]
         );
 
@@ -151,18 +159,18 @@ async function dispenseMedication(req, res) {
         }
 
         await connection.query(
-          'UPDATE drugs SET quantity_in_stock = quantity_in_stock - ? WHERE drug_id = ?',
+          'UPDATE pharmacy_inventory SET quantity_in_stock = quantity_in_stock - ? WHERE drug_id = ?',
           [quantity, drug_id]
         );
 
-        const [dispenseResult] = await connection.query(
-          `INSERT INTO dispensing (drug_id, patient_id, pharmacist_id, quantity_issued, dosage_instructions, dispense_date)
-           VALUES (?, ?, ?, ?, ?, CURDATE())`,
-          [drug_id, patient_id, pharmacist_id, quantity, dosage_instructions || null]
+        await connection.query(
+          `INSERT INTO dispensing_items (dispense_id, drug_id, quantity, dosage_instructions)
+           VALUES (?, ?, ?, ?)`,
+          [dispense_id, drug_id, quantity, dosage_instructions || null]
         );
 
         await connection.query(
-          `INSERT INTO pharmacy_transactions (drug_id, quantity_change, reason, performed_by, created_at)
+          `INSERT INTO stock_log (drug_id, quantity_change, reason, performed_by, created_at)
            VALUES (?, ?, ?, ?, NOW())`,
           [drug_id, -quantity, `Dispensed to patient ${patient_id}`, pharmacist_id]
         );
@@ -171,19 +179,20 @@ async function dispenseMedication(req, res) {
           drug_id,
           drug_name: drug.drug_name,
           quantity,
-          dispense_id: dispenseResult.insertId
+          dispense_id
         });
+      }
+
+      if (errors.length > 0 && dispensedItems.length === 0) {
+        await connection.rollback();
+        return res.status(400).json({ success: false, message: 'No items could be dispensed', errors });
       }
 
       await connection.commit();
 
-      if (errors.length > 0 && dispensedItems.length === 0) {
-        return res.status(400).json({ success: false, message: 'No items could be dispensed', errors });
-      }
-
       res.json({
         success: true,
-        dispenseId: dispensedItems[0]?.dispense_id || null,
+        dispenseId: dispense_id,
         items: dispensedItems,
         errors: errors.length > 0 ? errors : undefined
       });

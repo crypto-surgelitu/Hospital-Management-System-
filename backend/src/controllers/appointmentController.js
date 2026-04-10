@@ -21,7 +21,7 @@ async function getAppointments(req, res) {
 
     if (req.user.role === 'doctor') {
       whereClause += ' AND a.doctor_id = ?';
-      params.push(req.user.user_id);
+      params.push(req.user.id);
     }
 
     const [[{ total }]] = await pool.query(
@@ -126,7 +126,7 @@ async function updateAppointmentStatus(req, res) {
     }
 
     const appointment = appointments[0];
-    if (req.user.role !== 'admin' && appointment.doctor_id !== req.user.user_id) {
+    if (req.user.role !== 'admin' && appointment.doctor_id !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized to update this appointment' });
     }
 
@@ -159,7 +159,7 @@ async function addDoctorNotes(req, res) {
     }
 
     const appointment = appointments[0];
-    if (appointment.doctor_id !== req.user.user_id) {
+    if (appointment.doctor_id !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Only the assigned doctor can add notes' });
     }
 

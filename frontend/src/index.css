@@ -1,53 +1,196 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Syne:wght@500;600;700;800&display=swap');
 
-@theme {
-  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --font-display: 'Syne', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-
-  /* Clinical Architect Palette */
-  --color-primary: #006B58;
-  --color-primary-container: #00C9A7;
-  --color-on-primary: #FFFFFF;
-  
-  --color-surface: #F7F9FE;
-  --color-surface-lowest: #FFFFFF;
-  --color-surface-low: #ECEEF3;
-  --color-surface-variant: #E0E2E7;
-  
-  --color-ink-900: #080C14;
-  --color-ink-800: #0D1220;
-  
-  --color-module-blue: #3B82F6;
-  --color-module-violet: #8B5CF6;
-  --color-module-amber: #F59E0B;
-  --color-module-mint: #00C9A7;
-
-  --color-error: #BA1A1A;
-  --color-on-surface: #181C20;
-  --color-text-muted: #5F626D;
-  
-  --color-outline-variant: #BACAC3;
-}
-
+/* ─── Clinical Architect Design Tokens ─────────────────────── */
+/* Defined in @layer base so they don't override Tailwind utilities */
 @layer base {
+  :root {
+    /* Primary palette — Electric Mint */
+    --color-primary: #00C9A7;
+    --color-primary-container: #00A88C;
+    --color-primary-dark: #008F77;
+    --color-on-primary: #FFFFFF;
+
+    /* Surface / Background */
+    --color-surface: #F7F9FE;
+    --color-surface-low: #F1F3F8;
+    --color-surface-variant: #E8EAF0;
+    --color-on-surface: #1A1D23;
+
+    /* Sidebar — Deep Ink */
+    --color-sidebar: #080C14;
+    --color-sidebar-hover: #0D1220;
+
+    /* Ink / Text */
+    --color-ink-900: #0F1117;
+    --color-ink-800: #1A1F2E;
+    --color-text-muted: #6B7280;
+
+    /* Surface lowest (for sidebar text) */
+    --color-surface-lowest: #F7F9FE;
+
+    /* Outlines */
+    --color-outline: #D1D5DC;
+    --color-outline-variant: #E5E7EB;
+
+    /* Status */
+    --color-error: #EF4444;
+    --color-warning: #F59E0B;
+    --color-success: #10B981;
+
+    /* Module accent colors */
+    --color-module-blue: #3B82F6;
+    --color-module-violet: #8B5CF6;
+    --color-module-mint: #00C9A7;
+    --color-module-amber: #F59E0B;
+
+    /* Typography */
+    --font-display: 'Syne', sans-serif;
+    --font-ui: 'Plus Jakarta Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   body {
-    @apply bg-surface text-on-surface antialiased font-sans;
-    margin: 0;
-    min-height: 100vh;
+    font-family: var(--font-ui);
+    background: var(--color-surface);
+    color: var(--color-on-surface);
   }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight text-ink-900;
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-outline);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-muted);
+  }
+
+  /* Focus ring */
+  *:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 }
 
-@utility ghost-border {
-  border: 1px solid color-mix(in srgb, var(--color-outline-variant) 20%, transparent);
+/* ─── Reusable Components ─────────────────────────────────── */
+@layer components {
+  .ghost-border {
+    border: 1px solid rgba(229, 231, 235, 0.1); /* Virtually invisible until focused/active */
+    position: relative;
+  }
+
+  /* Design System: "Gutter Breathing" Spacing */
+  .gutter-breathing {
+    padding: 2.5rem; /* ~40px, Token 10-12 range */
+  }
+
+  .gutter-breathing-lg {
+    padding: 4rem; /* ~64px, for major sections */
+  }
+
+  .mesh-gradient {
+    background: linear-gradient(
+      135deg,
+      #080C14 0%,
+      #0D1220 25%,
+      #111827 50%,
+      #0D1220 75%,
+      #080C14 100%
+    );
+  }
+
+  .editorial-shadow {
+    box-shadow: 0 20px 40px rgba(8, 12, 20, 0.06);
+  }
+
+  /* Typography Scale Overrides */
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.025em;
+  }
 }
 
-@utility glass-panel {
-  @apply bg-surface-lowest/80 backdrop-blur-md;
-  border: 1px solid color-mix(in srgb, var(--color-outline-variant) 20%, transparent);
+/* ─── Custom Utilities ────────────────────────────────────── */
+@layer utilities {
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+
+  .text-primary {
+    color: var(--color-primary);
+  }
+
+  .bg-primary-dark {
+    background-color: var(--color-primary-dark);
+  }
+
+  /* Animations */
+  .animate-fade-up {
+    animation: fade-up 0.6s ease-out both;
+  }
+
+  .animate-in {
+    animation: fade-in 0.5s ease-out both;
+  }
+
+  .slide-in-from-bottom-4 {
+    animation: slide-in-from-bottom 0.5s ease-out both;
+  }
+
+  .animate-in.slide-in-from-bottom-4.fade-in {
+    animation: slide-in-from-bottom 0.5s ease-out both;
+  }
+}
+
+/* ─── Keyframes (outside layers — they don't affect specificity) ─── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-from-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Print ────────────────────────────────────────────────── */
+@media print {
+  .print\:hidden { display: none !important; }
 }

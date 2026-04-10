@@ -43,14 +43,18 @@ app.use((err, req, res, next) => {
 });
 
 // ─── Start Server ────────────────────────────────────────────
-const PORT = process.env.PORT || 5000;
+const PORT = Number.parseInt(process.env.PORT, 10) || 5000;
 
-try {
-  app.listen(PORT, async () => {
-    console.log(`🏥 HMS Meru server running on port ${PORT}`);
-    await testConnection();
-  });
-} catch (error) {
-  console.error('Failed to start server:', error.message);
+const server = app.listen(PORT, async () => {
+  console.log(`🏥 HMS Meru server running on port ${PORT}`);
+  await testConnection();
+});
+
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. Update PORT in backend/.env or stop the process using that port.`);
+  } else {
+    console.error('Failed to start server:', error.message);
+  }
   process.exit(1);
-}
+});

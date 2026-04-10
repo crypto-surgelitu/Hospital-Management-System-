@@ -8,10 +8,10 @@ async function getDashboardStats(req, res) {
       pendingLabTestsResult,
       lowStockDrugsResult
     ] = await Promise.all([
-      pool.query('SELECT COUNT(*) as count FROM patients'),
-      pool.query("SELECT COUNT(*) as count FROM appointments WHERE DATE(created_at) = CURDATE()"),
+      pool.query('SELECT COUNT(*) as count FROM patients WHERE deleted_at IS NULL'),
+      pool.query("SELECT COUNT(*) as count FROM appointments WHERE DATE(appointment_date) = CURDATE()"),
       pool.query("SELECT COUNT(*) as count FROM lab_requests WHERE status = 'pending'"),
-      pool.query('SELECT COUNT(*) as count FROM pharmacy_inventory WHERE quantity <= reorder_level')
+      pool.query('SELECT COUNT(*) as count FROM pharmacy_inventory WHERE quantity_in_stock <= reorder_level AND is_active = 1')
     ]);
 
     const stats = {

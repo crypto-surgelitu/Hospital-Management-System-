@@ -6,10 +6,10 @@ async function login(req, res) {
   try {
     const { username, password } = req.body;
 
-    const [rows] = await pool.execute(
-      'SELECT id, username, password_hash, role, full_name FROM users WHERE username = ?',
-      [username]
-    );
+const [rows] = await pool.execute(
+  'SELECT id, username, password_hash, role, full_name, is_active FROM users WHERE username = ?',
+  [username]
+);
 
     if (rows.length === 0) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });

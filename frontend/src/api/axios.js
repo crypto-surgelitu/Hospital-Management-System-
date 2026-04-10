@@ -1,27 +1,33 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: '/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('hms_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// Attach JWT token to every request
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('hms_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
+// Handle 401/403 responses globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response) {
-      if (error.response.status === 401) {
-        localStorage.removeItem('hms_token');
-        localStorage.removeItem('hms_user');
+    if (error.response && [401, 403].includes(error.response.status)) {
+      // Token expired or invalid — redirect to login
+      localStorage.removeItem('hms_token');
+      if (window.location.pathname !== '/login') {
         window.location.href = '/login';
-      } else if (error.response.status === 403) {
-        window.location.href = '/unauthorized';
       }
     }
     return Promise.reject(error);

@@ -1,32 +1,51 @@
-# HMS Meru - Hospital Management System
+# HMS Meru
 
-A modern, comprehensive Hospital Management System (HMS) built for high-efficiency clinical workflows and staff productivity.
+Hospital Management System with a React frontend, an Express backend, and a preserved legacy PHP implementation kept outside the active app structure.
 
-## 🚀 Tech Stack (Migrated)
-- **Backend:** Node.js (Express), interacting with MySQL.
-- **Frontend:** React + Vite, powered by Tailwind CSS.
-- **Database:** MySQL.
-- **System Theme:** HMS Meru Design System (Electric Mint & Deep Ink).
+## Repository Layout
 
-## 📦 Core Modules
-- **Authentication:** Role-based secure login.
-- **Patient Records:** Registration, search, and medical history maintenance.
-- **Appointments:** Booking system, consultation queue.
-- **Laboratory:** Test requests, specimen tracking.
-- **Pharmacy:** Drug inventory management.
-- **Billing:** Dynamic invoice generation and payment tracking via React frontend and Express backend APIs.
-- **Admin:** System user management and comprehensive reporting.
+```text
+backend/
+  database/
+    schema.sql
+    seeds/
+  src/
+    config/
+    controllers/
+    middleware/
+    routes/
+    server.js
+  package.json
 
-## 🛠️ Setup Instructions (New MERN-like Stack)
-1. **Database:** Import the schema from `sql/schema.sql`. Ensure `server/.env` has correct credentials for your local MySQL instance.
-2. **Backend Server:** 
-   - Navigate to the `/server` directory.
-   - Run `npm install` to install Express, MySQL, etc.
-   - Run `npm run dev` to start the backend API on port 5000.
-3. **Frontend Client:**
-   - Navigate to the `/client` directory.
-   - Run `npm install` to install React and Vite dependencies.
-   - Run `npm run dev` to start the client application on port 5173.
+frontend/
+  public/
+  src/
+  package.json
+  vite.config.js
 
-## 🧪 Testing Status
-Currently, the backend Express server needs to be booted, as connection on port 5000 is refused. Additionally, the Vite frontend seems to have been scaffolded with or overridden by a "SwahiliPot Hub" template and needs to be migrated to the HMS Meru design system to match the intended UI aesthetics.
+legacy/
+  php/
+
+docs/
+  contracts/
+  QA_Report.md
+```
+
+## Active Stack
+
+- Frontend: React + Vite
+- Backend: Node.js + Express
+- Database: MySQL
+
+## Setup
+
+1. Import `backend/database/schema.sql` into MySQL.
+2. Optionally import seed data from `backend/database/seeds/`.
+3. Configure backend environment variables in `backend/.env`.
+4. From `backend/`, run `npm install` and `npm run dev`.
+5. From `frontend/`, run `npm install` and `npm run dev`.
+
+## Notes
+
+- The legacy PHP codebase is preserved under `legacy/php/`.
+- The active application is now organized around `frontend/` and `backend/`.

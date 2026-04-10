@@ -36,15 +36,15 @@ export default function Sidebar() {
 
   return (
     <div className="flex min-h-screen bg-[var(--color-surface)]">
-      <aside className="w-64 bg-[var(--color-ink-900)] flex flex-col text-[var(--color-surface-lowest)] shadow-2xl z-20">
-        <div className="p-6 border-b border-white/5">
+      <aside className="w-64 bg-[var(--color-sidebar)] flex flex-col text-[var(--color-surface-lowest)] shadow-2xl z-20">
+        <div className="p-8">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[var(--color-primary)] rounded-lg flex items-center justify-center text-white font-bold text-xl ghost-border shadow-lg">
+            <div className="w-10 h-10 bg-[var(--color-primary)] rounded-lg flex items-center justify-center text-[var(--color-ink-900)] font-bold text-xl shadow-lg">
               M
             </div>
             <div>
-              <h1 className="font-bold text-white leading-none text-lg">HMS Meru</h1>
-              <span className="text-[10px] text-[var(--color-primary-container)] font-bold uppercase tracking-widest">Level 5</span>
+              <h1 className="font-display font-bold text-white leading-none text-xl tracking-tight">HMS Meru</h1>
+              <span className="text-[10px] text-[var(--color-primary-container)] font-bold uppercase tracking-widest mt-1 block">Level 5 Facility</span>
             </div>
           </div>
         </div>
@@ -68,19 +68,19 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-white/5 bg-[var(--color-ink-900)]">
+        <div className="p-4 mt-auto bg-[var(--color-ink-800)]/40 backdrop-blur-md m-4 rounded-[16px]">
           <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="w-9 h-9 bg-[var(--color-ink-800)] rounded-full flex items-center justify-center text-[var(--color-primary-container)] font-medium border border-white/10">
+            <div className="w-9 h-9 bg-[var(--color-ink-800)] rounded-full flex items-center justify-center text-[var(--color-primary-container)] font-medium">
               {user?.name?.charAt(0).toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">{user?.name || 'User'}</p>
-              <p className="text-[11px] text-[var(--color-outline-variant)] font-mono uppercase tracking-wider">{getRoleLabel(user?.role)}</p>
+              <p className="text-[10px] text-[var(--color-text-muted)] font-mono uppercase tracking-wider">{getRoleLabel(user?.role)}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-[10px] transition-colors border border-red-500/20"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-red-400 bg-red-400/10 hover:bg-red-400/20 rounded-[10px] transition-all duration-300"
           >
             <i className="bi bi-box-arrow-right"></i>
             Sign Out
