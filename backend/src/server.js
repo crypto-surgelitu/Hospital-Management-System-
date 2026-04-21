@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -26,6 +26,11 @@ const authLimiter = rateLimit({
 // ─── Middleware ──────────────────────────────────────────────
 app.use('/api/auth/login', authLimiter);
 app.use(express.json());
+
+// ─── Debug route ───────────────────────────────────────────
+app.get('/api/test', (req, res) => {
+  res.json({ success: true, message: 'Server works' });
+});
 
 // ─── Route Mounts ───────────────────────────────────────────
 app.use('/api/auth',         require('./routes/auth'));

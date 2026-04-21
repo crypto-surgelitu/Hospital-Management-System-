@@ -3,8 +3,8 @@
 -- Engine: InnoDB, Charset: utf8mb4
 -- ============================================
 
-CREATE DATABASE IF NOT EXISTS hms;
-USE hms;
+CREATE DATABASE IF NOT EXISTS hms_db;
+USE hms_db;
 
 -- ─── Patients ────────────────────────────────────────────────
 

@@ -32,8 +32,8 @@ async function getAppointments(req, res) {
     const [appointments] = await pool.query(
       `SELECT a.*, p.full_name as patient_name, u.full_name as doctor_name
        FROM appointments a
-       JOIN patients p ON a.patient_id = p.id
-       JOIN users u ON a.doctor_id = u.id
+       JOIN patients p ON a.patient_id = p.patient_id
+       JOIN users u ON a.doctor_id = u.user_id
        ${whereClause}
        ORDER BY a.appointment_date ASC, a.appointment_time ASC
        LIMIT ? OFFSET ?`,
@@ -62,12 +62,12 @@ async function createAppointment(req, res) {
 
     const { patient_id, doctor_id, appointment_date, appointment_time, notes } = req.body;
 
-    const [patients] = await pool.query('SELECT id FROM patients WHERE id = ? AND deleted_at IS NULL', [patient_id]);
+    const [patients] = await pool.query('SELECT patient_id FROM patients WHERE patient_id = ? AND deleted_at IS NULL', [patient_id]);
     if (patients.length === 0) {
       return res.status(400).json({ success: false, message: 'Patient not found' });
     }
 
-    const [doctors] = await pool.query("SELECT id FROM users WHERE id = ? AND role = 'doctor' AND is_active = 1", [doctor_id]);
+    const [doctors] = await pool.query("SELECT user_id FROM users WHERE user_id = ? AND role = 'doctor' AND is_active = 1", [doctor_id]);
     if (doctors.length === 0) {
       return res.status(400).json({ success: false, message: 'Doctor not found or not available' });
     }
@@ -97,9 +97,9 @@ async function createAppointment(req, res) {
     const [newAppointment] = await pool.query(
       `SELECT a.*, p.full_name as patient_name, u.full_name as doctor_name
        FROM appointments a
-       JOIN patients p ON a.patient_id = p.id
-       JOIN users u ON a.doctor_id = u.id
-       WHERE a.id = ?`,
+       JOIN patients p ON a.patient_id = p.patient_id
+       JOIN users u ON a.doctor_id = u.user_id
+       WHERE a.appointment_id = ?`,
       [result.insertId]
     );
 
@@ -120,7 +120,7 @@ async function updateAppointmentStatus(req, res) {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
 
-    const [appointments] = await pool.query('SELECT * FROM appointments WHERE id = ?', [id]);
+    const [appointments] = await pool.query('SELECT * FROM appointments WHERE appointment_id = ?', [id]);
     if (appointments.length === 0) {
       return res.status(404).json({ success: false, message: 'Appointment not found' });
     }
@@ -130,14 +130,14 @@ async function updateAppointmentStatus(req, res) {
       return res.status(403).json({ success: false, message: 'Not authorized to update this appointment' });
     }
 
-    await pool.query('UPDATE appointments SET status = ? WHERE id = ?', [status, id]);
+    await pool.query('UPDATE appointments SET status = ? WHERE appointment_id = ?', [status, id]);
 
     const [updated] = await pool.query(
       `SELECT a.*, p.full_name as patient_name, u.full_name as doctor_name
        FROM appointments a
-       JOIN patients p ON a.patient_id = p.id
-       JOIN users u ON a.doctor_id = u.id
-       WHERE a.id = ?`,
+       JOIN patients p ON a.patient_id = p.patient_id
+       JOIN users u ON a.doctor_id = u.user_id
+       WHERE a.appointment_id = ?`,
       [id]
     );
 
@@ -153,7 +153,7 @@ async function addDoctorNotes(req, res) {
     const { id } = req.params;
     const { notes } = req.body;
 
-    const [appointments] = await pool.query('SELECT * FROM appointments WHERE id = ?', [id]);
+    const [appointments] = await pool.query('SELECT * FROM appointments WHERE appointment_id = ?', [id]);
     if (appointments.length === 0) {
       return res.status(404).json({ success: false, message: 'Appointment not found' });
     }
@@ -163,14 +163,14 @@ async function addDoctorNotes(req, res) {
       return res.status(403).json({ success: false, message: 'Only the assigned doctor can add notes' });
     }
 
-    await pool.query('UPDATE appointments SET notes = ? WHERE id = ?', [notes, id]);
+    await pool.query('UPDATE appointments SET notes = ? WHERE appointment_id = ?', [notes, id]);
 
     const [updated] = await pool.query(
       `SELECT a.*, p.full_name as patient_name, u.full_name as doctor_name
        FROM appointments a
-       JOIN patients p ON a.patient_id = p.id
-       JOIN users u ON a.doctor_id = u.id
-       WHERE a.id = ?`,
+       JOIN patients p ON a.patient_id = p.patient_id
+       JOIN users u ON a.doctor_id = u.user_id
+       WHERE a.appointment_id = ?`,
       [id]
     );
 

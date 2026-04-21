@@ -1,0 +1,14 @@
+🏥 HMS Meru server running on port 5001
+✅ Database connected successfully
+User found: {
+  user_id: 1,
+  username: 'admin',
+  password_hash: '$2a$10$ZEaqMRyo512JOamo7sHgO.qEhOD.Kk6hQ1WbCdhOl2JoV96CeuM7W',
+  role: 'admin',
+  full_name: 'System Admin',
+  is_active: 1
+}
+Comparing password: Admin@1234 with hash: $2a$10$ZEaqMRyo512JOamo7sHgO.qEhOD.Kk6hQ1WbCdhOl2JoV96CeuM7W
+Password valid: true
+::1 - - [21/Apr/2026:13:13:22 +0000] "POST /api/auth/login HTTP/1.1" 200 311 "-" "curl/8.18.0"
+::1 - - [21/Apr/2026:13:13:32 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 200 64 "-" "curl/8.18.0"

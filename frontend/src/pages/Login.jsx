@@ -63,11 +63,12 @@ export default function Login() {
               <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">System Reliability</p>
             </div>
           </div>
+
+          <div className="mt-16 opacity-40">
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.4em]">Proprietary Clinical Architect System</p>
+          </div>
         </div>
 
-        <div className="absolute bottom-12 left-16 z-10">
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.4em]">Proprietary Clinical Architect System</p>
-        </div>
       </section>
 
       <section className="w-full lg:w-2/5 bg-[var(--color-surface)] flex flex-col justify-center px-6 sm:px-12 lg:px-8 xl:px-12 py-12">

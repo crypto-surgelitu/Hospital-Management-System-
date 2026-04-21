@@ -10,7 +10,7 @@ const DEPARTMENTS = ['General Medicine', 'Cardiology', 'Pediatrics', 'Surgery', 
 async function getUsers(req, res) {
   try {
     const [users] = await pool.query(
-      `SELECT id, full_name, username, role, department, is_active, created_at
+      `SELECT user_id, full_name, username, role, department, is_active, created_at
        FROM users ORDER BY created_at DESC`
     );
     res.json({ success: true, users });
@@ -24,7 +24,7 @@ async function getUsers(req, res) {
 async function getDoctors(req, res) {
   try {
     const [doctors] = await pool.query(
-      `SELECT id, full_name, department
+      `SELECT user_id, full_name, department
        FROM users WHERE role = 'doctor' AND is_active = 1
        ORDER BY full_name ASC`
     );
@@ -48,7 +48,7 @@ async function createUser(req, res) {
       return res.status(400).json({ success: false, message: 'Invalid role' });
     }
 
-    const [existing] = await pool.query('SELECT id FROM users WHERE username = ?', [username]);
+    const [existing] = await pool.query('SELECT user_id FROM users WHERE username = ?', [username]);
     if (existing.length > 0) {
       return res.status(409).json({ success: false, message: 'Username already exists' });
     }
@@ -62,7 +62,7 @@ async function createUser(req, res) {
     );
 
     const [newUser] = await pool.query(
-      'SELECT id, full_name, username, role, department, is_active, created_at FROM users WHERE id = ?',
+      'SELECT user_id, full_name, username, role, department, is_active, created_at FROM users WHERE user_id = ?',
       [result.insertId]
     );
 
@@ -79,24 +79,24 @@ async function updateUser(req, res) {
     const { id } = req.params;
     const { full_name, role, department, is_active, password } = req.body;
 
-    const [existing] = await pool.query('SELECT id FROM users WHERE id = ?', [id]);
+    const [existing] = await pool.query('SELECT user_id FROM users WHERE user_id = ?', [id]);
     if (existing.length === 0) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    let query = 'UPDATE users SET full_name = ?, role = ?, department = ?, is_active = ? WHERE id = ?';
+    let query = 'UPDATE users SET full_name = ?, role = ?, department = ?, is_active = ? WHERE user_id = ?';
     let params = [full_name, role, department || null, is_active !== undefined ? is_active : 1, id];
 
     if (password) {
       const password_hash = await bcrypt.hash(password, 10);
-      query = 'UPDATE users SET full_name = ?, role = ?, department = ?, is_active = ?, password_hash = ? WHERE id = ?';
+      query = 'UPDATE users SET full_name = ?, role = ?, department = ?, is_active = ?, password_hash = ? WHERE user_id = ?';
       params = [full_name, role, department || null, is_active !== undefined ? is_active : 1, password_hash, id];
     }
 
     await pool.query(query, params);
 
     const [updated] = await pool.query(
-      'SELECT id, full_name, username, role, department, is_active, created_at FROM users WHERE id = ?',
+      'SELECT user_id, full_name, username, role, department, is_active, created_at FROM users WHERE user_id = ?',
       [id]
     );
 
@@ -112,13 +112,13 @@ async function toggleUserStatus(req, res) {
   try {
     const { id } = req.params;
 
-    const [existing] = await pool.query('SELECT id, is_active FROM users WHERE id = ?', [id]);
+    const [existing] = await pool.query('SELECT user_id, is_active FROM users WHERE user_id = ?', [id]);
     if (existing.length === 0) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
     const newStatus = existing[0].is_active ? 0 : 1;
-    await pool.query('UPDATE users SET is_active = ? WHERE id = ?', [newStatus, id]);
+    await pool.query('UPDATE users SET is_active = ? WHERE user_id = ?', [newStatus, id]);
 
     res.json({ success: true, message: `User ${newStatus ? 'activated' : 'deactivated'}` });
   } catch (error) {
@@ -162,7 +162,7 @@ async function generateRandomUsers(req, res) {
         [fullName, username, password_hash, role, department]
       );
 
-      generated.push({ id: result.insertId, full_name: fullName, username, role, department, temp_password: password });
+      generated.push({ user_id: result.insertId, full_name: fullName, username, role, department, temp_password: password });
     }
 
     res.status(201).json({ success: true, message: `Generated ${generated.length} random users`, users: generated });

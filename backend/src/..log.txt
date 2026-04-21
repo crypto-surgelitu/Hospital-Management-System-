@@ -1,0 +1,178 @@
+🏥 HMS Meru server running on port 5001
+✅ Database connected successfully
+::1 - - [21/Apr/2026:11:33:36 +0000] "GET /api/admin/stats HTTP/1.1" 401 42 "-" "curl/8.18.0"
+User found: {
+  user_id: 1,
+  username: 'admin',
+  password_hash: '$2a$10$ZEaqMRyo512JOamo7sHgO.qEhOD.Kk6hQ1WbCdhOl2JoV96CeuM7W',
+  role: 'admin',
+  full_name: 'System Admin',
+  is_active: 1
+}
+Comparing password: Admin@1234 with hash: $2a$10$ZEaqMRyo512JOamo7sHgO.qEhOD.Kk6hQ1WbCdhOl2JoV96CeuM7W
+Password valid: true
+::1 - - [21/Apr/2026:11:33:50 +0000] "POST /api/auth/login HTTP/1.1" 200 311 "-" "curl/8.18.0"
+::1 - - [21/Apr/2026:11:34:16 +0000] "GET /api/admin/stats HTTP/1.1" 401 42 "-" "curl/8.18.0"
+User found: {
+  user_id: 1,
+  username: 'admin',
+  password_hash: '$2a$10$ZEaqMRyo512JOamo7sHgO.qEhOD.Kk6hQ1WbCdhOl2JoV96CeuM7W',
+  role: 'admin',
+  full_name: 'System Admin',
+  is_active: 1
+}
+Comparing password: Admin@1234 with hash: $2a$10$ZEaqMRyo512JOamo7sHgO.qEhOD.Kk6hQ1WbCdhOl2JoV96CeuM7W
+Password valid: true
+::1 - - [21/Apr/2026:11:35:18 +0000] "POST /api/auth/login HTTP/1.1" 200 311 "-" "curl/8.18.0"
+::1 - - [21/Apr/2026:11:35:36 +0000] "GET /api/admin/stats HTTP/1.1" 200 104 "-" "curl/8.18.0"
+::1 - - [21/Apr/2026:12:58:24 +0000] "GET /api/admin/stats HTTP/1.1" 200 104 "http://localhost:5173/dashboard" "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36"
+::1 - - [21/Apr/2026:12:58:24 +0000] "GET /api/admin/stats HTTP/1.1" 304 - "http://localhost:5173/dashboard" "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36"
+::1 - - [21/Apr/2026:12:58:24 +0000] "GET /api/admin/stats HTTP/1.1" 304 - "http://localhost:5173/dashboard" "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36"
+::1 - - [21/Apr/2026:12:58:25 +0000] "GET /api/admin/stats HTTP/1.1" 304 - "http://localhost:5173/dashboard" "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36"
+getAllPatients error: Error: Unknown column 'dob' in 'field list'
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getAllPatients (C:\Users\ANTONY\HMS\backend\src\controllers\patientController.js:11:35)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: 'SELECT patient_id, full_name, dob, gender, phone, national_id, created_at \n' +
+    '       FROM patients WHERE deleted_at IS NULL \n' +
+    '       ORDER BY created_at DESC LIMIT 20 OFFSET 0',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'dob' in 'field list'"
+}
+::1 - - [21/Apr/2026:12:58:35 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 500 54 "http://localhost:5173/patients" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+getAllPatients error: Error: Unknown column 'dob' in 'field list'
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getAllPatients (C:\Users\ANTONY\HMS\backend\src\controllers\patientController.js:11:35)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: 'SELECT patient_id, full_name, dob, gender, phone, national_id, created_at \n' +
+    '       FROM patients WHERE deleted_at IS NULL \n' +
+    '       ORDER BY created_at DESC LIMIT 20 OFFSET 0',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'dob' in 'field list'"
+}
+::1 - - [21/Apr/2026:12:58:35 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 500 54 "http://localhost:5173/patients" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+getAllPatients error: Error: Unknown column 'dob' in 'field list'
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getAllPatients (C:\Users\ANTONY\HMS\backend\src\controllers\patientController.js:11:35)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: 'SELECT patient_id, full_name, dob, gender, phone, national_id, created_at \n' +
+    '       FROM patients WHERE deleted_at IS NULL \n' +
+    '       ORDER BY created_at DESC LIMIT 20 OFFSET 0',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'dob' in 'field list'"
+}
+::1 - - [21/Apr/2026:12:58:36 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 500 54 "http://localhost:5173/patients" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:12:58:49 +0000] "GET /api/appointments?date=2026-04-21 HTTP/1.1" 200 68 "http://localhost:5173/appointments" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:12:58:49 +0000] "GET /api/appointments?date=2026-04-21 HTTP/1.1" 304 - "http://localhost:5173/appointments" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:12:58:51 +0000] "GET /api/admin/stats HTTP/1.1" 304 - "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:12:58:51 +0000] "GET /api/admin/stats HTTP/1.1" 304 - "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+getAllPatients error: Error: Unknown column 'dob' in 'field list'
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getAllPatients (C:\Users\ANTONY\HMS\backend\src\controllers\patientController.js:11:35)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: 'SELECT patient_id, full_name, dob, gender, phone, national_id, created_at \n' +
+    '       FROM patients WHERE deleted_at IS NULL \n' +
+    '       ORDER BY created_at DESC LIMIT 20 OFFSET 0',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'dob' in 'field list'"
+}
+::1 - - [21/Apr/2026:12:58:52 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 500 54 "http://localhost:5173/patients" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+getAllPatients error: Error: Unknown column 'dob' in 'field list'
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getAllPatients (C:\Users\ANTONY\HMS\backend\src\controllers\patientController.js:11:35)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: 'SELECT patient_id, full_name, dob, gender, phone, national_id, created_at \n' +
+    '       FROM patients WHERE deleted_at IS NULL \n' +
+    '       ORDER BY created_at DESC LIMIT 20 OFFSET 0',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'dob' in 'field list'"
+}
+::1 - - [21/Apr/2026:12:58:52 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 500 54 "http://localhost:5173/patients" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+getAllPatients error: Error: Unknown column 'dob' in 'field list'
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getAllPatients (C:\Users\ANTONY\HMS\backend\src\controllers\patientController.js:11:35)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: 'SELECT patient_id, full_name, dob, gender, phone, national_id, created_at \n' +
+    '       FROM patients WHERE deleted_at IS NULL \n' +
+    '       ORDER BY created_at DESC LIMIT 20 OFFSET 0',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'dob' in 'field list'"
+}
+::1 - - [21/Apr/2026:12:58:53 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 500 54 "http://localhost:5173/patients" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+getAllPatients error: Error: Unknown column 'dob' in 'field list'
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getAllPatients (C:\Users\ANTONY\HMS\backend\src\controllers\patientController.js:11:35)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: 'SELECT patient_id, full_name, dob, gender, phone, national_id, created_at \n' +
+    '       FROM patients WHERE deleted_at IS NULL \n' +
+    '       ORDER BY created_at DESC LIMIT 20 OFFSET 0',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'dob' in 'field list'"
+}
+::1 - - [21/Apr/2026:12:59:49 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 500 54 "-" "curl/8.18.0"
+getAllPatients error: Error: Unknown column 'dob' in 'field list'
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getAllPatients (C:\Users\ANTONY\HMS\backend\src\controllers\patientController.js:11:35)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: 'SELECT patient_id, full_name, dob, gender, phone, national_id, created_at \n' +
+    '       FROM patients WHERE deleted_at IS NULL \n' +
+    '       ORDER BY created_at DESC LIMIT 20 OFFSET 0',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'dob' in 'field list'"
+}
+::1 - - [21/Apr/2026:13:00:30 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 500 54 "-" "curl/8.18.0"
+getAllPatients error: Error: Unknown column 'dob' in 'field list'
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getAllPatients (C:\Users\ANTONY\HMS\backend\src\controllers\patientController.js:11:35)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: 'SELECT patient_id, full_name, dob, gender, phone, national_id, created_at \n' +
+    '       FROM patients WHERE deleted_at IS NULL \n' +
+    '       ORDER BY created_at DESC LIMIT 20 OFFSET 0',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'dob' in 'field list'"
+}
+::1 - - [21/Apr/2026:13:00:49 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 500 54 "-" "curl/8.18.0"
+getAllPatients error: Error: Unknown column 'dob' in 'field list'
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getAllPatients (C:\Users\ANTONY\HMS\backend\src\controllers\patientController.js:11:35)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: 'SELECT patient_id, full_name, dob, gender, phone, national_id, created_at \n' +
+    '       FROM patients WHERE deleted_at IS NULL \n' +
+    '       ORDER BY created_at DESC LIMIT 20 OFFSET 0',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'dob' in 'field list'"
+}
+::1 - - [21/Apr/2026:13:01:20 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 500 54 "-" "curl/8.18.0"
+getAllPatients error: Error: Unknown column 'dob' in 'field list'
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getAllPatients (C:\Users\ANTONY\HMS\backend\src\controllers\patientController.js:11:35)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: 'SELECT patient_id, full_name, dob, gender, phone, national_id, created_at \n' +
+    '       FROM patients WHERE deleted_at IS NULL \n' +
+    '       ORDER BY created_at DESC LIMIT 20 OFFSET 0',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'dob' in 'field list'"
+}
+::1 - - [21/Apr/2026:13:02:08 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 500 54 "-" "curl/8.18.0"

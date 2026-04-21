@@ -5,14 +5,14 @@ async function getAllPatients(req, res) {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
-    const offset = (page - 1) * limit;
+    const offset = (parseInt(req.query.page || '1') - 1) * parseInt(req.query.limit || '20');
 
-    const [[{ total }]] = await pool.query('SELECT COUNT(*) as total FROM patients WHERE deleted_at IS NULL');
+    const [countResult] = await pool.query('SELECT COUNT(*) as cnt FROM patients WHERE deleted_at IS NULL');
+    const total = countResult[0]?.cnt ?? 0;
     const [patients] = await pool.query(
-      `SELECT id, full_name, dob, gender, phone, national_id, created_at 
+      `SELECT patient_id, full_name, date_of_birth, gender, phone, email, national_id, created_at 
        FROM patients WHERE deleted_at IS NULL 
-       ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-      [limit, offset]
+       ORDER BY created_at DESC LIMIT ${parseInt(req.query.limit) || 20} OFFSET ${offset}`
     );
 
     res.json({
@@ -24,7 +24,7 @@ async function getAllPatients(req, res) {
     });
   } catch (error) {
     console.error('getAllPatients error:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch patients' });
+    res.status(500).json({ success: false, message: error.message });
   }
 }
 
@@ -36,7 +36,7 @@ async function searchPatients(req, res) {
     }
 
     const [patients] = await pool.query(
-      `SELECT id, full_name, dob, gender, phone, national_id, created_at 
+      `SELECT patient_id, full_name, date_of_birth, gender, phone, national_id, created_at 
        FROM patients 
        WHERE deleted_at IS NULL 
        AND (full_name LIKE ? OR national_id LIKE ? OR phone LIKE ?)
@@ -56,7 +56,7 @@ async function getPatientById(req, res) {
     const { id } = req.params;
 
     const [patients] = await pool.query(
-      'SELECT * FROM patients WHERE id = ? AND deleted_at IS NULL',
+      'SELECT * FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
       [id]
     );
 
@@ -86,10 +86,10 @@ async function createPatient(req, res) {
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { full_name, dob, gender, phone, national_id, address, emergency_contact } = req.body;
+    const { full_name, date_of_birth, gender, phone, national_id, address, emergency_contact } = req.body;
 
     const [existing] = await pool.query(
-      'SELECT id FROM patients WHERE national_id = ? AND deleted_at IS NULL',
+      'SELECT patient_id FROM patients WHERE national_id = ? AND deleted_at IS NULL',
       [national_id]
     );
 
@@ -98,12 +98,12 @@ async function createPatient(req, res) {
     }
 
     const [result] = await pool.query(
-      `INSERT INTO patients (full_name, dob, gender, phone, national_id, address, emergency_contact, created_at) 
+      `INSERT INTO patients (full_name, date_of_birth, gender, phone, national_id, address, emergency_contact, created_at) 
        VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [full_name, dob, gender, phone, national_id, address || null, emergency_contact || null]
+      [full_name, date_of_birth, gender, phone, national_id, address || null, emergency_contact || null]
     );
 
-    const [newPatient] = await pool.query('SELECT * FROM patients WHERE id = ?', [result.insertId]);
+    const [newPatient] = await pool.query('SELECT * FROM patients WHERE patient_id = ?', [result.insertId]);
 
     res.status(201).json({ success: true, patient: newPatient[0] });
   } catch (error) {
@@ -123,7 +123,7 @@ async function updatePatient(req, res) {
     const { full_name, phone, address, emergency_contact } = req.body;
 
     const [existing] = await pool.query(
-      'SELECT id FROM patients WHERE id = ? AND deleted_at IS NULL',
+      'SELECT patient_id FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
       [id]
     );
 
@@ -132,11 +132,11 @@ async function updatePatient(req, res) {
     }
 
     await pool.query(
-      `UPDATE patients SET full_name = ?, phone = ?, address = ?, emergency_contact = ? WHERE id = ?`,
+      `UPDATE patients SET full_name = ?, phone = ?, address = ?, emergency_contact = ? WHERE patient_id = ?`,
       [full_name, phone, address || null, emergency_contact || null, id]
     );
 
-    const [updated] = await pool.query('SELECT * FROM patients WHERE id = ?', [id]);
+    const [updated] = await pool.query('SELECT * FROM patients WHERE patient_id = ?', [id]);
 
     res.json({ success: true, patient: updated[0] });
   } catch (error) {
@@ -150,7 +150,7 @@ async function deletePatient(req, res) {
     const { id } = req.params;
 
     const [existing] = await pool.query(
-      'SELECT id FROM patients WHERE id = ? AND deleted_at IS NULL',
+      'SELECT patient_id FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
       [id]
     );
 
@@ -158,7 +158,7 @@ async function deletePatient(req, res) {
       return res.status(404).json({ success: false, message: 'Patient not found' });
     }
 
-    await pool.query('UPDATE patients SET deleted_at = NOW() WHERE id = ?', [id]);
+    await pool.query('UPDATE patients SET deleted_at = NOW() WHERE patient_id = ?', [id]);
 
     res.json({ success: true, message: 'Patient archived' });
   } catch (error) {

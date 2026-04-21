@@ -1,0 +1,192 @@
+🏥 HMS Meru server running on port 5001
+✅ Database connected successfully
+Dashboard stats error: Error: Unknown column 'deleted_at' in 'where clause'
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getDashboardStats (C:\Users\ANTONY\HMS\backend\src\controllers\adminController.js:5:41)
+    at Layer.handle [as handle_request] (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\route.js:149:13)
+    at C:\Users\ANTONY\HMS\backend\src\middleware\auth.js:38:5
+    at Layer.handle [as handle_request] (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\route.js:149:13)
+    at verifyToken (C:\Users\ANTONY\HMS\backend\src\middleware\auth.js:21:5)
+    at Layer.handle [as handle_request] (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\route.js:149:13) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: 'SELECT COUNT(*) as count FROM patients WHERE deleted_at IS NULL',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'deleted_at' in 'where clause'"
+}
+::1 - - [21/Apr/2026:11:09:53 +0000] "GET /api/admin/stats HTTP/1.1" 500 75 "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+Dashboard stats error: Error: Unknown column 'deleted_at' in 'where clause'
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getDashboardStats (C:\Users\ANTONY\HMS\backend\src\controllers\adminController.js:5:41)
+    at Layer.handle [as handle_request] (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\route.js:149:13)
+    at C:\Users\ANTONY\HMS\backend\src\middleware\auth.js:38:5
+    at Layer.handle [as handle_request] (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\route.js:149:13)
+    at verifyToken (C:\Users\ANTONY\HMS\backend\src\middleware\auth.js:21:5)
+    at Layer.handle [as handle_request] (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\route.js:149:13) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: 'SELECT COUNT(*) as count FROM patients WHERE deleted_at IS NULL',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'deleted_at' in 'where clause'"
+}
+::1 - - [21/Apr/2026:11:09:54 +0000] "GET /api/admin/stats HTTP/1.1" 500 75 "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+User found: {
+  user_id: 1,
+  username: 'admin',
+  password_hash: '$2a$10$ZEaqMRyo512JOamo7sHgO.qEhOD.Kk6hQ1WbCdhOl2JoV96CeuM7W',
+  role: 'admin',
+  full_name: 'System Admin',
+  is_active: 1
+}
+Comparing password: Admin@1234 with hash: $2a$10$ZEaqMRyo512JOamo7sHgO.qEhOD.Kk6hQ1WbCdhOl2JoV96CeuM7W
+Password valid: true
+::1 - - [21/Apr/2026:11:10:45 +0000] "POST /api/auth/login HTTP/1.1" 200 311 "-" "curl/8.18.0"
+Dashboard stats error: Error: Unknown column 'deleted_at' in 'where clause'
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getDashboardStats (C:\Users\ANTONY\HMS\backend\src\controllers\adminController.js:5:41)
+    at Layer.handle [as handle_request] (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\route.js:149:13)
+    at C:\Users\ANTONY\HMS\backend\src\middleware\auth.js:38:5
+    at Layer.handle [as handle_request] (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\route.js:149:13)
+    at verifyToken (C:\Users\ANTONY\HMS\backend\src\middleware\auth.js:21:5)
+    at Layer.handle [as handle_request] (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\route.js:149:13) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sql: 'SELECT COUNT(*) as count FROM patients WHERE deleted_at IS NULL',
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'deleted_at' in 'where clause'"
+}
+::1 - - [21/Apr/2026:11:10:45 +0000] "GET /api/admin/stats HTTP/1.1" 500 75 "-" "curl/8.18.0"
+User found: {
+  user_id: 1,
+  username: 'admin',
+  password_hash: '$2a$10$ZEaqMRyo512JOamo7sHgO.qEhOD.Kk6hQ1WbCdhOl2JoV96CeuM7W',
+  role: 'admin',
+  full_name: 'System Admin',
+  is_active: 1
+}
+Comparing password: Admin@1234 with hash: $2a$10$ZEaqMRyo512JOamo7sHgO.qEhOD.Kk6hQ1WbCdhOl2JoV96CeuM7W
+Password valid: true
+::1 - - [21/Apr/2026:11:11:57 +0000] "POST /api/auth/login HTTP/1.1" 200 311 "-" "curl/8.18.0"
+Dashboard stats error: TypeError: Cannot read properties of undefined (reading 'count')
+    at getDashboardStats (C:\Users\ANTONY\HMS\backend\src\controllers\adminController.js:14:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+::1 - - [21/Apr/2026:11:11:57 +0000] "GET /api/admin/stats HTTP/1.1" 500 83 "-" "curl/8.18.0"
+User found: {
+  user_id: 1,
+  username: 'admin',
+  password_hash: '$2a$10$ZEaqMRyo512JOamo7sHgO.qEhOD.Kk6hQ1WbCdhOl2JoV96CeuM7W',
+  role: 'admin',
+  full_name: 'System Admin',
+  is_active: 1
+}
+Comparing password: Admin@1234 with hash: $2a$10$ZEaqMRyo512JOamo7sHgO.qEhOD.Kk6hQ1WbCdhOl2JoV96CeuM7W
+Password valid: true
+::1 - - [21/Apr/2026:11:13:03 +0000] "POST /api/auth/login HTTP/1.1" 200 311 "-" "curl/8.18.0"
+Dashboard stats error: TypeError: Cannot read properties of undefined (reading 'count')
+    at getDashboardStats (C:\Users\ANTONY\HMS\backend\src\controllers\adminController.js:14:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+::1 - - [21/Apr/2026:11:13:03 +0000] "GET /api/admin/stats HTTP/1.1" 500 83 "-" "curl/8.18.0"
+::1 - - [21/Apr/2026:11:14:14 +0000] "GET /api/lab?status=pending&limit=100 HTTP/1.1" 200 64 "http://localhost:5173/lab" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:11:14:14 +0000] "GET /api/lab?status=pending&limit=100 HTTP/1.1" 304 - "http://localhost:5173/lab" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:11:14:16 +0000] "GET /api/appointments?date=2026-04-21 HTTP/1.1" 200 68 "http://localhost:5173/appointments" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:11:14:16 +0000] "GET /api/appointments?date=2026-04-21 HTTP/1.1" 304 - "http://localhost:5173/appointments" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:11:14:19 +0000] "GET /api/lab?status=pending&limit=100 HTTP/1.1" 304 - "http://localhost:5173/lab" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:11:14:19 +0000] "GET /api/lab?status=pending&limit=100 HTTP/1.1" 304 - "http://localhost:5173/lab" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:11:14:20 +0000] "GET /api/pharmacy/drugs HTTP/1.1" 200 60 "http://localhost:5173/pharmacy" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:11:14:20 +0000] "GET /api/pharmacy/drugs HTTP/1.1" 304 - "http://localhost:5173/pharmacy" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+getInvoices error: Error: Table 'hms_db.invoices' doesn't exist
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getInvoices (C:\Users\ANTONY\HMS\backend\src\controllers\billingController.js:23:38)
+    at Layer.handle [as handle_request] (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\route.js:149:13)
+    at C:\Users\ANTONY\HMS\backend\src\middleware\auth.js:38:5
+    at Layer.handle [as handle_request] (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\route.js:149:13)
+    at verifyToken (C:\Users\ANTONY\HMS\backend\src\middleware\auth.js:21:5)
+    at Layer.handle [as handle_request] (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\route.js:149:13) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sql: 'SELECT COUNT(*) as total FROM invoices b WHERE 1=1',
+  sqlState: '42S02',
+  sqlMessage: "Table 'hms_db.invoices' doesn't exist"
+}
+::1 - - [21/Apr/2026:11:14:22 +0000] "GET /api/billing?limit=100 HTTP/1.1" 500 54 "http://localhost:5173/billing" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+getInvoices error: Error: Table 'hms_db.invoices' doesn't exist
+    at PromisePool.query (C:\Users\ANTONY\HMS\backend\node_modules\mysql2\lib\promise\pool.js:36:22)
+    at getInvoices (C:\Users\ANTONY\HMS\backend\src\controllers\billingController.js:23:38)
+    at Layer.handle [as handle_request] (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\route.js:149:13)
+    at C:\Users\ANTONY\HMS\backend\src\middleware\auth.js:38:5
+    at Layer.handle [as handle_request] (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\route.js:149:13)
+    at verifyToken (C:\Users\ANTONY\HMS\backend\src\middleware\auth.js:21:5)
+    at Layer.handle [as handle_request] (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\ANTONY\HMS\backend\node_modules\express\lib\router\route.js:149:13) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sql: 'SELECT COUNT(*) as total FROM invoices b WHERE 1=1',
+  sqlState: '42S02',
+  sqlMessage: "Table 'hms_db.invoices' doesn't exist"
+}
+::1 - - [21/Apr/2026:11:14:22 +0000] "GET /api/billing?limit=100 HTTP/1.1" 500 54 "http://localhost:5173/billing" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:11:14:23 +0000] "GET /api/admin/users HTTP/1.1" 200 834 "http://localhost:5173/admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:11:14:24 +0000] "GET /api/admin/users HTTP/1.1" 304 - "http://localhost:5173/admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:11:14:31 +0000] "GET /api/admin/stats HTTP/1.1" 401 42 "-" "curl/8.18.0"
+Dashboard stats error: TypeError: Cannot read properties of undefined (reading 'count')
+    at getDashboardStats (C:\Users\ANTONY\HMS\backend\src\controllers\adminController.js:14:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+::1 - - [21/Apr/2026:11:14:31 +0000] "GET /api/admin/stats HTTP/1.1" 500 83 "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+Dashboard stats error: TypeError: Cannot read properties of undefined (reading 'count')
+    at getDashboardStats (C:\Users\ANTONY\HMS\backend\src\controllers\adminController.js:14:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+::1 - - [21/Apr/2026:11:14:31 +0000] "GET /api/admin/stats HTTP/1.1" 500 83 "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:11:14:34 +0000] "GET /api/admin/users HTTP/1.1" 304 - "http://localhost:5173/admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:11:14:34 +0000] "GET /api/admin/users HTTP/1.1" 304 - "http://localhost:5173/admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+Dashboard stats error: TypeError: Cannot read properties of undefined (reading 'count')
+    at getDashboardStats (C:\Users\ANTONY\HMS\backend\src\controllers\adminController.js:14:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+::1 - - [21/Apr/2026:11:14:40 +0000] "GET /api/admin/stats HTTP/1.1" 500 83 "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+Dashboard stats error: TypeError: Cannot read properties of undefined (reading 'count')
+    at getDashboardStats (C:\Users\ANTONY\HMS\backend\src\controllers\adminController.js:14:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+::1 - - [21/Apr/2026:11:14:40 +0000] "GET /api/admin/stats HTTP/1.1" 500 83 "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+User found: {
+  user_id: 1,
+  username: 'admin',
+  password_hash: '$2a$10$ZEaqMRyo512JOamo7sHgO.qEhOD.Kk6hQ1WbCdhOl2JoV96CeuM7W',
+  role: 'admin',
+  full_name: 'System Admin',
+  is_active: 1
+}
+Comparing password: Admin@1234 with hash: $2a$10$ZEaqMRyo512JOamo7sHgO.qEhOD.Kk6hQ1WbCdhOl2JoV96CeuM7W
+Password valid: true
+::1 - - [21/Apr/2026:11:14:51 +0000] "POST /api/auth/login HTTP/1.1" 200 311 "-" "curl/8.18.0"
+Dashboard stats error: TypeError: Cannot read properties of undefined (reading 'count')
+    at getDashboardStats (C:\Users\ANTONY\HMS\backend\src\controllers\adminController.js:14:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+::1 - - [21/Apr/2026:11:14:52 +0000] "GET /api/admin/stats HTTP/1.1" 500 83 "-" "curl/8.18.0"
+❌ Error: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+::1 - - [21/Apr/2026:11:15:24 +0000] "POST /api/auth/login HTTP/1.1" 500 99 "-" "curl/8.18.0"
+::1 - - [21/Apr/2026:11:15:25 +0000] "GET /api/admin/stats HTTP/1.1" 401 42 "-" "curl/8.18.0"
+Dashboard stats error: TypeError: Cannot read properties of undefined (reading 'count')
+    at getDashboardStats (C:\Users\ANTONY\HMS\backend\src\controllers\adminController.js:14:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+::1 - - [21/Apr/2026:11:15:48 +0000] "GET /api/admin/stats HTTP/1.1" 500 83 "-" "curl/8.18.0"
+Dashboard stats error: TypeError: Cannot read properties of undefined (reading 'count')
+    at getDashboardStats (C:\Users\ANTONY\HMS\backend\src\controllers\adminController.js:14:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+::1 - - [21/Apr/2026:11:17:24 +0000] "GET /api/admin/stats HTTP/1.1" 500 83 "-" "curl/8.18.0"
+Dashboard stats error: TypeError: Cannot read properties of undefined (reading 'count')
+    at getDashboardStats (C:\Users\ANTONY\HMS\backend\src\controllers\adminController.js:14:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+::1 - - [21/Apr/2026:11:18:09 +0000] "GET /api/admin/stats HTTP/1.1" 500 83 "-" "curl/8.18.0"

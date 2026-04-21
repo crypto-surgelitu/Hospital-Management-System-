@@ -28,7 +28,7 @@ async function getInvoices(req, res) {
     const [invoices] = await pool.query(
       `SELECT b.*, p.full_name as patient_name 
        FROM invoices b
-       JOIN patients p ON b.patient_id = p.id
+       JOIN patients p ON b.patient_id = p.patient_id
        WHERE ${whereClause}
        ORDER BY b.created_at DESC
        LIMIT ? OFFSET ?`,
@@ -55,8 +55,8 @@ async function getInvoiceById(req, res) {
     const [invoices] = await pool.query(
       `SELECT b.*, p.full_name as patient_name 
        FROM invoices b
-       JOIN patients p ON b.patient_id = p.id
-       WHERE b.id = ?`,
+       JOIN patients p ON b.patient_id = p.patient_id
+       WHERE b.invoice_id = ?`,
       [id]
     );
 
@@ -72,7 +72,7 @@ async function getInvoiceById(req, res) {
     const [payments] = await pool.query(
       `SELECT bp.*, u.full_name as recorded_by_name
        FROM payments bp
-       JOIN users u ON bp.received_by = u.id
+       JOIN users u ON bp.received_by = u.user_id
        WHERE bp.invoice_id = ?
        ORDER BY bp.created_at DESC`,
       [id]
@@ -138,8 +138,8 @@ async function createInvoice(req, res) {
       const [newInvoice] = await pool.query(
         `SELECT b.*, p.full_name as patient_name 
          FROM invoices b
-         JOIN patients p ON b.patient_id = p.id
-         WHERE b.id = ?`,
+         JOIN patients p ON b.patient_id = p.patient_id
+         WHERE b.invoice_id = ?`,
         [invoice_id]
       );
 
@@ -172,7 +172,7 @@ async function recordPayment(req, res) {
     }
 
     const [[invoice]] = await pool.query(
-      'SELECT * FROM invoices WHERE id = ?',
+      'SELECT * FROM invoices WHERE invoice_id = ?',
       [id]
     );
 
@@ -209,8 +209,8 @@ async function recordPayment(req, res) {
       const [[updatedInvoice]] = await pool.query(
         `SELECT b.*, p.full_name as patient_name 
          FROM invoices b
-         JOIN patients p ON b.patient_id = p.id
-         WHERE b.id = ?`,
+         JOIN patients p ON b.patient_id = p.patient_id
+         WHERE b.invoice_id = ?`,
         [id]
       );
 

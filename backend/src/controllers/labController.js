@@ -23,8 +23,8 @@ async function getLabRequests(req, res) {
     const [requests] = await pool.query(
       `SELECT lr.*, p.full_name as patient_name, u.full_name as requested_by_name
        FROM lab_requests lr
-       JOIN patients p ON lr.patient_id = p.id
-       JOIN users u ON lr.requested_by = u.id
+       JOIN patients p ON lr.patient_id = p.patient_id
+       JOIN users u ON lr.requested_by = u.user_id
        WHERE ${whereClause}
        ORDER BY 
          CASE lr.priority 
@@ -68,9 +68,9 @@ async function createLabRequest(req, res) {
     const [newRequest] = await pool.query(
       `SELECT lr.*, p.full_name as patient_name, u.full_name as requested_by_name
        FROM lab_requests lr
-       JOIN patients p ON lr.patient_id = p.id
-       JOIN users u ON lr.requested_by = u.id
-       WHERE lr.id = ?`,
+       JOIN patients p ON lr.patient_id = p.patient_id
+       JOIN users u ON lr.requested_by = u.user_id
+       WHERE lr.lab_request_id = ?`,
       [result.insertId]
     );
 
@@ -91,16 +91,16 @@ async function updateSpecimenStatus(req, res) {
     await pool.query(
       `UPDATE lab_requests 
        SET specimen_collected = ?, specimen_collected_at = ?, status = CASE WHEN ? = 1 THEN 'in-progress' ELSE status END
-       WHERE id = ?`,
+       WHERE lab_request_id = ?`,
       [specimen_collected ? 1 : 0, specimen_collected_at, specimen_collected ? 1 : 0, id]
     );
 
     const [updated] = await pool.query(
       `SELECT lr.*, p.full_name as patient_name, u.full_name as requested_by_name
        FROM lab_requests lr
-       JOIN patients p ON lr.patient_id = p.id
-       JOIN users u ON lr.requested_by = u.id
-       WHERE lr.id = ?`,
+       JOIN patients p ON lr.patient_id = p.patient_id
+       JOIN users u ON lr.requested_by = u.user_id
+       WHERE lr.lab_request_id = ?`,
       [id]
     );
 
@@ -123,16 +123,16 @@ async function enterLabResults(req, res) {
     await pool.query(
       `UPDATE lab_requests 
        SET results = ?, status = 'completed', completed_at = NOW()
-       WHERE id = ?`,
+       WHERE lab_request_id = ?`,
       [results, id]
     );
 
     const [updated] = await pool.query(
       `SELECT lr.*, p.full_name as patient_name, u.full_name as requested_by_name
        FROM lab_requests lr
-       JOIN patients p ON lr.patient_id = p.id
-       JOIN users u ON lr.requested_by = u.id
-       WHERE lr.id = ?`,
+       JOIN patients p ON lr.patient_id = p.patient_id
+       JOIN users u ON lr.requested_by = u.user_id
+       WHERE lr.lab_request_id = ?`,
       [id]
     );
 

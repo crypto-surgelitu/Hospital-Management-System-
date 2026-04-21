@@ -6,8 +6,8 @@ async function login(req, res) {
   try {
     const { username, password } = req.body;
 
-const [rows] = await pool.execute(
-  'SELECT id, username, password_hash, role, full_name, is_active FROM users WHERE username = ?',
+const [rows] = await pool.query(
+  'SELECT user_id, username, password_hash, role, full_name, is_active FROM users WHERE username = ?',
   [username]
 );
 
@@ -16,19 +16,22 @@ const [rows] = await pool.execute(
     }
 
     const user = rows[0];
+    console.log('User found:', user);
 
-    if (user.is_active === 0) {
+    if (user.is_active === 0 || user.is_active === '0') {
       return res.status(401).json({ success: false, message: 'Account deactivated' });
     }
 
+    console.log('Comparing password:', password, 'with hash:', user.password_hash);
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    console.log('Password valid:', isValidPassword);
 
     if (!isValidPassword) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, role: user.role, name: user.full_name },
+      { id: user.user_id, username: user.username, role: user.role, name: user.full_name },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -36,11 +39,11 @@ const [rows] = await pool.execute(
     return res.status(200).json({
       success: true,
       token,
-      user: { id: user.id, username: user.username, role: user.role, name: user.full_name }
+      user: { id: user.user_id, username: user.username, role: user.role, name: user.full_name }
     });
   } catch (error) {
     console.error('Login error:', error);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: error.message });
   }
 }
 
