@@ -12,3 +12,47 @@ Comparing password: Admin@1234 with hash: $2a$10$ZEaqMRyo512JOamo7sHgO.qEhOD.Kk6
 Password valid: true
 ::1 - - [21/Apr/2026:13:13:22 +0000] "POST /api/auth/login HTTP/1.1" 200 311 "-" "curl/8.18.0"
 ::1 - - [21/Apr/2026:13:13:32 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 200 64 "-" "curl/8.18.0"
+::1 - - [21/Apr/2026:13:15:23 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 200 64 "http://localhost:5173/patients" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:15:23 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 304 - "http://localhost:5173/patients" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:15:23 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 304 - "http://localhost:5173/patients" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:15:32 +0000] "GET /api/appointments?date=2026-04-21 HTTP/1.1" 200 68 "http://localhost:5173/appointments" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:15:32 +0000] "GET /api/appointments?date=2026-04-21 HTTP/1.1" 304 - "http://localhost:5173/appointments" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:15:34 +0000] "GET /api/admin/doctors HTTP/1.1" 200 106 "http://localhost:5173/appointments" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:15:37 +0000] "GET /api/lab?status=pending&limit=100 HTTP/1.1" 304 - "http://localhost:5173/lab" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:15:37 +0000] "GET /api/lab?status=pending&limit=100 HTTP/1.1" 304 - "http://localhost:5173/lab" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:15:41 +0000] "GET /api/lab?status=completed&limit=100 HTTP/1.1" 200 64 "http://localhost:5173/lab" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:15:42 +0000] "GET /api/admin/users HTTP/1.1" 304 - "http://localhost:5173/admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:15:42 +0000] "GET /api/admin/users HTTP/1.1" 304 - "http://localhost:5173/admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:16:50 +0000] "GET /api/admin/users HTTP/1.1" 304 - "http://localhost:5173/admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:16:50 +0000] "GET /api/admin/users HTTP/1.1" 304 - "http://localhost:5173/admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:12 +0000] "POST /api/admin/users HTTP/1.1" 201 175 "http://localhost:5173/admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:12 +0000] "GET /api/admin/users HTTP/1.1" 200 986 "http://localhost:5173/admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:21 +0000] "GET /api/admin/stats HTTP/1.1" 304 - "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:21 +0000] "GET /api/admin/stats HTTP/1.1" 304 - "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+User found: {
+  user_id: 7,
+  username: 'John doe ',
+  password_hash: '$2a$10$B/bE9Ey8sVAmXgS5Ok8wKu6bUGNfhWgInBXAWnGIE/4pCDWCMSAXe',
+  role: 'doctor',
+  full_name: 'Dr John',
+  is_active: 1
+}
+Comparing password: 0987654321 with hash: $2a$10$B/bE9Ey8sVAmXgS5Ok8wKu6bUGNfhWgInBXAWnGIE/4pCDWCMSAXe
+Password valid: true
+::1 - - [21/Apr/2026:13:18:43 +0000] "POST /api/auth/login HTTP/1.1" 200 311 "http://localhost:5173/login" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:43 +0000] "GET /api/admin/stats HTTP/1.1" 304 - "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:43 +0000] "GET /api/admin/stats HTTP/1.1" 304 - "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:45 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 304 - "http://localhost:5173/patients" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:45 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 304 - "http://localhost:5173/patients" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:46 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 304 - "http://localhost:5173/patients" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:47 +0000] "GET /api/appointments?date=2026-04-21 HTTP/1.1" 304 - "http://localhost:5173/appointments" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:47 +0000] "GET /api/appointments?date=2026-04-21 HTTP/1.1" 304 - "http://localhost:5173/appointments" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:50 +0000] "GET /api/admin/stats HTTP/1.1" 304 - "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:50 +0000] "GET /api/admin/stats HTTP/1.1" 304 - "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:58 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 304 - "http://localhost:5173/patients" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:58 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 304 - "http://localhost:5173/patients" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:58 +0000] "GET /api/patients?page=1&limit=20 HTTP/1.1" 304 - "http://localhost:5173/patients" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:18:59 +0000] "GET /api/appointments?date=2026-04-21 HTTP/1.1" 304 - "http://localhost:5173/appointments" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:19:00 +0000] "GET /api/appointments?date=2026-04-21 HTTP/1.1" 304 - "http://localhost:5173/appointments" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:19:03 +0000] "GET /api/admin/stats HTTP/1.1" 304 - "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+::1 - - [21/Apr/2026:13:19:03 +0000] "GET /api/admin/stats HTTP/1.1" 304 - "http://localhost:5173/dashboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
