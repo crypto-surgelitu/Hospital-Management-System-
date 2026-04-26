@@ -21,16 +21,16 @@ async function getInvoices(req, res) {
     }
 
     const [[{ total }]] = await pool.query(
-      `SELECT COUNT(*) as total FROM invoices b WHERE ${whereClause}`,
+      `SELECT COUNT(*) as total FROM bills b WHERE ${whereClause}`,
       params
     );
 
     const [invoices] = await pool.query(
       `SELECT b.*, p.full_name as patient_name 
-       FROM invoices b
+       FROM bills b
        JOIN patients p ON b.patient_id = p.patient_id
        WHERE ${whereClause}
-       ORDER BY b.created_at DESC
+       ORDER BY b.bill_date DESC
        LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );
@@ -54,9 +54,9 @@ async function getInvoiceById(req, res) {
 
     const [invoices] = await pool.query(
       `SELECT b.*, p.full_name as patient_name 
-       FROM invoices b
+       FROM bills b
        JOIN patients p ON b.patient_id = p.patient_id
-       WHERE b.invoice_id = ?`,
+       WHERE b.bill_id = ?`,
       [id]
     );
 
@@ -65,7 +65,7 @@ async function getInvoiceById(req, res) {
     }
 
     const [items] = await pool.query(
-      'SELECT * FROM invoice_items WHERE invoice_id = ?',
+      'SELECT * FROM bill_items WHERE bill_id = ?',
       [id]
     );
 
@@ -73,7 +73,7 @@ async function getInvoiceById(req, res) {
       `SELECT bp.*, u.full_name as recorded_by_name
        FROM payments bp
        JOIN users u ON bp.received_by = u.user_id
-       WHERE bp.invoice_id = ?
+       WHERE bp.bill_id = ?
        ORDER BY bp.created_at DESC`,
       [id]
     );
@@ -117,19 +117,19 @@ async function createInvoice(req, res) {
       await connection.beginTransaction();
 
       const [billResult] = await connection.query(
-        `INSERT INTO invoices (patient_id, invoice_number, total, generated_by, status, created_at)
-         VALUES (?, ?, ?, ?, 'pending', NOW())`,
+        `INSERT INTO bills (patient_id, invoice_number, total_amount, generated_by, payment_status, bill_date)
+         VALUES (?, ?, ?, ?, 'pending', CURDATE())`,
         [patient_id, invoice_number, total, generated_by]
       );
 
-      const invoice_id = billResult.insertId;
+      const bill_id = billResult.insertId;
 
       for (const item of items) {
         const itemSubtotal = parseFloat(item.quantity) * parseFloat(item.unit_price || 0);
         await connection.query(
-          `INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, subtotal)
+          `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal)
            VALUES (?, ?, ?, ?, ?)`,
-          [invoice_id, item.description, item.quantity, item.unit_price || 0, itemSubtotal]
+          [bill_id, item.description, item.quantity, item.unit_price || 0, itemSubtotal]
         );
       }
 
@@ -137,15 +137,15 @@ async function createInvoice(req, res) {
 
       const [newInvoice] = await pool.query(
         `SELECT b.*, p.full_name as patient_name 
-         FROM invoices b
+         FROM bills b
          JOIN patients p ON b.patient_id = p.patient_id
-         WHERE b.invoice_id = ?`,
-        [invoice_id]
+         WHERE b.bill_id = ?`,
+        [bill_id]
       );
 
       const [newItems] = await pool.query(
-        'SELECT * FROM invoice_items WHERE invoice_id = ?',
-        [invoice_id]
+        'SELECT * FROM bill_items WHERE bill_id = ?',
+        [bill_id]
       );
 
       res.status(201).json({ success: true, invoice: newInvoice[0], items: newItems });
@@ -172,7 +172,7 @@ async function recordPayment(req, res) {
     }
 
     const [[invoice]] = await pool.query(
-      'SELECT * FROM invoices WHERE invoice_id = ?',
+      'SELECT * FROM bills WHERE bill_id = ?',
       [id]
     );
 
@@ -181,9 +181,9 @@ async function recordPayment(req, res) {
     }
 
     const newAmountPaid = (invoice.amount_paid || 0) + parseFloat(amount_paid);
-    let newStatus = invoice.status;
+    let newStatus = invoice.payment_status;
 
-    if (newAmountPaid >= invoice.total) {
+    if (newAmountPaid >= invoice.total_amount) {
       newStatus = 'paid';
     } else if (newAmountPaid > 0) {
       newStatus = 'partial';
@@ -194,12 +194,12 @@ async function recordPayment(req, res) {
       await connection.beginTransaction();
 
       await connection.query(
-        `UPDATE invoices SET amount_paid = ?, status = ? WHERE id = ?`,
+        `UPDATE bills SET amount_paid = ?, payment_status = ? WHERE bill_id = ?`,
         [newAmountPaid, newStatus, id]
       );
 
       const [paymentResult] = await connection.query(
-        `INSERT INTO payments (invoice_id, amount_paid, payment_method, reference_number, received_by, created_at)
+        `INSERT INTO payments (bill_id, amount_paid, payment_method, reference_number, received_by, created_at)
          VALUES (?, ?, ?, ?, ?, NOW())`,
         [id, amount_paid, payment_method || 'cash', reference_number || null, received_by]
       );
@@ -208,9 +208,9 @@ async function recordPayment(req, res) {
 
       const [[updatedInvoice]] = await pool.query(
         `SELECT b.*, p.full_name as patient_name 
-         FROM invoices b
+         FROM bills b
          JOIN patients p ON b.patient_id = p.patient_id
-         WHERE b.invoice_id = ?`,
+         WHERE b.bill_id = ?`,
         [id]
       );
 

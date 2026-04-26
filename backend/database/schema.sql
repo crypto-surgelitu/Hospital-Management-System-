@@ -168,9 +168,9 @@ CREATE TABLE IF NOT EXISTS payments (
 -- ============================================
 
 INSERT INTO users (full_name, username, password_hash, role, department) VALUES
-('System Admin',    'admin',       '$2a$10$Rz8wpv3.bMI1IK/v.OPErQlVNehAZPu35tRcDUp9AvO/VLhaWQ', 'admin',        'Administration'),
-('Dr. James Ochieng','dr.ochieng', '$2a$10$Rz8wpv3.bMI1IK/v.OPErQlVNehAZPu35tRcDUp9AvO/VLhaWQ', 'doctor',       'General Medicine'),
-('Mary Wanjiku',    'm.wanjiku',   '$2a$10$Rz8wpv3.bMI1IK/v.OPErQlVNehAZPu35tRcDUp9AvO/VLhaWQ', 'receptionist', 'Front Desk'),
-('Sam Oduor',       's.oduor',     '$2a$10$Rz8wpv3.bMI1IK/v.OPErQlVNehAZPu35tRcDUp9AvO/VLhaWQ', 'lab',          'Laboratory'),
-('Grace Akinyi',    'g.akinyi',    '$2a$10$Rz8wpv3.bMI1IK/v.OPErQlVNehAZPu35tRcDUp9AvO/VLhaWQ', 'pharmacist',   'Pharmacy'),
-('Nurse Faith Njeri','f.njeri',    '$2a$10$Rz8wpv3.bMI1IK/v.OPErQlVNehAZPu35tRcDUp9AvO/VLhaWQ', 'nurse',        'Nursing');
+('System Admin',    'admin',       NULL, 'admin',        'Administration'),
+('Dr. James Ochieng','dr.ochieng', NULL, 'doctor',       'General Medicine'),
+('Mary Wanjiku',    'm.wanjiku',   NULL, 'receptionist', 'Front Desk'),
+('Sam Oduor',       's.oduor',     NULL, 'lab',          'Laboratory'),
+('Grace Akinyi',    'g.akinyi',    NULL, 'pharmacist',   'Pharmacy'),
+('Nurse Faith Njeri','f.njeri',    NULL, 'nurse',        'Nursing');

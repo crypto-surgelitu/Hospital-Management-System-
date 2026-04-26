@@ -23,8 +23,8 @@ async function getLabRequests(req, res) {
     const [requests] = await pool.query(
       `SELECT lr.*, p.full_name as patient_name, u.full_name as requested_by_name
        FROM lab_requests lr
-       JOIN patients p ON lr.patient_id = p.patient_id
-       JOIN users u ON lr.requested_by = u.user_id
+JOIN patients p ON lr.patient_id = p.patient_id
+        JOIN users u ON lr.requested_by = u.user_id
        WHERE ${whereClause}
        ORDER BY 
          CASE lr.priority 
@@ -68,8 +68,8 @@ async function createLabRequest(req, res) {
     const [newRequest] = await pool.query(
       `SELECT lr.*, p.full_name as patient_name, u.full_name as requested_by_name
        FROM lab_requests lr
-       JOIN patients p ON lr.patient_id = p.patient_id
-       JOIN users u ON lr.requested_by = u.user_id
+JOIN patients p ON lr.patient_id = p.patient_id
+        JOIN users u ON lr.requested_by = u.user_id
        WHERE lr.lab_request_id = ?`,
       [result.insertId]
     );
@@ -98,8 +98,8 @@ async function updateSpecimenStatus(req, res) {
     const [updated] = await pool.query(
       `SELECT lr.*, p.full_name as patient_name, u.full_name as requested_by_name
        FROM lab_requests lr
-       JOIN patients p ON lr.patient_id = p.patient_id
-       JOIN users u ON lr.requested_by = u.user_id
+JOIN patients p ON lr.patient_id = p.patient_id
+        JOIN users u ON lr.requested_by = u.user_id
        WHERE lr.lab_request_id = ?`,
       [id]
     );
@@ -130,8 +130,8 @@ async function enterLabResults(req, res) {
     const [updated] = await pool.query(
       `SELECT lr.*, p.full_name as patient_name, u.full_name as requested_by_name
        FROM lab_requests lr
-       JOIN patients p ON lr.patient_id = p.patient_id
-       JOIN users u ON lr.requested_by = u.user_id
+JOIN patients p ON lr.patient_id = p.patient_id
+        JOIN users u ON lr.requested_by = u.user_id
        WHERE lr.lab_request_id = ?`,
       [id]
     );

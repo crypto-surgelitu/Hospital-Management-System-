@@ -122,7 +122,7 @@ async function updatePatient(req, res) {
     const { id } = req.params;
     const { full_name, phone, address, emergency_contact } = req.body;
 
-    const [existing] = await pool.query(
+const [existing] = await pool.query(
       'SELECT patient_id FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
       [id]
     );

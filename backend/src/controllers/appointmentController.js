@@ -32,8 +32,8 @@ async function getAppointments(req, res) {
     const [appointments] = await pool.query(
       `SELECT a.*, p.full_name as patient_name, u.full_name as doctor_name
        FROM appointments a
-       JOIN patients p ON a.patient_id = p.patient_id
-       JOIN users u ON a.doctor_id = u.user_id
+JOIN patients p ON a.patient_id = p.patient_id
+        JOIN users u ON a.doctor_id = u.user_id
        ${whereClause}
        ORDER BY a.appointment_date ASC, a.appointment_time ASC
        LIMIT ? OFFSET ?`,
@@ -97,8 +97,8 @@ async function createAppointment(req, res) {
     const [newAppointment] = await pool.query(
       `SELECT a.*, p.full_name as patient_name, u.full_name as doctor_name
        FROM appointments a
-       JOIN patients p ON a.patient_id = p.patient_id
-       JOIN users u ON a.doctor_id = u.user_id
+JOIN patients p ON a.patient_id = p.patient_id
+        JOIN users u ON a.doctor_id = u.user_id
        WHERE a.appointment_id = ?`,
       [result.insertId]
     );
@@ -135,8 +135,8 @@ async function updateAppointmentStatus(req, res) {
     const [updated] = await pool.query(
       `SELECT a.*, p.full_name as patient_name, u.full_name as doctor_name
        FROM appointments a
-       JOIN patients p ON a.patient_id = p.patient_id
-       JOIN users u ON a.doctor_id = u.user_id
+JOIN patients p ON a.patient_id = p.patient_id
+        JOIN users u ON a.doctor_id = u.user_id
        WHERE a.appointment_id = ?`,
       [id]
     );
@@ -168,8 +168,8 @@ async function addDoctorNotes(req, res) {
     const [updated] = await pool.query(
       `SELECT a.*, p.full_name as patient_name, u.full_name as doctor_name
        FROM appointments a
-       JOIN patients p ON a.patient_id = p.patient_id
-       JOIN users u ON a.doctor_id = u.user_id
+JOIN patients p ON a.patient_id = p.patient_id
+        JOIN users u ON a.doctor_id = u.user_id
        WHERE a.appointment_id = ?`,
       [id]
     );

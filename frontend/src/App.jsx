@@ -27,7 +27,7 @@ function App() {
             </Route>
           </Route>
 
-          <Route element={<ProtectedRoute roles={['admin', 'doctor', 'nurse', 'receptionist']} />}>
+          <Route element={<ProtectedRoute roles={['admin', 'doctor', 'receptionist']} />}>
             <Route element={<Sidebar />}>
               <Route path="/patients" element={<Patients />} />
               <Route path="/appointments" element={<Appointments />} />
@@ -40,7 +40,7 @@ function App() {
             </Route>
           </Route>
 
-          <Route element={<ProtectedRoute roles={['admin', 'pharmacist']} />}>
+          <Route element={<ProtectedRoute roles={['admin', 'pharmacy']} />}>
             <Route element={<Sidebar />}>
               <Route path="/pharmacy" element={<Pharmacy />} />
             </Route>

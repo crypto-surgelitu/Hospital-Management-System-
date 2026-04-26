@@ -24,7 +24,6 @@ const authLimiter = rateLimit({
 });
 
 // ─── Middleware ──────────────────────────────────────────────
-app.use('/api/auth/login', authLimiter);
 app.use(express.json());
 
 // ─── Debug route ───────────────────────────────────────────

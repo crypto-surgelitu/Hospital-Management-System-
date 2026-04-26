@@ -24,9 +24,9 @@ async function getUsers(req, res) {
 async function getDoctors(req, res) {
   try {
     const [doctors] = await pool.query(
-      `SELECT user_id, full_name, department
-       FROM users WHERE role = 'doctor' AND is_active = 1
-       ORDER BY full_name ASC`
+`SELECT user_id, full_name, department
+        FROM users WHERE role = 'doctor' AND is_active = 1
+        ORDER BY full_name ASC`
     );
     res.json({ success: true, doctors });
   } catch (error) {
@@ -84,13 +84,23 @@ async function updateUser(req, res) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    let query = 'UPDATE users SET full_name = ?, role = ?, department = ?, is_active = ? WHERE user_id = ?';
-    let params = [full_name, role, department || null, is_active !== undefined ? is_active : 1, id];
+    let query = 'UPDATE users SET full_name = ?, role = ?, department = ? WHERE user_id = ?';
+    let params = [full_name, role, department || null, id];
+
+    if (is_active !== undefined) {
+      query = 'UPDATE users SET full_name = ?, role = ?, department = ?, is_active = ? WHERE user_id = ?';
+      params = [full_name, role, department || null, is_active, id];
+    }
 
     if (password) {
       const password_hash = await bcrypt.hash(password, 10);
-      query = 'UPDATE users SET full_name = ?, role = ?, department = ?, is_active = ?, password_hash = ? WHERE user_id = ?';
-      params = [full_name, role, department || null, is_active !== undefined ? is_active : 1, password_hash, id];
+      if (is_active !== undefined) {
+        query = 'UPDATE users SET full_name = ?, role = ?, department = ?, is_active = ?, password_hash = ? WHERE user_id = ?';
+        params = [full_name, role, department || null, is_active, password_hash, id];
+      } else {
+        query = 'UPDATE users SET full_name = ?, role = ?, department = ?, password_hash = ? WHERE user_id = ?';
+        params = [full_name, role, department || null, password_hash, id];
+      }
     }
 
     await pool.query(query, params);
@@ -162,7 +172,7 @@ async function generateRandomUsers(req, res) {
         [fullName, username, password_hash, role, department]
       );
 
-      generated.push({ user_id: result.insertId, full_name: fullName, username, role, department, temp_password: password });
+      generated.push({ id: result.insertId, full_name: fullName, username, role, department, temp_password: password });
     }
 
     res.status(201).json({ success: true, message: `Generated ${generated.length} random users`, users: generated });
@@ -172,4 +182,29 @@ async function generateRandomUsers(req, res) {
   }
 }
 
-module.exports = { getUsers, getDoctors, createUser, updateUser, toggleUserStatus, generateRandomUsers };
+// ─── Reset user password (admin only) ─────────────────────
+async function resetUserPassword(req, res) {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    }
+
+    const [existing] = await pool.query('SELECT user_id FROM users WHERE user_id = ?', [id]);
+    if (existing.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const password_hash = await bcrypt.hash(password, 10);
+    await pool.query('UPDATE users SET password_hash = ? WHERE user_id = ?', [password_hash, id]);
+
+    res.json({ success: true, message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('resetUserPassword error:', error);
+    res.status(500).json({ success: false, message: 'Failed to reset password' });
+  }
+}
+
+module.exports = { getUsers, getDoctors, createUser, updateUser, toggleUserStatus, generateRandomUsers, resetUserPassword };

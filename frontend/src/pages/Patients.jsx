@@ -23,8 +23,8 @@ function Toast({ message, type, onClose }) {
 function ConfirmDialog({ open, title, message, onConfirm, onCancel }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+      <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm mx-auto">
         <h3 className="text-lg font-semibold text-slate-900 mb-2">{title}</h3>
         <p className="text-slate-600 text-sm mb-4">{message}</p>
         <div className="flex gap-3 justify-end">
@@ -166,8 +166,8 @@ function NewPatientModal({ open, onClose, onSubmit, loading }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-slate-900">New Patient</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
@@ -225,8 +225,8 @@ export default function Patients() {
   const [toast, setToast] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const canCreate = user?.role === 'admin' || user?.role === 'receptionist';
-  const canEdit = user?.role === 'admin' || user?.role === 'receptionist';
+  const canCreate = user?.role === 'admin' || user?.role === 'receptionist' || user?.role === 'doctor';
+  const canEdit = user?.role === 'admin' || user?.role === 'receptionist' || user?.role === 'doctor';
   const canDelete = user?.role === 'admin';
 
   const fetchPatients = useCallback(async (pageNum = 1, searchTerm = '') => {

@@ -6,26 +6,26 @@ async function login(req, res) {
   try {
     const { username, password } = req.body;
 
-const [rows] = await pool.query(
-  'SELECT user_id, username, password_hash, role, full_name, is_active FROM users WHERE username = ?',
-  [username]
-);
+    const [rows] = await pool.query(
+      'SELECT user_id, username, password_hash, role, full_name, is_active FROM users WHERE username = ?',
+      [username]
+    );
 
     if (rows.length === 0) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
     const user = rows[0];
-    console.log('User found:', user);
 
     if (user.is_active === 0 || user.is_active === '0') {
       return res.status(401).json({ success: false, message: 'Account deactivated' });
     }
 
-    console.log('Comparing password:', password, 'with hash:', user.password_hash);
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
-    console.log('Password valid:', isValidPassword);
+    if (!user.password_hash) {
+      return res.status(401).json({ success: false, message: 'Please set a password. Contact admin to reset.' });
+    }
 
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }

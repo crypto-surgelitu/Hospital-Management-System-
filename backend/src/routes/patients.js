@@ -33,7 +33,7 @@ router.get('/search', verifyToken, requireRole(['admin', 'doctor', 'nurse', 'rec
 
 router.get('/:id', verifyToken, requireRole(['admin', 'doctor', 'nurse']), getPatientById);
 
-router.post('/', verifyToken, requireRole(['admin', 'receptionist']), createValidation, createPatient);
+router.post('/', verifyToken, requireRole(['admin', 'receptionist', 'doctor']), createValidation, createPatient);
 
 router.put('/:id', verifyToken, requireRole(['admin', 'receptionist']), updateValidation, updatePatient);
 

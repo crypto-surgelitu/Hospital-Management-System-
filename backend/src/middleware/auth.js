@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const VALID_ROLES = ['admin', 'doctor', 'nurse', 'pharmacist', 'lab', 'receptionist'];
+const VALID_ROLES = ['admin', 'doctor', 'lab', 'pharmacy', 'receptionist'];
 
 /**
  * Verify JWT from Authorization header.
