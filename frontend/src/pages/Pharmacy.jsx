@@ -45,8 +45,9 @@ function AddDrugModal({ open, onClose, onSubmit, loading }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-auto max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 z-[9999]" onClick={onClose}></div>
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-lg mx-auto max-h-[90vh] overflow-y-auto z-[10000]">
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-slate-900">Add New Drug</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
@@ -125,8 +126,9 @@ function RestockModal({ open, onClose, onSubmit, loading, drug }) {
   if (!open || !drug) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 z-[9999]" onClick={onClose}></div>
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto z-[10000]">
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-slate-900">Restock Drug</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
@@ -201,8 +203,9 @@ function DispenseModal({ open, onClose, onSubmit, loading, drugs, onSearchPatien
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 z-[9999]" onClick={onClose}></div>
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto z-[10000]">
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-slate-900">Dispense Medication</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
@@ -233,7 +236,7 @@ function DispenseModal({ open, onClose, onSubmit, loading, drugs, onSearchPatien
               <div key={idx} className="flex gap-2 mb-2 items-start">
                 <select value={item.drug_id} onChange={e => updateItem(idx, 'drug_id', e.target.value)} className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm">
                   <option value="">Select drug</option>
-                  {drugs.map(d => <option key={d.drug_id} value={d.drug_id}>{d.drug_name} (Stock: {d.quantity_in_stock})</option>)}
+                  {drugs?.map(d => <option key={d.drug_id} value={d.drug_id}>{d.drug_name} (Stock: {d.quantity_in_stock})</option>)}
                 </select>
                 <input type="number" min="1" value={item.quantity} onChange={e => updateItem(idx, 'quantity', parseInt(e.target.value))} className="w-20 px-2 py-2 border border-slate-300 rounded-lg text-sm" />
                 <input type="text" value={item.dosage_instructions} onChange={e => updateItem(idx, 'dosage_instructions', e.target.value)} placeholder="Dosage" className="flex-1 px-2 py-2 border border-slate-300 rounded-lg text-sm" />
@@ -268,7 +271,7 @@ export default function Pharmacy() {
   const [patientSearch, setPatientSearch] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
 
-  const isPharmacist = user?.role === 'pharmacist';
+  const isPharmacist = user?.role === 'pharmacy';
   const isAdmin = user?.role === 'admin';
 
   const fetchInventory = useCallback(async () => {
@@ -302,7 +305,8 @@ export default function Pharmacy() {
         setToast({ type: 'error', message: res.data.message });
       }
     } catch (err) {
-      setToast({ type: 'error', message: err.response?.data?.message || 'Failed to add drug' });
+      const msg = err.response?.data?.message || 'Failed to add drug';
+      setToast({ type: 'error', message: msg });
     } finally {
       setActionLoading(false);
     }
@@ -415,7 +419,7 @@ export default function Pharmacy() {
                     <td className="px-6 py-4"><div className="h-4 bg-slate-100 rounded w-24 ml-auto"></div></td>
                   </tr>
                 ))
-              ) : drugs.length === 0 ? (
+              ) : !drugs || drugs.length === 0 ? (
                 <tr><td colSpan={7} className="px-6 py-12 text-center text-[var(--color-text-muted)]">No drugs in inventory</td></tr>
               ) : (
                 drugs.map(drug => (

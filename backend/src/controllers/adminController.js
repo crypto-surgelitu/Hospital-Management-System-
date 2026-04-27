@@ -9,7 +9,7 @@ async function getDashboardStats(req, res) {
       const pendingPatients = await pool.query('SELECT COUNT(*) as cnt FROM patients WHERE deleted_at IS NULL');
       const todayAppointments = await pool.query('SELECT COUNT(*) as cnt FROM appointments WHERE DATE(appointment_date) = CURDATE()');
       const pendingLabTests = await pool.query("SELECT COUNT(*) as cnt FROM lab_requests WHERE status = 'pending'");
-      const lowStockDrugs = await pool.query('SELECT COUNT(*) as cnt FROM drugs WHERE quantity_in_stock <= reorder_level AND is_active = 1');
+      const lowStockDrugs = await pool.query('SELECT COUNT(*) as cnt FROM pharmacy_inventory WHERE quantity_in_stock <= reorder_level AND is_active = 1');
       const pendingPayments = await pool.query("SELECT COUNT(*) as cnt FROM bills WHERE payment_status = 'pending'");
       const invoicesToday = await pool.query('SELECT COUNT(*) as cnt FROM bills WHERE DATE(bill_date) = CURDATE()');
 
@@ -38,11 +38,11 @@ async function getDashboardStats(req, res) {
     }
 
     if (userRole === 'pharmacy') {
-      const drugsInStock = await pool.query('SELECT COUNT(*) as cnt FROM drugs WHERE is_active = 1');
-      const lowStock = await pool.query('SELECT COUNT(*) as cnt FROM drugs WHERE quantity_in_stock <= reorder_level AND is_active = 1');
+      const pharmacy_inventoryInStock = await pool.query('SELECT COUNT(*) as cnt FROM pharmacy_inventory WHERE is_active = 1');
+      const lowStock = await pool.query('SELECT COUNT(*) as cnt FROM pharmacy_inventory WHERE quantity_in_stock <= reorder_level AND is_active = 1');
 
       return res.json({ success: true, stats: {
-        drugsInStock: drugsInStock[0][0].cnt || 0,
+        pharmacy_inventoryInStock: pharmacy_inventoryInStock[0][0].cnt || 0,
         lowStockDrugs: lowStock[0][0].cnt || 0,
         pendingDispense: 0,
         dispensedToday: 0,

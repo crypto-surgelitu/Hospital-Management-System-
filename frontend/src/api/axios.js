@@ -7,7 +7,6 @@ const api = axios.create({
   },
 });
 
-// Attach JWT token to every request
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('hms_token');
@@ -19,17 +18,28 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle 401/403 responses globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && [401, 403].includes(error.response.status)) {
-      // Token expired or invalid — redirect to login
-      localStorage.removeItem('hms_token');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+    if (!error.response) {
+      console.error('Network error:', error.message);
+      return Promise.reject(error);
+    }
+    
+    if (error.response.status === 401) {
+      const isAuthRoute = error.config.url?.includes('/auth/login');
+      if (!isAuthRoute && window.location.pathname !== '/login') {
+        console.warn('401 on', error.config.url, '- token may be invalid/expired');
       }
     }
+    
+    if (error.response.status === 403) {
+      console.warn('403 Forbidden:', error.response.data?.message);
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/unauthorized';
+      }
+    }
+    
     return Promise.reject(error);
   }
 );

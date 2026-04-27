@@ -81,26 +81,31 @@ async function getPatientById(req, res) {
 
 async function createPatient(req, res) {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, errors: errors.array() });
+    const { full_name, phone } = req.body;
+    
+    if (!full_name || !full_name.trim()) {
+      return res.status(400).json({ success: false, message: 'Full name is required' });
+    }
+    if (!phone || !phone.trim()) {
+      return res.status(400).json({ success: false, message: 'Phone is required' });
     }
 
-    const { full_name, date_of_birth, gender, phone, national_id, address, emergency_contact } = req.body;
-
-    const [existing] = await pool.query(
-      'SELECT patient_id FROM patients WHERE national_id = ? AND deleted_at IS NULL',
-      [national_id]
-    );
-
-    if (existing.length > 0) {
-      return res.status(409).json({ success: false, message: 'Patient already registered' });
+    const { date_of_birth, gender, national_id, address, email } = req.body;
+    
+    if (national_id) {
+      const [existing] = await pool.query(
+        'SELECT patient_id FROM patients WHERE national_id = ? AND deleted_at IS NULL',
+        [national_id]
+      );
+      if (existing.length > 0) {
+        return res.status(409).json({ success: false, message: 'Patient already registered' });
+      }
     }
 
     const [result] = await pool.query(
-      `INSERT INTO patients (full_name, date_of_birth, gender, phone, national_id, address, emergency_contact, created_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [full_name, date_of_birth, gender, phone, national_id, address || null, emergency_contact || null]
+      `INSERT INTO patients (full_name, date_of_birth, gender, phone, national_id, address, email, created_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [full_name, date_of_birth || null, gender || null, phone, national_id || null, address || null, email || null]
     );
 
     const [newPatient] = await pool.query('SELECT * FROM patients WHERE patient_id = ?', [result.insertId]);
@@ -108,7 +113,7 @@ async function createPatient(req, res) {
     res.status(201).json({ success: true, patient: newPatient[0] });
   } catch (error) {
     console.error('createPatient error:', error);
-    res.status(500).json({ success: false, message: 'Failed to create patient' });
+    res.status(500).json({ success: false, message: error.message });
   }
 }
 
@@ -120,9 +125,9 @@ async function updatePatient(req, res) {
     }
 
     const { id } = req.params;
-    const { full_name, phone, address, emergency_contact } = req.body;
+    const { full_name, phone, address, email } = req.body;
 
-const [existing] = await pool.query(
+    const [existing] = await pool.query(
       'SELECT patient_id FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
       [id]
     );
@@ -132,8 +137,8 @@ const [existing] = await pool.query(
     }
 
     await pool.query(
-      `UPDATE patients SET full_name = ?, phone = ?, address = ?, emergency_contact = ? WHERE patient_id = ?`,
-      [full_name, phone, address || null, emergency_contact || null, id]
+      `UPDATE patients SET full_name = ?, phone = ?, address = ?, email = ? WHERE patient_id = ?`,
+      [full_name, phone, address || null, email || null, id]
     );
 
     const [updated] = await pool.query('SELECT * FROM patients WHERE patient_id = ?', [id]);

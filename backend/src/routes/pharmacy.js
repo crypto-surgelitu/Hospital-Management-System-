@@ -8,12 +8,12 @@ const {
   dispenseMedication
 } = require('../controllers/pharmacyController');
 
-router.get('/drugs', verifyToken, requireRole(['admin', 'pharmacist']), getInventory);
+router.get('/drugs', verifyToken, getInventory);
 
-router.post('/drugs', verifyToken, requireRole(['admin', 'pharmacist']), addDrug);
+router.post('/drugs', verifyToken, requireRole(['admin', 'pharmacy']), addDrug);
 
-router.patch('/drugs/:id/stock', verifyToken, requireRole(['admin', 'pharmacist']), updateStock);
+router.patch('/drugs/:id/stock', verifyToken, requireRole(['admin', 'pharmacy']), updateStock);
 
-router.post('/dispense', verifyToken, requireRole(['pharmacist']), dispenseMedication);
+router.post('/dispense', verifyToken, requireRole(['admin', 'pharmacy']), dispenseMedication);
 
 module.exports = router;

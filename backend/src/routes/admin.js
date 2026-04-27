@@ -4,8 +4,8 @@ const { verifyToken, requireRole } = require('../middleware/auth');
 const { getDashboardStats } = require('../controllers/adminController');
 const { getUsers, getDoctors, createUser, updateUser, toggleUserStatus, generateRandomUsers, resetUserPassword } = require('../controllers/userController');
 
-// Dashboard stats — accessible to admin, receptionist, doctor
-router.get('/stats', verifyToken, requireRole(['admin', 'receptionist', 'doctor']), getDashboardStats);
+// Dashboard stats — accessible to all authenticated users
+router.get('/stats', verifyToken, getDashboardStats);
 
 // Doctors list — accessible to anyone authenticated (for appointment booking)
 router.get('/doctors', verifyToken, getDoctors);

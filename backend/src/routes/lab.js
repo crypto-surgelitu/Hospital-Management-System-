@@ -8,9 +8,9 @@ const {
   enterLabResults
 } = require('../controllers/labController');
 
-router.get('/', verifyToken, requireRole(['admin', 'doctor', 'nurse', 'lab']), getLabRequests);
+router.get('/', verifyToken, requireRole(['admin', 'doctor', 'lab']), getLabRequests);
 
-router.post('/', verifyToken, requireRole(['admin', 'doctor', 'nurse']), createLabRequest);
+router.post('/', verifyToken, requireRole(['admin', 'doctor']), createLabRequest);
 
 router.patch('/:id/specimen', verifyToken, requireRole(['admin', 'lab']), updateSpecimenStatus);
 

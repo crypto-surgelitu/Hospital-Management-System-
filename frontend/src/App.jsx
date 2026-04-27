@@ -12,6 +12,14 @@ import Billing from './pages/Billing';
 import Admin from './pages/Admin';
 import Unauthorized from './pages/Unauthorized';
 
+const ROLE_ROUTES = {
+  admin: ['/dashboard', '/patients', '/appointments', '/lab', '/pharmacy', '/billing', '/admin'],
+  doctor: ['/dashboard', '/patients', '/appointments'],
+  receptionist: ['/dashboard', '/patients', '/appointments', '/billing'],
+  lab: ['/dashboard', '/lab'],
+  pharmacy: ['/dashboard', '/pharmacy'],
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -57,10 +65,13 @@ function App() {
               <Route path="/admin" element={<Admin />} />
             </Route>
           </Route>
+
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
   );
 }
 
+export { ROLE_ROUTES };
 export default App;

@@ -53,8 +53,8 @@ function NewAppointmentModal({ open, onClose, onSubmit, loading }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto z-[10000] relative">
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-slate-900">New Appointment</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
@@ -78,7 +78,7 @@ function NewAppointmentModal({ open, onClose, onSubmit, loading }) {
             <label className="block text-sm font-medium text-slate-700 mb-1">Doctor *</label>
             <select required value={form.doctor_id} onChange={e => setForm({ ...form, doctor_id: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
               <option value="">Select Doctor</option>
-              {doctors.map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}
+              {doctors.map(d => <option key={d.user_id} value={d.user_id}>{d.full_name}</option>)}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-4">

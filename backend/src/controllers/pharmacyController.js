@@ -2,23 +2,23 @@ const { pool } = require('../config/db');
 
 async function getInventory(req, res) {
   try {
-    const [drugs] = await pool.query(`
-      SELECT * FROM drugs 
+    const [pharmacy_inventory] = await pool.query(`
+      SELECT * FROM pharmacy_inventory 
       WHERE is_active = 1 
       ORDER BY drug_name ASC
     `);
 
-    const drugsWithLowStock = drugs.map(drug => ({
+    const pharmacy_inventoryWithLowStock = pharmacy_inventory.map(drug => ({
       ...drug,
       low_stock: drug.quantity_in_stock <= drug.reorder_level
     }));
 
-    const lowStockCount = drugsWithLowStock.filter(d => d.low_stock).length;
+    const lowStockCount = pharmacy_inventoryWithLowStock.filter(d => d.low_stock).length;
 
     res.json({
       success: true,
-      drugs: drugsWithLowStock,
-      totalDrugs: drugsWithLowStock.length,
+      drugs: pharmacy_inventoryWithLowStock,
+      totalDrugs: pharmacy_inventoryWithLowStock.length,
       lowStockCount
     });
   } catch (error) {
@@ -35,16 +35,20 @@ async function addDrug(req, res) {
       return res.status(400).json({ success: false, message: 'Drug name is required' });
     }
 
-    if (quantity_in_stock < 0) {
+    const qty = parseInt(quantity_in_stock) || 0;
+    const level = parseInt(reorder_level) || 0;
+    const price = parseFloat(unit_price) || 0;
+
+    if (qty < 0) {
       return res.status(400).json({ success: false, message: 'Quantity cannot be negative' });
     }
 
-    if (unit_price <= 0) {
+    if (price <= 0) {
       return res.status(400).json({ success: false, message: 'Unit price must be greater than 0' });
     }
 
     const [existing] = await pool.query(
-      'SELECT drug_id FROM drugs WHERE drug_name = ? AND is_active = 1',
+      'SELECT drug_id FROM pharmacy_inventory WHERE drug_name = ? AND is_active = 1',
       [drug_name]
     );
 
@@ -53,12 +57,12 @@ async function addDrug(req, res) {
     }
 
     const [result] = await pool.query(
-      `INSERT INTO drugs (drug_name, generic_name, category, quantity_in_stock, unit, reorder_level, unit_price, is_active)
+      `INSERT INTO pharmacy_inventory (drug_name, generic_name, category, quantity_in_stock, unit, reorder_level, unit_price, is_active)
        VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
-      [drug_name, generic_name || null, category || null, quantity_in_stock || 0, unit || null, reorder_level || 0, unit_price]
+      [drug_name, generic_name || null, category || null, qty, unit || null, level, price]
     );
 
-    const [newDrug] = await pool.query('SELECT * FROM drugs WHERE drug_id = ?', [result.insertId]);
+    const [newDrug] = await pool.query('SELECT * FROM pharmacy_inventory WHERE drug_id = ?', [result.insertId]);
 
     res.status(201).json({ success: true, drug: newDrug[0] });
   } catch (error) {
@@ -78,7 +82,7 @@ async function updateStock(req, res) {
     }
 
     const [[drug]] = await pool.query(
-      'SELECT quantity_in_stock FROM drugs WHERE drug_id = ? AND is_active = 1',
+      'SELECT quantity_in_stock FROM pharmacy_inventory WHERE drug_id = ? AND is_active = 1',
       [id]
     );
 
@@ -92,7 +96,7 @@ async function updateStock(req, res) {
     }
 
     await pool.query(
-      'UPDATE drugs SET quantity_in_stock = ? WHERE drug_id = ?',
+      'UPDATE pharmacy_inventory SET quantity_in_stock = ? WHERE drug_id = ?',
       [newQuantity, id]
     );
 
@@ -102,7 +106,7 @@ async function updateStock(req, res) {
       [id, quantity_change, reason, performed_by]
     );
 
-    const [[updatedDrug]] = await pool.query('SELECT * FROM drugs WHERE drug_id = ?', [id]);
+    const [[updatedDrug]] = await pool.query('SELECT * FROM pharmacy_inventory WHERE drug_id = ?', [id]);
 
     res.json({ success: true, drug: updatedDrug });
   } catch (error) {
@@ -144,7 +148,7 @@ async function dispenseMedication(req, res) {
         }
 
         const [[drug]] = await connection.query(
-          'SELECT drug_id, quantity_in_stock, drug_name FROM drugs WHERE drug_id = ? AND is_active = 1',
+          'SELECT drug_id, quantity_in_stock, drug_name FROM pharmacy_inventory WHERE drug_id = ? AND is_active = 1',
           [drug_id]
         );
 
@@ -159,7 +163,7 @@ async function dispenseMedication(req, res) {
         }
 
         await connection.query(
-          'UPDATE drugs SET quantity_in_stock = quantity_in_stock - ? WHERE drug_id = ?',
+          'UPDATE pharmacy_inventory SET quantity_in_stock = quantity_in_stock - ? WHERE drug_id = ?',
           [quantity, drug_id]
         );
 
