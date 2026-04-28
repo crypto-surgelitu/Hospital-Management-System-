@@ -5,10 +5,13 @@ const {
   getInventory,
   addDrug,
   updateStock,
-  dispenseMedication
+  dispenseMedication,
+  getDrugsForReferral
 } = require('../controllers/pharmacyController');
 
-router.get('/drugs', verifyToken, getInventory);
+router.get('/', verifyToken, requireRole(['admin', 'pharmacy']), getInventory);
+
+router.get('/drugs', verifyToken, getDrugsForReferral);
 
 router.post('/drugs', verifyToken, requireRole(['admin', 'pharmacy']), addDrug);
 

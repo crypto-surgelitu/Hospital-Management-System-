@@ -22,6 +22,7 @@ function Toast({ message, type, onClose }) {
 const ROLES = [
   { value: 'admin', label: 'Admin', color: 'danger' },
   { value: 'doctor', label: 'Doctor', color: 'info' },
+  { value: 'nurse', label: 'Nurse', color: 'warning' },
   { value: 'receptionist', label: 'Receptionist', color: 'warning' },
   { value: 'lab', label: 'Lab Tech', color: 'success' },
   { value: 'pharmacy', label: 'Pharmacist', color: 'default' },

@@ -37,7 +37,7 @@ async function searchPatients(req, res) {
     }
 
     const [patients] = await pool.query(
-      `SELECT patient_id, full_name, date_of_birth, gender, phone, national_id, created_at 
+      `SELECT id, full_name, dob, gender, phone, national_id, created_at 
        FROM patients 
        WHERE deleted_at IS NULL 
        AND (full_name LIKE ? OR national_id LIKE ? OR phone LIKE ?)
@@ -82,7 +82,7 @@ async function getPatientById(req, res) {
 
 async function createPatient(req, res) {
   try {
-    const { full_name, phone } = req.body;
+    const { full_name, phone, national_id } = req.body;
     
     if (!full_name || !full_name.trim()) {
       return res.status(400).json({ success: false, message: 'Full name is required' });
@@ -91,18 +91,32 @@ async function createPatient(req, res) {
       return res.status(400).json({ success: false, message: 'Phone is required' });
     }
 
-    const { date_of_birth, gender, national_id, address, email } = req.body;
+    // Validate phone is numeric
+    const phoneClean = phone.replace(/\D/g, '');
+    if (phoneClean.length < 7) {
+      return res.status(400).json({ success: false, message: 'Phone number must be at least 7 digits' });
+    }
+
+    // Validate national_id if provided
+    if (national_id && national_id.trim()) {
+      const nationalIdClean = national_id.replace(/\D/g, '');
+      if (nationalIdClean.length < 4) {
+        return res.status(400).json({ success: false, message: 'National ID must be at least 4 digits' });
+      }
+    }
+
+    const { date_of_birth, gender, address, email } = req.body;
     
-    if (national_id) {
+    if (national_id && national_id.trim()) {
       const [existing] = await pool.query(
         'SELECT patient_id FROM patients WHERE national_id = ? AND deleted_at IS NULL',
         [national_id]
       );
       if (existing.length > 0) {
-        return res.status(409).json({ success: false, message: 'Patient already registered' });
+        return res.status(409).json({ success: false, message: 'Patient already registered with this National ID' });
       }
     }
-
+    
     const birthDate = date_of_birth && date_of_birth.trim() ? date_of_birth : null;
     
     const [result] = await pool.query(
@@ -131,7 +145,7 @@ async function updatePatient(req, res) {
     const { full_name, phone, address, email } = req.body;
 
     const [existing] = await pool.query(
-      'SELECT patient_id FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
+      'SELECT id FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
       [id]
     );
 
@@ -158,6 +172,28 @@ async function deletePatient(req, res) {
     const { id } = req.params;
 
     const [existing] = await pool.query(
+      'SELECT id FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
+      [id]
+    );
+
+    if (existing.length === 0) {
+      return res.status(404).json({ success: false, message: 'Patient not found' });
+    }
+
+    await pool.query('UPDATE patients SET deleted_at = NOW() WHERE patient_id = ?', [id]);
+
+    res.json({ success: true, message: 'Patient archived' });
+  } catch (error) {
+    console.error('deletePatient error:', error);
+    res.status(500).json({ success: false, message: 'Failed to archive patient' });
+  }
+}
+
+async function deletePatient(req, res) {
+  try {
+    const { id } = req.params;
+
+    const [existing] = await pool.query(
       'SELECT patient_id FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
       [id]
     );
@@ -175,11 +211,87 @@ async function deletePatient(req, res) {
   }
 }
 
+async function getPatientHistory(req, res) {
+  try {
+    const { id } = req.params;
+
+    const [[patient]] = await pool.query(
+      'SELECT * FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
+      [id]
+    );
+
+    if (!patient) {
+      return res.status(404).json({ success: false, message: 'Patient not found' });
+    }
+
+    const [appointments] = await pool.query(
+      `SELECT a.*, u.full_name as doctor_name
+       FROM appointments a
+       LEFT JOIN users u ON a.doctor_id = u.user_id
+       WHERE a.patient_id = ?
+       ORDER BY a.created_at DESC
+       LIMIT 20`,
+      [id]
+    );
+
+    const [labResults] = await pool.query(
+      `SELECT lr.*, u.full_name as requested_by_name
+       FROM lab_requests lr
+       LEFT JOIN users u ON lr.requested_by = u.user_id
+       WHERE lr.patient_id = ?
+       ORDER BY lr.created_at DESC
+       LIMIT 10`,
+      [id]
+    );
+
+    const [prescriptions] = await pool.query(
+      `SELECT dr.*, u.full_name as doctor_name
+       FROM doctor_referrals dr
+       LEFT JOIN users u ON dr.doctor_id = u.user_id
+       WHERE dr.patient_id = ? AND dr.referral_type = 'pharmacy'
+       ORDER BY dr.created_at DESC
+       LIMIT 10`,
+      [id]
+    );
+
+    const [bills] = await pool.query(
+      'SELECT * FROM bills WHERE patient_id = ? ORDER BY bill_date DESC LIMIT 10',
+      [id]
+    );
+
+    const [queueVisits] = await pool.query(
+      `SELECT q.*, u.full_name as doctor_name
+       FROM patient_queue q
+       LEFT JOIN users u ON q.doctor_id = u.user_id
+       WHERE q.patient_id = ?
+       ORDER BY q.created_at DESC
+       LIMIT 10`,
+      [id]
+    );
+
+    res.json({
+      success: true,
+      patient,
+      history: {
+        appointments,
+        labResults,
+        prescriptions,
+        bills,
+        queueVisits
+      }
+    });
+  } catch (error) {
+    console.error('getPatientHistory error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch patient history' });
+  }
+}
+
 module.exports = {
   getAllPatients,
   searchPatients,
   getPatientById,
   createPatient,
   updatePatient,
-  deletePatient
+  deletePatient,
+  getPatientHistory
 };

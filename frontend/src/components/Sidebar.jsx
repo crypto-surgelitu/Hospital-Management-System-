@@ -7,8 +7,8 @@ const navItems = [
   { path: '/doctor-queue', label: 'Examination', icon: 'bi-clipboard-data', roles: ['admin', 'doctor'] },
   { path: '/patients', label: 'Patients', icon: 'bi-people', roles: ['admin', 'doctor', 'receptionist'] },
   { path: '/appointments', label: 'Appointments', icon: 'bi-calendar-check', roles: ['admin', 'doctor', 'receptionist'] },
-  { path: '/lab', label: 'Lab', icon: 'bi-droplet', roles: ['admin', 'lab'] },
-  { path: '/pharmacy', label: 'Pharmacy', icon: 'bi-capsule', roles: ['admin', 'pharmacy'] },
+  { path: '/lab', label: 'Lab Results', icon: 'bi-droplet', roles: ['admin', 'doctor', 'lab'] },
+  { path: '/pharmacy', label: 'Pharmacy', icon: 'bi-capsule', roles: ['admin', 'doctor', 'pharmacy'] },
   { path: '/billing', label: 'Billing', icon: 'bi-credit-card', roles: ['admin', 'receptionist'] },
   { path: '/nurse-tasks', label: 'Nurse Tasks', icon: 'bi-clipboard-check', roles: ['admin', 'nurse'] },
   { path: '/admin', label: 'Admin', icon: 'bi-gear', roles: ['admin'] },
@@ -31,6 +31,7 @@ export default function Sidebar() {
       doctor: 'Doctor',
       pharmacy: 'Pharmacist',
       lab: 'Lab Technician',
+      nurse: 'Nurse',
       receptionist: 'Receptionist',
     };
     return labels[role] || role;

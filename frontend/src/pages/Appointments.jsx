@@ -207,7 +207,7 @@ export default function Appointments() {
   const handleNotesSubmit = async (notes) => {
     setActionLoading(true);
     try {
-      const res = await api.patch(`/appointments/${notesModal.appointment.id}/notes`, { notes });
+      const res = await api.patch(`/appointments/${notesModal.appointment.appointment_id}/notes`, { notes });
       if (res.data.success) {
         setToast({ type: 'success', message: 'Notes saved' });
         setNotesModal({ open: false, appointment: null });

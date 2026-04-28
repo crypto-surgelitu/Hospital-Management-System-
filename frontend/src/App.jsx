@@ -16,8 +16,8 @@ import DoctorQueue from './pages/DoctorQueue';
 import Unauthorized from './pages/Unauthorized';
 
 const ROLE_ROUTES = {
-  admin: ['/dashboard', '/queue', '/doctor-queue', '/patients', '/appointments', '/lab', '/pharmacy', '/billing', '/admin'],
-  doctor: ['/dashboard', '/doctor-queue', '/patients', '/appointments'],
+  admin: ['/dashboard', '/queue', '/doctor-queue', '/patients', '/appointments', '/lab', '/pharmacy', '/billing', '/admin', '/nurse-tasks'],
+  doctor: ['/dashboard', '/doctor-queue', '/patients', '/appointments', '/lab', '/pharmacy', '/billing'],
   receptionist: ['/dashboard', '/queue', '/patients', '/appointments', '/billing'],
   lab: ['/dashboard', '/lab'],
   pharmacy: ['/dashboard', '/pharmacy'],
@@ -35,49 +35,20 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<Sidebar />}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              
               <Route path="/dashboard" element={<Dashboard />} />
-            </Route>
-          </Route>
-
-          <Route element={<ProtectedRoute roles={['admin', 'doctor', 'receptionist']} />}>
-            <Route element={<Sidebar />}>
+              <Route path="/queue" element={<Queue />} />
               <Route path="/patients" element={<Patients />} />
               <Route path="/appointments" element={<Appointments />} />
-              <Route path="/queue" element={<Queue />} />
               <Route path="/doctor-queue" element={<DoctorQueue />} />
-            </Route>
-          </Route>
-
-          <Route element={<ProtectedRoute roles={['admin', 'lab']} />}>
-            <Route element={<Sidebar />}>
               <Route path="/lab" element={<Lab />} />
-            </Route>
-          </Route>
-
-          <Route element={<ProtectedRoute roles={['admin', 'pharmacy']} />}>
-            <Route element={<Sidebar />}>
               <Route path="/pharmacy" element={<Pharmacy />} />
-            </Route>
-          </Route>
-
-          <Route element={<ProtectedRoute roles={['admin', 'receptionist']} />}>
-            <Route element={<Sidebar />}>
               <Route path="/billing" element={<Billing />} />
-            </Route>
-          </Route>
-
-          <Route element={<ProtectedRoute roles={['admin', 'nurse']} />}>
-            <Route element={<Sidebar />}>
               <Route path="/nurse-tasks" element={<NurseTasks />} />
-            </Route>
-          </Route>
-
-          <Route element={<ProtectedRoute roles={['admin']} />}>
-            <Route element={<Sidebar />}>
               <Route path="/admin" element={<Admin />} />
             </Route>
           </Route>
-
+          
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>

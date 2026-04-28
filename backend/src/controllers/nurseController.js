@@ -7,12 +7,15 @@ async function getNurseTasks(req, res) {
     const userRole = req.user.role;
 
     let query = `
-      SELECT t.*, p.full_name as patient_name, q.queue_number,
-             d.full_name as assigned_by_name
+      SELECT t.*, p.full_name as patient_name, p.phone as patient_phone, p.gender,
+             q.queue_number, q.chief_complaint,
+             d.full_name as assigned_by_name,
+             u.full_name as assigned_nurse_name
       FROM nurse_tasks t
       JOIN patients p ON t.patient_id = p.patient_id
       LEFT JOIN patient_queue q ON t.queue_id = q.queue_id
       LEFT JOIN users d ON t.assigned_by = d.user_id
+      LEFT JOIN users u ON t.assigned_nurse = u.user_id
       WHERE 1=1
     `;
     const params = [];
@@ -27,7 +30,7 @@ async function getNurseTasks(req, res) {
       params.push(status);
     }
 
-    query += ' ORDER BY t.priority DESC, t.created_at ASC';
+    query += ' ORDER BY CASE priority WHEN \'urgent\' THEN 1 WHEN \'high\' THEN 2 ELSE 3 END, t.created_at ASC';
 
     const [tasks] = await pool.query(query, params);
 
@@ -43,12 +46,15 @@ async function getNurseTaskById(req, res) {
     const { id } = req.params;
 
     const [[task]] = await pool.query(
-      `SELECT t.*, p.full_name as patient_name, p.phone, p.gender,
-              q.queue_number, d.full_name as assigned_by_name
+      `SELECT t.*, p.full_name as patient_name, p.phone, p.gender, p.date_of_birth,
+             q.queue_number, q.chief_complaint, 
+             d.full_name as assigned_by_name,
+             u.full_name as assigned_nurse_name
        FROM nurse_tasks t
        JOIN patients p ON t.patient_id = p.patient_id
        LEFT JOIN patient_queue q ON t.queue_id = q.queue_id
        LEFT JOIN users d ON t.assigned_by = d.user_id
+       LEFT JOIN users u ON t.assigned_nurse = u.user_id
        WHERE t.task_id = ?`,
       [id]
     );
@@ -61,6 +67,45 @@ async function getNurseTaskById(req, res) {
   } catch (error) {
     console.error('getNurseTaskById error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch task' });
+  }
+}
+
+async function getNurseStats(req, res) {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    
+    let whereClause = "t.status = 'pending'";
+    let params = [];
+    
+    if (userRole !== 'admin') {
+      whereClause += ' AND (t.assigned_nurse = ? OR t.assigned_nurse IS NULL)';
+      params.push(userId);
+    }
+    
+    const [[pending]] = await pool.query(
+      `SELECT COUNT(*) as count FROM nurse_tasks t WHERE ${whereClause}`,
+      params
+    );
+    
+    const statsParams = userRole !== 'admin' ? [userId] : [];
+    const [[todayCompleted]] = await pool.query(
+      `SELECT COUNT(*) as count FROM nurse_tasks t 
+       WHERE t.assigned_nurse = ? AND t.status = 'completed' 
+       AND DATE(t.completed_at) = CURDATE()`,
+      statsParams
+    );
+    
+    res.json({
+      success: true,
+      stats: {
+        pending: pending.count,
+        completedToday: todayCompleted.count
+      }
+    });
+  } catch (error) {
+    console.error('getNurseStats error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch stats' });
   }
 }
 
@@ -125,5 +170,6 @@ module.exports = {
   getNurseTasks,
   getNurseTaskById,
   startTask,
-  completeTask
+  completeTask,
+  getNurseStats
 };

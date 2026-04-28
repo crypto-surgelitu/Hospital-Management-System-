@@ -15,8 +15,10 @@ export default function DoctorQueue() {
   const [showPharmacyModal, setShowPharmacyModal] = useState(false);
   const [showNurseModal, setShowNurseModal] = useState(false);
   
-  const [labForm, setLabForm] = useState({ test_type: '', priority: 'normal' });
-  const [pharmacyForm, setPharmacyForm] = useState({ drug_name: '', quantity: 1, dosage_instructions: '' });
+  const [labForm, setLabForm] = useState({ test_type: '', priority: 'routine' });
+  const [labTestTypes, setLabTestTypes] = useState([]);
+  const [drugsList, setDrugsList] = useState([]);
+  const [pharmacyForm, setPharmacyForm] = useState({ drug_id: '', quantity: 1, dosage_instructions: '' });
   const [nurseForm, setNurseForm] = useState({ task_description: '', task_type: 'other', priority: 'normal' });
 
   const fetchQueue = async () => {
@@ -33,8 +35,32 @@ export default function DoctorQueue() {
     }
   };
 
+  const fetchLabTestTypes = async () => {
+    try {
+      const res = await api.get('/lab/types');
+      if (res.data.success) {
+        setLabTestTypes(res.data.types);
+      }
+    } catch (err) {
+      console.error('Failed to fetch test types:', err);
+    }
+  };
+
+  const fetchDrugsList = async () => {
+    try {
+      const res = await api.get('/pharmacy/drugs');
+      if (res.data.success) {
+        setDrugsList(res.data.drugs);
+      }
+    } catch (err) {
+      console.error('Failed to fetch drugs:', err);
+    }
+  };
+
   useEffect(() => {
     fetchQueue();
+    fetchLabTestTypes();
+    fetchDrugsList();
   }, []);
 
   const handleStartConsultation = async (queueId) => {
@@ -81,17 +107,17 @@ export default function DoctorQueue() {
   };
 
   const handleCreatePharmacyReferral = async () => {
-    if (!selectedPatient || !pharmacyForm.drug_name) return;
+    if (!selectedPatient || !pharmacyForm.drug_id) return;
     try {
       await api.post('/referrals/pharmacy', {
         queue_id: selectedPatient.queue_id,
         patient_id: selectedPatient.patient_id,
-        drug_name: pharmacyForm.drug_name,
+        drug_id: pharmacyForm.drug_id,
         quantity: pharmacyForm.quantity,
         dosage_instructions: pharmacyForm.dosage_instructions
       });
       setShowPharmacyModal(false);
-      setPharmacyForm({ drug_name: '', quantity: 1, dosage_instructions: '' });
+      setPharmacyForm({ drug_id: '', quantity: 1, dosage_instructions: '' });
       alert('Prescription created successfully');
     } catch (err) {
       console.error('Failed to create prescription:', err);
@@ -273,16 +299,9 @@ export default function DoctorQueue() {
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                 >
                   <option value="">Select test</option>
-                  <option value="Blood Count">Blood Count</option>
-                  <option value="Urinalysis">Urinalysis</option>
-                  <option value="Lipid Profile">Lipid Profile</option>
-                  <option value="Liver Function">Liver Function</option>
-                  <option value="Kidney Function">Kidney Function</option>
-                  <option value="Thyroid Function">Thyroid Function</option>
-                  <option value="HIV Test">HIV Test</option>
-                  <option value="Malaria Test">Malaria Test</option>
-                  <option value="Blood Sugar">Blood Sugar</option>
-                  <option value="Other">Other</option>
+                  {labTestTypes.map((test) => (
+                    <option key={test.test_type_id} value={test.test_name}>{test.test_name}</option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -292,8 +311,9 @@ export default function DoctorQueue() {
                   onChange={(e) => setLabForm({ ...labForm, priority: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                 >
-                  <option value="normal">Normal</option>
+                  <option value="routine">Routine</option>
                   <option value="urgent">Urgent</option>
+                  <option value="stat">STAT</option>
                 </select>
               </div>
               <div className="flex gap-3">
@@ -323,12 +343,18 @@ export default function DoctorQueue() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Drug Name *</label>
-                <input
-                  type="text"
-                  value={pharmacyForm.drug_name}
-                  onChange={(e) => setPharmacyForm({ ...pharmacyForm, drug_name: e.target.value })}
+                <select
+                  value={pharmacyForm.drug_id}
+                  onChange={(e) => setPharmacyForm({ ...pharmacyForm, drug_id: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                />
+                >
+                  <option value="">Select drug</option>
+                  {drugsList.map((drug) => (
+                    <option key={drug.drug_id} value={drug.drug_id}>
+                      {drug.drug_name} {drug.generic_name ? `(${drug.generic_name})` : ''} - KES {drug.unit_price}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Quantity</label>

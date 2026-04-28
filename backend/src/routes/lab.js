@@ -5,10 +5,13 @@ const {
   getLabRequests,
   createLabRequest,
   updateSpecimenStatus,
-  enterLabResults
+  enterLabResults,
+  getLabTestTypes
 } = require('../controllers/labController');
 
 router.get('/', verifyToken, requireRole(['admin', 'doctor', 'lab']), getLabRequests);
+
+router.get('/types', verifyToken, requireRole(['admin', 'doctor', 'lab']), getLabTestTypes);
 
 router.post('/', verifyToken, requireRole(['admin', 'doctor']), createLabRequest);
 

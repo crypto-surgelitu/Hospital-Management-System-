@@ -220,7 +220,9 @@ export default function Patients() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [patientHistory, setPatientHistory] = useState(null);
   const [showNewModal, setShowNewModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState({ open: false, patient: null });
   const [toast, setToast] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -269,6 +271,22 @@ export default function Patients() {
       }
     } catch {
       setToast({ type: 'error', message: 'Failed to load patient details' });
+    }
+  };
+
+  const fetchFullHistory = async (id) => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      const res = await api.get(`/patients/${id}/history`);
+      if (res.data.success) {
+        setPatientHistory(res.data.history);
+        setShowHistoryModal(true);
+      }
+    } catch {
+      setToast({ type: 'error', message: 'Failed to load history' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -384,7 +402,10 @@ export default function Patients() {
                   <td className="px-6 py-4 text-sm text-[var(--color-text-muted)] font-mono">{p.phone}</td>
                   <td className="px-6 py-4 text-sm text-[var(--color-text-muted)] font-mono">{p.national_id}</td>
                   <td className="px-6 py-4">
-                    <button onClick={(e) => { e.stopPropagation(); fetchPatientDetails(p.patient_id); }} className="text-[var(--color-primary)] hover:text-[var(--color-primary-container)] text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">View Details <i className="bi bi-arrow-right ml-1"></i></button>
+                    <div className="flex gap-2">
+                      <button onClick={(e) => { e.stopPropagation(); fetchPatientDetails(p.patient_id); }} className="text-[var(--color-primary)] hover:text-[var(--color-primary-container)] text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">View <i className="bi bi-eye ml-1"></i></button>
+                      <button onClick={(e) => { e.stopPropagation(); fetchFullHistory(p.patient_id); }} className="text-emerald-600 hover:text-emerald-700 text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">History <i className="bi bi-clock-history ml-1"></i></button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -429,6 +450,86 @@ export default function Patients() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteDialog({ open: false, patient: null })}
       />
+
+      {showHistoryModal && patientHistory && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 z-[9999]" onClick={() => setShowHistoryModal(false)}></div>
+          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-auto max-h-[90vh] overflow-y-auto z-[10000]">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">Patient History</h3>
+              <button onClick={() => setShowHistoryModal(false)} className="text-slate-400 hover:text-slate-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-6 space-y-6">
+              {patientHistory.appointments?.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase mb-2">Appointments</p>
+                  <div className="space-y-2">
+                    {patientHistory.appointments.map(apt => (
+                      <div key={apt.appointment_id} className="p-3 bg-slate-50 rounded-lg flex justify-between">
+                        <div>
+                          <p className="text-sm font-medium">{new Date(apt.appointment_date || apt.created_at).toLocaleDateString()}</p>
+                          <p className="text-xs text-slate-500">{apt.doctor_name}</p>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-full ${apt.status === 'completed' ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'}`}>{apt.status || 'pending'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {patientHistory.labResults?.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase mb-2">Lab Results</p>
+                  <div className="space-y-2">
+                    {patientHistory.labResults.map(lr => (
+                      <div key={lr.lab_request_id} className="p-3 bg-slate-50 rounded-lg flex justify-between">
+                        <div>
+                          <p className="text-sm font-medium">{lr.test_type}</p>
+                          <p className="text-xs text-slate-500">{new Date(lr.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-full ${lr.status === 'completed' ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'}`}>{lr.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {patientHistory.prescriptions?.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase mb-2">Prescriptions</p>
+                  <div className="space-y-2">
+                    {patientHistory.prescriptions.map(rx => (
+                      <div key={rx.referral_id} className="p-3 bg-slate-50 rounded-lg">
+                        <p className="text-sm font-medium">{rx.item_description}</p>
+                        <p className="text-xs text-slate-500">Qty: {rx.quantity} - {new Date(rx.created_at).toLocaleDateString()}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {patientHistory.bills?.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase mb-2">Billing</p>
+                  <div className="space-y-2">
+                    {patientHistory.bills.map(bill => (
+                      <div key={bill.bill_id} className="p-3 bg-slate-50 rounded-lg flex justify-between">
+                        <div>
+                          <p className="text-sm font-medium">KES {bill.total_amount}</p>
+                          <p className="text-xs text-slate-500">{new Date(bill.bill_date).toLocaleDateString()}</p>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-full ${bill.payment_status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>{bill.payment_status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {(!patientHistory.appointments?.length && !patientHistory.labResults?.length && !patientHistory.prescriptions?.length && !patientHistory.bills?.length) && (
+                <p className="text-center text-slate-400 py-4">No history found</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>

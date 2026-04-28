@@ -183,26 +183,21 @@ async function dispenseMedication(req, res) {
           drug_id,
           drug_name: drug.drug_name,
           quantity,
-          dispense_id
+          dosage_instructions
         });
-      }
-
-      if (errors.length > 0 && dispensedItems.length === 0) {
-        await connection.rollback();
-        return res.status(400).json({ success: false, message: 'No items could be dispensed', errors });
       }
 
       await connection.commit();
 
       res.json({
         success: true,
-        dispenseId: dispense_id,
-        items: dispensedItems,
+        dispense_id,
+        dispensed: dispensedItems,
         errors: errors.length > 0 ? errors : undefined
       });
-    } catch (err) {
+    } catch (error) {
       await connection.rollback();
-      throw err;
+      throw error;
     } finally {
       connection.release();
     }
@@ -212,9 +207,33 @@ async function dispenseMedication(req, res) {
   }
 }
 
+async function getDrugsForReferral(req, res) {
+  try {
+    const { q } = req.query;
+    
+    let query = 'SELECT drug_id, drug_name, generic_name, category, unit_price FROM pharmacy_inventory WHERE is_active = 1 AND quantity_in_stock > 0';
+    const params = [];
+    
+    if (q) {
+      query += ' AND (drug_name LIKE ? OR generic_name LIKE ?)';
+      params.push(`%${q}%`, `%${q}%`);
+    }
+    
+    query += ' ORDER BY drug_name ASC LIMIT 50';
+    
+    const [drugs] = await pool.query(query, params);
+    
+    res.json({ success: true, drugs });
+  } catch (error) {
+    console.error('getDrugsForReferral error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch drugs' });
+  }
+}
+
 module.exports = {
   getInventory,
   addDrug,
   updateStock,
-  dispenseMedication
+  dispenseMedication,
+  getDrugsForReferral
 };

@@ -5,10 +5,13 @@ const {
   getNurseTasks,
   getNurseTaskById,
   startTask,
-  completeTask
+  completeTask,
+  getNurseStats
 } = require('../controllers/nurseController');
 
 router.get('/', verifyToken, requireRole(['admin', 'nurse']), getNurseTasks);
+
+router.get('/stats', verifyToken, requireRole(['admin', 'nurse']), getNurseStats);
 
 router.get('/:id', verifyToken, requireRole(['admin', 'nurse']), getNurseTaskById);
 

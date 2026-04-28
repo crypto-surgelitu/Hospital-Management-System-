@@ -30,6 +30,8 @@ router.get('/search', verifyToken, requireRole(['admin', 'doctor', 'receptionist
 
 router.get('/:id', verifyToken, requireRole(['admin', 'doctor']), getPatientById);
 
+router.get('/:id/history', verifyToken, requireRole(['admin', 'doctor']), require('../controllers/patientController').getPatientHistory);
+
 router.post('/', verifyToken, requireRole(['admin', 'receptionist', 'doctor']), createPatient);
 
 router.put('/:id', verifyToken, requireRole(['admin', 'receptionist']), updateValidation, updatePatient);

@@ -232,9 +232,116 @@ async function recordPayment(req, res) {
   }
 }
 
+async function getServices(req, res) {
+  try {
+    const { type } = req.query;
+    
+    let query = 'SELECT service_id, service_name, service_type, unit_price FROM service_prices WHERE is_active = 1';
+    const params = [];
+    
+    if (type) {
+      query += ' AND service_type = ?';
+      params.push(type);
+    }
+    
+    query += ' ORDER BY service_type, service_name';
+    
+    const [services] = await pool.query(query, params);
+    
+    res.json({ success: true, services });
+  } catch (error) {
+    console.error('getServices error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch services' });
+  }
+}
+
+async function createBillFromServices(req, res) {
+  try {
+    const { patient_id, services } = req.body;
+    const generated_by = req.user.id;
+
+    if (!patient_id || !services || services.length === 0) {
+      return res.status(400).json({ success: false, message: 'Patient ID and services are required' });
+    }
+
+    const [[patient]] = await pool.query(
+      'SELECT patient_id FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
+      [patient_id]
+    );
+
+    if (!patient) {
+      return res.status(404).json({ success: false, message: 'Patient not found' });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      const [billResult] = await connection.query(
+        `INSERT INTO bills (patient_id, total_amount, payment_status, bill_date, generated_by)
+         VALUES (?, 0, 'pending', NOW(), ?)`,
+        [patient_id, generated_by]
+      );
+
+      const bill_id = billResult.insertId;
+      let total = 0;
+
+      for (const svc of services) {
+        const [[service]] = await connection.query(
+          'SELECT unit_price FROM service_prices WHERE service_id = ? AND is_active = 1',
+          [svc.service_id]
+        );
+
+        if (service) {
+          const itemTotal = service.unit_price * (svc.quantity || 1);
+          total += itemTotal;
+
+          await connection.query(
+            `INSERT INTO bill_items (bill_id, service_id, service_name, quantity, unit_price, total_price)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [bill_id, svc.service_id, service.service_name, svc.quantity || 1, service.unit_price, itemTotal]
+          );
+        }
+      }
+
+      await connection.query(
+        'UPDATE bills SET total_amount = ? WHERE bill_id = ?',
+        [total, bill_id]
+      );
+
+      await connection.commit();
+
+      const [[bill]] = await pool.query(
+        `SELECT b.*, p.full_name as patient_name
+         FROM bills b
+         JOIN patients p ON b.patient_id = p.patient_id
+         WHERE b.bill_id = ?`,
+        [bill_id]
+      );
+
+      const [items] = await pool.query(
+        'SELECT * FROM bill_items WHERE bill_id = ?',
+        [bill_id]
+      );
+
+      res.status(201).json({ success: true, invoice: bill, items });
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    console.error('createBillFromServices error:', error);
+    res.status(500).json({ success: false, message: 'Failed to create bill' });
+  }
+}
+
 module.exports = {
   getInvoices,
   getInvoiceById,
   createInvoice,
-  recordPayment
+  recordPayment,
+  getServices,
+  createBillFromServices
 };

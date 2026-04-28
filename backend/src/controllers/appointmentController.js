@@ -80,8 +80,8 @@ async function createAppointment(req, res) {
     }
 
     const [existing] = await pool.query(
-      'SELECT id FROM appointments WHERE doctor_id = ? AND appointment_date = ? AND appointment_time = ? AND status != ?',
-      [doctor_id, appointment_date, appointment_time, 'cancelled']
+      'SELECT id FROM appointments WHERE doctor_id = ? AND appointment_date = ? AND appointment_time = ? AND status != "cancelled"',
+      [doctor_id, appointment_date, appointment_time]
     );
 
     if (existing.length > 0) {
@@ -89,16 +89,16 @@ async function createAppointment(req, res) {
     }
 
     const [result] = await pool.query(
-      `INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, notes, status, created_at)
-       VALUES (?, ?, ?, ?, ?, 'pending', NOW())`,
-      [patient_id, doctor_id, appointment_date, appointment_time, notes || null]
+      `INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, reason, notes, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())`,
+      [patient_id, doctor_id, appointment_date, appointment_time, notes || null, notes || null]
     );
 
-    const [newAppointment] = await pool.query(
+const [newAppointment] = await pool.query(
       `SELECT a.*, p.full_name as patient_name, u.full_name as doctor_name
        FROM appointments a
-JOIN patients p ON a.patient_id = p.patient_id
-        JOIN users u ON a.doctor_id = u.user_id
+       JOIN patients p ON a.patient_id = p.patient_id
+       JOIN users u ON a.doctor_id = u.user_id
        WHERE a.appointment_id = ?`,
       [result.insertId]
     );

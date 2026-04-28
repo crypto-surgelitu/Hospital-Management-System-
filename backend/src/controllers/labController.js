@@ -130,8 +130,8 @@ async function enterLabResults(req, res) {
     const [updated] = await pool.query(
       `SELECT lr.*, p.full_name as patient_name, u.full_name as requested_by_name
        FROM lab_requests lr
-JOIN patients p ON lr.patient_id = p.patient_id
-        JOIN users u ON lr.requested_by = u.user_id
+       JOIN patients p ON lr.patient_id = p.patient_id
+       JOIN users u ON lr.requested_by = u.user_id
        WHERE lr.lab_request_id = ?`,
       [id]
     );
@@ -143,9 +143,23 @@ JOIN patients p ON lr.patient_id = p.patient_id
   }
 }
 
+async function getLabTestTypes(req, res) {
+  try {
+    const [types] = await pool.query(
+      'SELECT test_type_id, test_name, category FROM lab_test_types WHERE is_active = 1 ORDER BY category, test_name'
+    );
+
+    res.json({ success: true, types });
+  } catch (error) {
+    console.error('getLabTestTypes error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch test types' });
+  }
+}
+
 module.exports = {
   getLabRequests,
   createLabRequest,
   updateSpecimenStatus,
-  enterLabResults
+  enterLabResults,
+  getLabTestTypes
 };

@@ -11,8 +11,8 @@ USE hms_db;
 CREATE TABLE IF NOT EXISTS patients (
     id INT AUTO_INCREMENT PRIMARY KEY,
     full_name VARCHAR(150) NOT NULL,
-    gender ENUM('male','female','other') NOT NULL,
-    dob DATE NOT NULL,
+    gender ENUM('male','female','other'),
+    dob DATE,
     phone VARCHAR(20),
     email VARCHAR(100),
     address TEXT,
@@ -179,7 +179,7 @@ CREATE TABLE IF NOT EXISTS patient_queue (
     called_at TIMESTAMP NULL,
     started_at TIMESTAMP NULL,
     completed_at TIMESTAMP NULL,
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (patient_id) REFERENCES patients(id),
     FOREIGN KEY (doctor_id) REFERENCES users(user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -201,7 +201,7 @@ CREATE TABLE IF NOT EXISTS nurse_tasks (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP NULL,
     FOREIGN KEY (queue_id) REFERENCES patient_queue(queue_id),
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (patient_id) REFERENCES patients(id),
     FOREIGN KEY (assigned_by) REFERENCES users(user_id),
     FOREIGN KEY (assigned_nurse) REFERENCES users(user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -224,7 +224,7 @@ CREATE TABLE IF NOT EXISTS doctor_referrals (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP NULL,
     FOREIGN KEY (queue_id) REFERENCES patient_queue(queue_id),
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (patient_id) REFERENCES patients(id),
     FOREIGN KEY (doctor_id) REFERENCES users(user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
