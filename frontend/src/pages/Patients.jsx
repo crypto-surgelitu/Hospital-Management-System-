@@ -55,7 +55,7 @@ function PatientDrawer({ patient, onClose, onUpdate, onDelete, canEdit, canDelet
   }, [patient, resetForm]);
 
   const handleSave = async () => {
-    await onUpdate(patient.id, form);
+    await onUpdate(patient.patient_id, form);
     setEditMode(false);
   };
 
@@ -122,7 +122,7 @@ function PatientDrawer({ patient, onClose, onUpdate, onDelete, canEdit, canDelet
               <p className="text-xs font-medium text-slate-400 uppercase mb-3">Recent Appointments</p>
               <div className="space-y-2">
                 {patient.recentAppointments.map(apt => (
-                  <div key={apt.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div key={apt.appointment_id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div>
                       <p className="text-sm font-medium text-slate-900">{new Date(apt.appointment_date || apt.created_at).toLocaleDateString()}</p>
                       <p className="text-xs text-slate-500">{apt.appointment_time || '—'}</p>
@@ -312,7 +312,7 @@ export default function Patients() {
     const patient = deleteDialog.patient;
     setActionLoading(true);
     try {
-      const res = await api.delete(`/patients/${patient.id}`);
+      const res = await api.delete(`/patients/${patient.patient_id}`);
       if (res.data.success) {
         setToast({ type: 'success', message: 'Patient archived' });
         setDeleteDialog({ open: false, patient: null });
@@ -377,14 +377,14 @@ export default function Patients() {
               <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400 text-sm">No patients found</td></tr>
             ) : (
               patients.map((p) => (
-                <tr key={p.id} className="hover:bg-[var(--color-surface-low)] transition-colors cursor-pointer group" onClick={() => fetchPatientDetails(p.id)}>
+                <tr key={p.patient_id} className="hover:bg-[var(--color-surface-low)] transition-colors cursor-pointer group" onClick={() => fetchPatientDetails(p.patient_id)}>
                   <td className="px-6 py-4 text-sm font-semibold text-[var(--color-ink-900)]">{p.full_name}</td>
-                  <td className="px-6 py-4 text-sm text-[var(--color-text-muted)] font-mono">{formatDate(p.dob)}</td>
+                  <td className="px-6 py-4 text-sm text-[var(--color-text-muted)] font-mono">{formatDate(p.date_of_birth)}</td>
                   <td className="px-6 py-4 text-sm text-[var(--color-text-muted)] capitalize">{p.gender || '—'}</td>
                   <td className="px-6 py-4 text-sm text-[var(--color-text-muted)] font-mono">{p.phone}</td>
                   <td className="px-6 py-4 text-sm text-[var(--color-text-muted)] font-mono">{p.national_id}</td>
                   <td className="px-6 py-4">
-                    <button onClick={(e) => { e.stopPropagation(); fetchPatientDetails(p.id); }} className="text-[var(--color-primary)] hover:text-[var(--color-primary-container)] text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">View Details <i className="bi bi-arrow-right ml-1"></i></button>
+                    <button onClick={(e) => { e.stopPropagation(); fetchPatientDetails(p.patient_id); }} className="text-[var(--color-primary)] hover:text-[var(--color-primary-container)] text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">View Details <i className="bi bi-arrow-right ml-1"></i></button>
                   </td>
                 </tr>
               ))

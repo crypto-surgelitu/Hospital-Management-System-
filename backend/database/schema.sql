@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name VARCHAR(150) NOT NULL,
     username VARCHAR(80) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('admin','doctor','nurse','pharmacist','lab','receptionist') NOT NULL,
+    role ENUM('admin','doctor','nurse','pharmacy','lab','receptionist') NOT NULL,
     department VARCHAR(100),
     is_active TINYINT(1) DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -162,6 +162,73 @@ CREATE TABLE IF NOT EXISTS payments (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================
+-- Patient Queue Management
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS patient_queue (
+    queue_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    doctor_id INT,
+    status ENUM('waiting', 'in_progress', 'completed', 'cancelled', 'no_show') DEFAULT 'waiting',
+    priority ENUM('normal', 'urgent') DEFAULT 'normal',
+    chief_complaint TEXT,
+    notes TEXT,
+    queue_number INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    called_at TIMESTAMP NULL,
+    started_at TIMESTAMP NULL,
+    completed_at TIMESTAMP NULL,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (doctor_id) REFERENCES users(user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================
+-- Nurse Tasks
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS nurse_tasks (
+    task_id INT AUTO_INCREMENT PRIMARY KEY,
+    queue_id INT NOT NULL,
+    patient_id INT NOT NULL,
+    task_description TEXT NOT NULL,
+    task_type ENUM('injection', 'vital_signs', 'wound_care', 'observation', 'dressing', 'other') DEFAULT 'other',
+    status ENUM('pending', 'in_progress', 'completed') DEFAULT 'pending',
+    priority ENUM('normal', 'urgent') DEFAULT 'normal',
+    assigned_by INT NOT NULL,
+    assigned_nurse INT,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL,
+    FOREIGN KEY (queue_id) REFERENCES patient_queue(queue_id),
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (assigned_by) REFERENCES users(user_id),
+    FOREIGN KEY (assigned_nurse) REFERENCES users(user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================
+-- Doctor Referrals
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS doctor_referrals (
+    referral_id INT AUTO_INCREMENT PRIMARY KEY,
+    queue_id INT NOT NULL,
+    patient_id INT NOT NULL,
+    doctor_id INT NOT NULL,
+    referral_type ENUM('lab', 'pharmacy', 'nurse') NOT NULL,
+    item_id INT,
+    item_description TEXT,
+    quantity INT DEFAULT 1,
+    dosage_instructions TEXT,
+    status ENUM('pending', 'completed', 'cancelled') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL,
+    FOREIGN KEY (queue_id) REFERENCES patient_queue(queue_id),
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (doctor_id) REFERENCES users(user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================
 -- Seed Data
 -- Password for ALL users: Admin@1234
 -- bcryptjs hash ($2a$) of "Admin@1234"
@@ -172,5 +239,5 @@ INSERT INTO users (full_name, username, password_hash, role, department) VALUES
 ('Dr. James Ochieng','dr.ochieng', NULL, 'doctor',       'General Medicine'),
 ('Mary Wanjiku',    'm.wanjiku',   NULL, 'receptionist', 'Front Desk'),
 ('Sam Oduor',       's.oduor',     NULL, 'lab',          'Laboratory'),
-('Grace Akinyi',    'g.akinyi',    NULL, 'pharmacist',   'Pharmacy'),
+('Grace Akinyi',    'g.akinyi',    NULL, 'pharmacy',   'Pharmacy'),
 ('Nurse Faith Njeri','f.njeri',    NULL, 'nurse',        'Nursing');

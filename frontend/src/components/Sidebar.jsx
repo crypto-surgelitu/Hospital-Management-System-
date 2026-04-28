@@ -2,12 +2,15 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const navItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: 'bi-grid-1x2', roles: ['admin', 'doctor', 'receptionist', 'lab', 'pharmacy'] },
+  { path: '/dashboard', label: 'Dashboard', icon: 'bi-grid-1x2', roles: ['admin', 'doctor', 'receptionist', 'lab', 'pharmacy', 'nurse'] },
+  { path: '/queue', label: 'Queue', icon: 'bi-list-ol', roles: ['admin', 'receptionist'] },
+  { path: '/doctor-queue', label: 'Examination', icon: 'bi-clipboard-data', roles: ['admin', 'doctor'] },
   { path: '/patients', label: 'Patients', icon: 'bi-people', roles: ['admin', 'doctor', 'receptionist'] },
   { path: '/appointments', label: 'Appointments', icon: 'bi-calendar-check', roles: ['admin', 'doctor', 'receptionist'] },
   { path: '/lab', label: 'Lab', icon: 'bi-droplet', roles: ['admin', 'lab'] },
   { path: '/pharmacy', label: 'Pharmacy', icon: 'bi-capsule', roles: ['admin', 'pharmacy'] },
   { path: '/billing', label: 'Billing', icon: 'bi-credit-card', roles: ['admin', 'receptionist'] },
+  { path: '/nurse-tasks', label: 'Nurse Tasks', icon: 'bi-clipboard-check', roles: ['admin', 'nurse'] },
   { path: '/admin', label: 'Admin', icon: 'bi-gear', roles: ['admin'] },
 ];
 

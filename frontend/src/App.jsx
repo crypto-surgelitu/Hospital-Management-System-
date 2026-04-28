@@ -10,14 +10,18 @@ import Lab from './pages/Lab';
 import Pharmacy from './pages/Pharmacy';
 import Billing from './pages/Billing';
 import Admin from './pages/Admin';
+import NurseTasks from './pages/NurseTasks';
+import Queue from './pages/Queue';
+import DoctorQueue from './pages/DoctorQueue';
 import Unauthorized from './pages/Unauthorized';
 
 const ROLE_ROUTES = {
-  admin: ['/dashboard', '/patients', '/appointments', '/lab', '/pharmacy', '/billing', '/admin'],
-  doctor: ['/dashboard', '/patients', '/appointments'],
-  receptionist: ['/dashboard', '/patients', '/appointments', '/billing'],
+  admin: ['/dashboard', '/queue', '/doctor-queue', '/patients', '/appointments', '/lab', '/pharmacy', '/billing', '/admin'],
+  doctor: ['/dashboard', '/doctor-queue', '/patients', '/appointments'],
+  receptionist: ['/dashboard', '/queue', '/patients', '/appointments', '/billing'],
   lab: ['/dashboard', '/lab'],
   pharmacy: ['/dashboard', '/pharmacy'],
+  nurse: ['/dashboard', '/nurse-tasks'],
 };
 
 function App() {
@@ -39,6 +43,8 @@ function App() {
             <Route element={<Sidebar />}>
               <Route path="/patients" element={<Patients />} />
               <Route path="/appointments" element={<Appointments />} />
+              <Route path="/queue" element={<Queue />} />
+              <Route path="/doctor-queue" element={<DoctorQueue />} />
             </Route>
           </Route>
 
@@ -57,6 +63,12 @@ function App() {
           <Route element={<ProtectedRoute roles={['admin', 'receptionist']} />}>
             <Route element={<Sidebar />}>
               <Route path="/billing" element={<Billing />} />
+            </Route>
+          </Route>
+
+          <Route element={<ProtectedRoute roles={['admin', 'nurse']} />}>
+            <Route element={<Sidebar />}>
+              <Route path="/nurse-tasks" element={<NurseTasks />} />
             </Route>
           </Route>
 

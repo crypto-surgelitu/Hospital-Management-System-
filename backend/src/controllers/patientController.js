@@ -5,14 +5,15 @@ async function getAllPatients(req, res) {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
-    const offset = (parseInt(req.query.page || '1') - 1) * parseInt(req.query.limit || '20');
+    const offset = (page - 1) * limit;
 
     const [countResult] = await pool.query('SELECT COUNT(*) as cnt FROM patients WHERE deleted_at IS NULL');
     const total = countResult[0]?.cnt ?? 0;
     const [patients] = await pool.query(
       `SELECT patient_id, full_name, date_of_birth, gender, phone, email, national_id, created_at 
        FROM patients WHERE deleted_at IS NULL 
-       ORDER BY created_at DESC LIMIT ${parseInt(req.query.limit) || 20} OFFSET ${offset}`
+       ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      [limit, offset]
     );
 
     res.json({
@@ -102,10 +103,12 @@ async function createPatient(req, res) {
       }
     }
 
+    const birthDate = date_of_birth && date_of_birth.trim() ? date_of_birth : null;
+    
     const [result] = await pool.query(
       `INSERT INTO patients (full_name, date_of_birth, gender, phone, national_id, address, email, created_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [full_name, date_of_birth || null, gender || null, phone, national_id || null, address || null, email || null]
+       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [full_name, birthDate, gender || null, phone, national_id || null, address || null, email || null]
     );
 
     const [newPatient] = await pool.query('SELECT * FROM patients WHERE patient_id = ?', [result.insertId]);

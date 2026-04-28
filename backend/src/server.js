@@ -36,9 +36,12 @@ app.use('/api/auth',         require('./routes/auth'));
 app.use('/api/patients',     require('./routes/patients'));
 app.use('/api/appointments', require('./routes/appointments'));
 app.use('/api/lab',          require('./routes/lab'));
-app.use('/api/pharmacy',     require('./routes/pharmacy'));
-app.use('/api/billing',      require('./routes/billing'));
-app.use('/api/admin',        require('./routes/admin'));
+app.use('/api/pharmacy',    require('./routes/pharmacy'));
+app.use('/api/billing',     require('./routes/billing'));
+app.use('/api/admin',       require('./routes/admin'));
+app.use('/api/queue',      require('./routes/queue'));
+app.use('/api/referrals',  require('./routes/referrals'));
+app.use('/api/nurse',       require('./routes/nurse'));
 
 // ─── Global Error Handler ───────────────────────────────────
 app.use((err, req, res, next) => {
