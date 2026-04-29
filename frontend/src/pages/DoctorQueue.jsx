@@ -14,11 +14,11 @@ export default function DoctorQueue() {
   const [showLabModal, setShowLabModal] = useState(false);
   const [showPharmacyModal, setShowPharmacyModal] = useState(false);
   const [showNurseModal, setShowNurseModal] = useState(false);
+  const [selectedReferral, setSelectedReferral] = useState(null);
   
   const [labForm, setLabForm] = useState({ test_type: '', priority: 'routine' });
   const [labTestTypes, setLabTestTypes] = useState([]);
-  const [drugsList, setDrugsList] = useState([]);
-  const [pharmacyForm, setPharmacyForm] = useState({ drug_id: '', quantity: 1, dosage_instructions: '' });
+  const [pharmacyForm, setPharmacyForm] = useState({ medication_requirements: '' });
   const [nurseForm, setNurseForm] = useState({ task_description: '', task_type: 'other', priority: 'normal' });
 
   const fetchQueue = async () => {
@@ -46,21 +46,9 @@ export default function DoctorQueue() {
     }
   };
 
-  const fetchDrugsList = async () => {
-    try {
-      const res = await api.get('/pharmacy/drugs');
-      if (res.data.success) {
-        setDrugsList(res.data.drugs);
-      }
-    } catch (err) {
-      console.error('Failed to fetch drugs:', err);
-    }
-  };
-
   useEffect(() => {
     fetchQueue();
     fetchLabTestTypes();
-    fetchDrugsList();
   }, []);
 
   const handleStartConsultation = async (queueId) => {
@@ -76,9 +64,33 @@ export default function DoctorQueue() {
     if (!selectedPatient) return;
     setSaving(true);
     try {
+      let referral_type = null;
+      let referral_data = null;
+
+      if (selectedReferral === 'lab' && labForm.test_type) {
+        referral_type = 'lab';
+        referral_data = { test_type: labForm.test_type, priority: labForm.priority };
+      } else if (selectedReferral === 'pharmacy' && pharmacyForm.medication_requirements.trim()) {
+        referral_type = 'pharmacy';
+        referral_data = { medication_requirements: pharmacyForm.medication_requirements.trim() };
+      } else if (selectedReferral === 'nurse' && nurseForm.task_description) {
+        referral_type = 'nurse';
+        referral_data = { task_description: nurseForm.task_description, task_type: nurseForm.task_type };
+      }
+
       await api.patch(`/queue/${selectedPatient.queue_id}/complete`, {
-        notes: consultationNotes
+        notes: consultationNotes,
+        referral_type,
+        referral_data
       });
+
+      setShowLabModal(false);
+      setShowPharmacyModal(false);
+      setShowNurseModal(false);
+      setSelectedReferral(null);
+      setLabForm({ test_type: '', priority: 'routine' });
+      setPharmacyForm({ medication_requirements: '' });
+      setNurseForm({ task_description: '', task_type: 'other', priority: 'normal' });
       setSelectedPatient(null);
       setConsultationNotes('');
       fetchQueue();
@@ -99,7 +111,8 @@ export default function DoctorQueue() {
         priority: labForm.priority
       });
       setShowLabModal(false);
-      setLabForm({ test_type: '', priority: 'normal' });
+      setSelectedReferral(null);
+      setLabForm({ test_type: '', priority: 'routine' });
       alert('Lab test ordered successfully');
     } catch (err) {
       console.error('Failed to order lab:', err);
@@ -107,20 +120,19 @@ export default function DoctorQueue() {
   };
 
   const handleCreatePharmacyReferral = async () => {
-    if (!selectedPatient || !pharmacyForm.drug_id) return;
+    if (!selectedPatient || !pharmacyForm.medication_requirements.trim()) return;
     try {
       await api.post('/referrals/pharmacy', {
         queue_id: selectedPatient.queue_id,
         patient_id: selectedPatient.patient_id,
-        drug_id: pharmacyForm.drug_id,
-        quantity: pharmacyForm.quantity,
-        dosage_instructions: pharmacyForm.dosage_instructions
+        medication_requirements: pharmacyForm.medication_requirements.trim()
       });
       setShowPharmacyModal(false);
-      setPharmacyForm({ drug_id: '', quantity: 1, dosage_instructions: '' });
-      alert('Prescription created successfully');
+      setSelectedReferral(null);
+      setPharmacyForm({ medication_requirements: '' });
+      alert('Pharmacy request sent successfully');
     } catch (err) {
-      console.error('Failed to create prescription:', err);
+      console.error('Failed to send pharmacy request:', err);
     }
   };
 
@@ -135,6 +147,7 @@ export default function DoctorQueue() {
         priority: nurseForm.priority
       });
       setShowNurseModal(false);
+      setSelectedReferral(null);
       setNurseForm({ task_description: '', task_type: 'other', priority: 'normal' });
       alert('Nurse task assigned successfully');
     } catch (err) {
@@ -246,19 +259,19 @@ export default function DoctorQueue() {
 
               <div className="grid grid-cols-3 gap-3">
                 <button
-                  onClick={() => setShowLabModal(true)}
+                  onClick={() => { setSelectedReferral('lab'); setShowLabModal(true); }}
                   className="px-4 py-3 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-200 text-center"
                 >
                   Order Lab Test
                 </button>
                 <button
-                  onClick={() => setShowPharmacyModal(true)}
+                  onClick={() => { setSelectedReferral('pharmacy'); setShowPharmacyModal(true); }}
                   className="px-4 py-3 bg-teal-100 text-teal-700 rounded-lg text-sm font-medium hover:bg-teal-200 text-center"
                 >
-                  Prescribe Medicine
+                  Send to Pharmacy
                 </button>
                 <button
-                  onClick={() => setShowNurseModal(true)}
+                  onClick={() => { setSelectedReferral('nurse'); setShowNurseModal(true); }}
                   className="px-4 py-3 bg-orange-100 text-orange-700 rounded-lg text-sm font-medium hover:bg-orange-200 text-center"
                 >
                   Assign Nurse Task
@@ -287,7 +300,7 @@ export default function DoctorQueue() {
 
       {showLabModal && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 z-[10000]" onClick={() => setShowLabModal(false)}></div>
+          <div className="absolute inset-0 bg-black/60 z-[10000]" onClick={() => { setShowLabModal(false); setSelectedReferral(null); }}></div>
           <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto z-[10001] p-6">
             <h3 className="text-lg font-semibold mb-4">Order Lab Test</h3>
             <div className="space-y-4">
@@ -324,7 +337,7 @@ export default function DoctorQueue() {
                   Order Test
                 </button>
                 <button
-                  onClick={() => setShowLabModal(false)}
+                  onClick={() => { setShowLabModal(false); setSelectedReferral(null); }}
                   className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50"
                 >
                   Cancel
@@ -337,54 +350,30 @@ export default function DoctorQueue() {
 
       {showPharmacyModal && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 z-[10000]" onClick={() => setShowPharmacyModal(false)}></div>
+          <div className="absolute inset-0 bg-black/60 z-[10000]" onClick={() => { setShowPharmacyModal(false); setSelectedReferral(null); }}></div>
           <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto z-[10001] p-6">
-            <h3 className="text-lg font-semibold mb-4">Prescribe Medicine</h3>
+            <h3 className="text-lg font-semibold mb-4">Send to Pharmacy</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Drug Name *</label>
-                <select
-                  value={pharmacyForm.drug_id}
-                  onChange={(e) => setPharmacyForm({ ...pharmacyForm, drug_id: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                >
-                  <option value="">Select drug</option>
-                  {drugsList.map((drug) => (
-                    <option key={drug.drug_id} value={drug.drug_id}>
-                      {drug.drug_name} {drug.generic_name ? `(${drug.generic_name})` : ''} - KES {drug.unit_price}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={pharmacyForm.quantity}
-                  onChange={(e) => setPharmacyForm({ ...pharmacyForm, quantity: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Dosage Instructions</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Medication Requirements *</label>
                 <textarea
-                  value={pharmacyForm.dosage_instructions}
-                  onChange={(e) => setPharmacyForm({ ...pharmacyForm, dosage_instructions: e.target.value })}
-                  rows={2}
-                  placeholder="e.g. Take twice daily after meals"
+                  value={pharmacyForm.medication_requirements}
+                  onChange={(e) => setPharmacyForm({ ...pharmacyForm, medication_requirements: e.target.value })}
+                  rows={4}
+                  placeholder="Describe the medicine requirement for the pharmacist to prescribe..."
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                 />
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={handleCreatePharmacyReferral}
+                  disabled={!pharmacyForm.medication_requirements.trim()}
                   className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700"
                 >
-                  Prescribe
+                  Send Request
                 </button>
                 <button
-                  onClick={() => setShowPharmacyModal(false)}
+                  onClick={() => { setShowPharmacyModal(false); setSelectedReferral(null); }}
                   className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50"
                 >
                   Cancel
@@ -397,7 +386,7 @@ export default function DoctorQueue() {
 
       {showNurseModal && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 z-[10000]" onClick={() => setShowNurseModal(false)}></div>
+          <div className="absolute inset-0 bg-black/60 z-[10000]" onClick={() => { setShowNurseModal(false); setSelectedReferral(null); }}></div>
           <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto z-[10001] p-6">
             <h3 className="text-lg font-semibold mb-4">Assign Nurse Task</h3>
             <div className="space-y-4">
@@ -445,7 +434,7 @@ export default function DoctorQueue() {
                   Assign Task
                 </button>
                 <button
-                  onClick={() => setShowNurseModal(false)}
+                  onClick={() => { setShowNurseModal(false); setSelectedReferral(null); }}
                   className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50"
                 >
                   Cancel

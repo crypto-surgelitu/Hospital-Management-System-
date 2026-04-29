@@ -141,7 +141,10 @@ export default function Appointments() {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return today;
+  });
   const [showNewModal, setShowNewModal] = useState(false);
   const [notesModal, setNotesModal] = useState({ open: false, appointment: null });
   const [toast, setToast] = useState(null);
@@ -154,12 +157,18 @@ export default function Appointments() {
   const fetchAppointments = useCallback(async () => {
     setLoading(true);
     try {
+      console.log('Fetching appointments for:', selectedDate);
       const res = await api.get(`/appointments?date=${selectedDate}`);
+      console.log('Appointments response:', res.data);
       if (res.data.success) {
-        setAppointments(res.data.appointments);
+        setAppointments(res.data.appointments || []);
+      } else {
+        setAppointments([]);
       }
-    } catch {
+    } catch (err) {
+      console.error('Fetch appointments error:', err);
       setToast({ type: 'error', message: 'Failed to load appointments' });
+      setAppointments([]);
     } finally {
       setLoading(false);
     }
@@ -259,7 +268,7 @@ export default function Appointments() {
           <div className="col-span-full text-center py-16 text-[var(--color-text-muted)] font-medium bg-[var(--color-surface-low)] rounded-[16px] ghost-border">No appointments scheduled for this date.</div>
         ) : (
           appointments.map(apt => (
-            <Card key={apt.id} className="hover:-translate-y-1 transition-transform duration-300 flex flex-col">
+            <Card key={apt.appointment_id} className="hover:-translate-y-1 transition-transform duration-300 flex flex-col">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <p className="font-bold text-[var(--color-ink-900)] text-base">{apt.patient_name}</p>
@@ -274,7 +283,7 @@ export default function Appointments() {
               {apt.notes && <p className="text-[13px] text-[var(--color-text-muted)] mb-4 line-clamp-2 leading-relaxed">{apt.notes}</p>}
               <div className="flex items-center gap-2 pt-4 border-t border-[var(--color-outline-variant)]/30 mt-auto">
                 {canUpdateStatus && (
-                  <select value={apt.status} onChange={e => handleStatusChange(apt.id, e.target.value)} disabled={actionLoading} className="flex-1 px-3 py-2 text-[13px] font-medium border border-[var(--color-outline-variant)] rounded-[10px] bg-white focus:ring-[var(--color-primary)] cursor-pointer">
+                  <select value={apt.status} onChange={e => handleStatusChange(apt.appointment_id, e.target.value)} disabled={actionLoading} className="flex-1 px-3 py-2 text-[13px] font-medium border border-[var(--color-outline-variant)] rounded-[10px] bg-white focus:ring-[var(--color-primary)] cursor-pointer">
                     <option value="pending">Pending</option>
                     <option value="in-progress">In Progress</option>
                     <option value="completed">Completed</option>

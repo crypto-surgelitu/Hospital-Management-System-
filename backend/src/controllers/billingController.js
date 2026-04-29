@@ -10,9 +10,13 @@ async function getInvoices(req, res) {
     let whereClause = '1=1';
     const params = [];
 
-    if (status && ['pending', 'paid', 'partial', 'waived'].includes(status)) {
-      whereClause += ' AND b.status = ?';
-      params.push(status);
+    const normalizedStatus = status
+      ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
+      : null;
+
+    if (normalizedStatus && ['Unpaid', 'Partial', 'Paid'].includes(normalizedStatus)) {
+      whereClause += ' AND b.payment_status = ?';
+      params.push(normalizedStatus);
     }
 
     if (patient_id) {
@@ -69,14 +73,21 @@ async function getInvoiceById(req, res) {
       [id]
     );
 
-    const [payments] = await pool.query(
-      `SELECT bp.*, u.full_name as recorded_by_name
-       FROM payments bp
-       JOIN users u ON bp.received_by = u.user_id
-       WHERE bp.bill_id = ?
-       ORDER BY bp.created_at DESC`,
-      [id]
-    );
+    let payments = [];
+    try {
+      [payments] = await pool.query(
+        `SELECT bp.*, u.full_name as recorded_by_name
+         FROM payments bp
+         JOIN users u ON bp.received_by = u.user_id
+         WHERE bp.bill_id = ?
+         ORDER BY bp.created_at DESC`,
+        [id]
+      );
+    } catch (paymentError) {
+      if (!['ER_NO_SUCH_TABLE', 'ER_BAD_FIELD_ERROR'].includes(paymentError.code)) {
+        throw paymentError;
+      }
+    }
 
     res.json({
       success: true,
@@ -99,37 +110,45 @@ async function createInvoice(req, res) {
       return res.status(400).json({ success: false, message: 'Patient ID and items are required' });
     }
 
-    for (const item of items) {
-      if (!item.description || !item.quantity || item.quantity < 1) {
-        return res.status(400).json({ success: false, message: 'Valid description and quantity required for all items' });
-      }
+    // Validate patient exists
+    const [patients] = await pool.query('SELECT patient_id, full_name FROM patients WHERE patient_id = ? AND deleted_at IS NULL', [patient_id]);
+    if (patients.length === 0) {
+      return res.status(400).json({ success: false, message: 'Patient not found. Please select an existing patient from the search.' });
+    }
+
+    // Validate items have required fields
+    const validItems = items.filter(item => item.description && item.quantity > 0);
+    if (validItems.length === 0) {
+      return res.status(400).json({ success: false, message: 'At least one valid item with description and quantity is required' });
     }
 
     let total = 0;
-    for (const item of items) {
-      total += parseFloat(item.quantity) * parseFloat(item.unit_price || 0);
+    for (const item of validItems) {
+      const qty = parseInt(item.quantity) || 1;
+      const price = parseFloat(item.unit_price) || 0;
+      total += qty * price;
     }
-
-    const invoice_number = 'INV-' + Date.now();
 
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
 
       const [billResult] = await connection.query(
-        `INSERT INTO bills (patient_id, invoice_number, total_amount, generated_by, payment_status, bill_date)
-         VALUES (?, ?, ?, ?, 'pending', CURDATE())`,
-        [patient_id, invoice_number, total, generated_by]
+        `INSERT INTO bills (patient_id, total_amount, generated_by, payment_status, bill_date)
+         VALUES (?, ?, ?, 'Unpaid', CURDATE())`,
+        [patient_id, total, generated_by]
       );
 
       const bill_id = billResult.insertId;
 
-      for (const item of items) {
-        const itemSubtotal = parseFloat(item.quantity) * parseFloat(item.unit_price || 0);
+      for (const item of validItems) {
+        const qty = parseInt(item.quantity) || 1;
+        const price = parseFloat(item.unit_price) || 0;
+        const subtotal = qty * price;
         await connection.query(
           `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal)
            VALUES (?, ?, ?, ?, ?)`,
-          [bill_id, item.description, item.quantity, item.unit_price || 0, itemSubtotal]
+          [bill_id, item.description, qty, price, subtotal]
         );
       }
 
@@ -143,21 +162,17 @@ async function createInvoice(req, res) {
         [bill_id]
       );
 
-      const [newItems] = await pool.query(
-        'SELECT * FROM bill_items WHERE bill_id = ?',
-        [bill_id]
-      );
-
-      res.status(201).json({ success: true, invoice: newInvoice[0], items: newItems });
-    } catch (err) {
+      res.status(201).json({ success: true, invoice: newInvoice[0] });
+    } catch (error) {
       await connection.rollback();
-      throw err;
+      console.error('Transaction error in createInvoice:', error);
+      return res.status(500).json({ success: false, message: error.message || 'Failed to create invoice - rollback performed' });
     } finally {
-      connection.release();
+      if (connection) connection.release();
     }
   } catch (error) {
     console.error('createInvoice error:', error);
-    res.status(500).json({ success: false, message: 'Failed to create invoice' });
+    return res.status(500).json({ success: false, message: error.message || 'Failed to create invoice' });
   }
 }
 
@@ -180,29 +195,60 @@ async function recordPayment(req, res) {
       return res.status(404).json({ success: false, message: 'Invoice not found' });
     }
 
-    const newAmountPaid = (invoice.amount_paid || 0) + parseFloat(amount_paid);
+    const newAmountPaid = Number(invoice.amount_paid || 0) + parseFloat(amount_paid);
     let newStatus = invoice.payment_status;
 
-    if (newAmountPaid >= invoice.total_amount) {
-      newStatus = 'paid';
+    if (newAmountPaid >= Number(invoice.total_amount || 0)) {
+      newStatus = 'Paid';
     } else if (newAmountPaid > 0) {
-      newStatus = 'partial';
+      newStatus = 'Partial';
+    } else {
+      newStatus = 'Unpaid';
     }
+
+    const paymentMethods = {
+      cash: 'Cash',
+      mpesa: 'M-Pesa',
+      'm-pesa': 'M-Pesa',
+      insurance: 'Insurance',
+      card: 'Other',
+      other: 'Other'
+    };
+    const normalizedPaymentMethod = paymentMethods[String(payment_method || 'cash').toLowerCase()] || 'Cash';
 
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
 
       await connection.query(
-        `UPDATE bills SET amount_paid = ?, payment_status = ? WHERE bill_id = ?`,
-        [newAmountPaid, newStatus, id]
+        `UPDATE bills SET amount_paid = ?, payment_status = ?, payment_method = ? WHERE bill_id = ?`,
+        [newAmountPaid, newStatus, normalizedPaymentMethod, id]
       );
 
-      const [paymentResult] = await connection.query(
-        `INSERT INTO payments (bill_id, amount_paid, payment_method, reference_number, received_by, created_at)
-         VALUES (?, ?, ?, ?, ?, NOW())`,
-        [id, amount_paid, payment_method || 'cash', reference_number || null, received_by]
-      );
+      let payment = {
+        bill_id: Number(id),
+        amount_paid: parseFloat(amount_paid),
+        payment_method: normalizedPaymentMethod,
+        reference_number: reference_number || null,
+        received_by
+      };
+
+      try {
+        const [paymentResult] = await connection.query(
+          `INSERT INTO payments (bill_id, amount_paid, payment_method, reference_number, received_by, created_at)
+           VALUES (?, ?, ?, ?, ?, NOW())`,
+          [id, amount_paid, normalizedPaymentMethod, reference_number || null, received_by]
+        );
+        const [paymentRows] = await connection.query(
+          'SELECT * FROM payments WHERE id = ?',
+          [paymentResult.insertId]
+        );
+        payment = paymentRows[0] || payment;
+      } catch (paymentError) {
+        if (!['ER_NO_SUCH_TABLE', 'ER_BAD_FIELD_ERROR'].includes(paymentError.code)) {
+          throw paymentError;
+        }
+      }
 
       await connection.commit();
 
@@ -214,12 +260,7 @@ async function recordPayment(req, res) {
         [id]
       );
 
-      const [payment] = await pool.query(
-        'SELECT * FROM payments WHERE id = ?',
-        [paymentResult.insertId]
-      );
-
-      res.json({ success: true, invoice: updatedInvoice, payment: payment[0] });
+      res.json({ success: true, invoice: updatedInvoice, payment });
     } catch (err) {
       await connection.rollback();
       throw err;
@@ -279,7 +320,7 @@ async function createBillFromServices(req, res) {
 
       const [billResult] = await connection.query(
         `INSERT INTO bills (patient_id, total_amount, payment_status, bill_date, generated_by)
-         VALUES (?, 0, 'pending', NOW(), ?)`,
+         VALUES (?, 0, 'Unpaid', CURDATE(), ?)`,
         [patient_id, generated_by]
       );
 
@@ -288,7 +329,7 @@ async function createBillFromServices(req, res) {
 
       for (const svc of services) {
         const [[service]] = await connection.query(
-          'SELECT unit_price FROM service_prices WHERE service_id = ? AND is_active = 1',
+          'SELECT service_name, unit_price FROM service_prices WHERE service_id = ? AND is_active = 1',
           [svc.service_id]
         );
 
@@ -297,9 +338,9 @@ async function createBillFromServices(req, res) {
           total += itemTotal;
 
           await connection.query(
-            `INSERT INTO bill_items (bill_id, service_id, service_name, quantity, unit_price, total_price)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [bill_id, svc.service_id, service.service_name, svc.quantity || 1, service.unit_price, itemTotal]
+            `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal)
+             VALUES (?, ?, ?, ?, ?)`,
+            [bill_id, service.service_name, svc.quantity || 1, service.unit_price, itemTotal]
           );
         }
       }

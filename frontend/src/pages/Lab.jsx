@@ -91,9 +91,18 @@ export default function Lab() {
   const [actionLoading, setActionLoading] = useState(false);
   const [resultsModal, setResultsModal] = useState({ open: false, request: null });
 
+  const [labReferrals, setLabReferrals] = useState([]);
+
   const isLab = user?.role === 'lab';
+  const canViewReferrals = user?.role === 'lab' || user?.role === 'admin';
 
   const fetchRequests = useCallback(async () => {
+    if (activeTab === 'referrals') {
+      setRequests([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const status = activeTab === 'pending' ? 'pending' : 'completed';
@@ -108,9 +117,39 @@ export default function Lab() {
     }
   }, [activeTab]);
 
+  const fetchLabReferrals = useCallback(async () => {
+    try {
+      const res = await api.get('/referrals?type=lab');
+      if (res.data.success) {
+        setLabReferrals(res.data.referrals || []);
+      }
+    } catch {
+      setLabReferrals([]);
+    }
+  }, []);
+
   useEffect(() => {
     fetchRequests();
-  }, [fetchRequests]);
+    if (canViewReferrals) fetchLabReferrals();
+  }, [fetchRequests, fetchLabReferrals, canViewReferrals]);
+
+  const handleCompleteReferral = async (referralId) => {
+    setActionLoading(true);
+    try {
+      const res = await api.patch(`/referrals/${referralId}/complete`);
+      if (res.data.success) {
+        setToast({ type: 'success', message: 'Test completed' });
+        fetchLabReferrals();
+      } else {
+        setToast({ type: 'error', message: res.data.message });
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setToast({ type: 'error', message: err.response?.data?.message || 'Failed to complete' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handleSpecimenCollect = async (id) => {
     setActionLoading(true);
@@ -132,7 +171,7 @@ export default function Lab() {
   const handleResultsSubmit = async (results) => {
     setActionLoading(true);
     try {
-      const res = await api.patch(`/lab/${resultsModal.request.id}/results`, { results });
+      const res = await api.patch(`/lab/${resultsModal.request.lab_request_id}/results`, { results });
       if (res.data.success) {
         setToast({ type: 'success', message: 'Results saved successfully' });
         setResultsModal({ open: false, request: null });
@@ -164,9 +203,38 @@ export default function Lab() {
           <button onClick={() => setActiveTab('completed')} className={`px-4 py-2 text-[13px] font-bold uppercase tracking-wider rounded-[10px] transition-all duration-300 ${activeTab === 'completed' ? 'bg-white text-[var(--color-primary)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-ink-900)]'}`}>
             Completed Results
           </button>
+          {canViewReferrals && (
+            <button onClick={() => setActiveTab('referrals')} className={`px-4 py-2 text-[13px] font-bold uppercase tracking-wider rounded-[10px] transition-all duration-300 ${activeTab === 'referrals' ? 'bg-white text-[var(--color-primary)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-ink-900)]'}`}>
+              Referrals {labReferrals.length > 0 && <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full">{labReferrals.length}</span>}
+            </button>
+          )}
         </div>
       </div>
 
+      {activeTab === 'referrals' ? (
+        <Card>
+          {labReferrals.length === 0 ? (
+            <div className="py-12 text-center text-slate-500">No pending lab referrals</div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {labReferrals.map(rx => (
+                <div key={rx.referral_id} className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-slate-900">{rx.patient_name}</p>
+                    <p className="text-sm text-slate-500">{rx.item_description}</p>
+                    <p className="text-xs text-slate-400">From: Dr. {rx.doctor_name}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => handleCompleteReferral(rx.referral_id)} disabled={actionLoading} className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                      Complete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
           [...Array(4)].map((_, i) => (
@@ -181,7 +249,7 @@ export default function Lab() {
           </div>
         ) : (
           requests.map(req => (
-            <Card key={req.id} className="hover:-translate-y-1 transition-transform duration-300 flex flex-col">
+            <Card key={req.lab_request_id} className="hover:-translate-y-1 transition-transform duration-300 flex flex-col">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <p className="font-bold text-[var(--color-ink-900)] text-base">{req.patient_name}</p>
@@ -208,7 +276,7 @@ export default function Lab() {
               {activeTab === 'pending' && isLab && (
                 <div className="flex items-center gap-2 pt-4 border-t border-[var(--color-outline-variant)]/30 mt-auto">
                   {!req.specimen_collected ? (
-                    <Button variant="secondary" size="sm" onClick={() => handleSpecimenCollect(req.id)} disabled={actionLoading} className="flex-1 px-3">
+                    <Button variant="secondary" size="sm" onClick={() => handleSpecimenCollect(req.lab_request_id)} disabled={actionLoading} className="flex-1 px-3">
                       Mark Collected
                     </Button>
                   ) : (
@@ -237,6 +305,7 @@ export default function Lab() {
           ))
         )}
       </div>
+      )}
 
       <ResultsModal open={resultsModal.open} onClose={() => setResultsModal({ open: false, request: null })} onSubmit={handleResultsSubmit} loading={actionLoading} request={resultsModal.request} />
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}

@@ -197,7 +197,7 @@ function DispenseModal({ open, onClose, onSubmit, loading, drugs, onSearchPatien
 
   const handleSubmit = () => {
     if (!selectedPatient || items.filter(i => i.drug_id && i.quantity > 0).length === 0) return;
-    onSubmit({ patient_id: selectedPatient.id, items: items.filter(i => i.drug_id && i.quantity > 0) });
+    onSubmit({ patient_id: selectedPatient.patient_id, items: items.filter(i => i.drug_id && i.quantity > 0) });
   };
 
   if (!open) return null;
@@ -219,7 +219,7 @@ function DispenseModal({ open, onClose, onSubmit, loading, drugs, onSearchPatien
             {searchResults.length > 0 && (
               <div className="border border-slate-200 rounded-lg mt-1 max-h-32 overflow-y-auto">
                 {searchResults.map(p => (
-                  <div key={p.id} onClick={() => onSelectPatient(p)} className="px-3 py-2 hover:bg-slate-50 cursor-pointer text-sm">{p.full_name}</div>
+                  <div key={p.patient_id} onClick={() => onSelectPatient(p)} className="px-3 py-2 hover:bg-slate-50 cursor-pointer text-sm">{p.full_name}</div>
                 ))}
               </div>
             )}
@@ -256,6 +256,73 @@ function DispenseModal({ open, onClose, onSubmit, loading, drugs, onSearchPatien
   );
 }
 
+function ReferralPrescriptionModal({ open, onClose, onSubmit, loading, referral, drugs }) {
+  const [form, setForm] = useState({ drug_id: '', quantity: 1, dosage_instructions: '' });
+
+  useEffect(() => {
+    if (open) {
+      setForm({ drug_id: '', quantity: 1, dosage_instructions: '' });
+    }
+  }, [open]);
+
+  if (!open || !referral) return null;
+
+  const handleSubmit = () => {
+    if (!form.drug_id || Number(form.quantity) < 1) return;
+    onSubmit(referral.referral_id, {
+      drug_id: form.drug_id,
+      quantity: Number(form.quantity),
+      dosage_instructions: form.dosage_instructions
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 z-[9999]" onClick={onClose}></div>
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-lg mx-auto z-[10000]">
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-slate-900">Pharmacist Prescription</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="p-6 space-y-4">
+          <div className="bg-slate-50 p-3 rounded-lg">
+            <p className="text-sm font-medium text-slate-900">{referral.patient_name}</p>
+            <p className="text-sm text-slate-600 mt-1">{referral.item_description}</p>
+            <p className="text-xs text-slate-400 mt-1">From: Dr. {referral.doctor_name}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Medication *</label>
+            <select value={form.drug_id} onChange={e => setForm({ ...form, drug_id: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+              <option value="">Select drug</option>
+              {drugs?.map(d => (
+                <option key={d.drug_id} value={d.drug_id}>
+                  {d.drug_name} (Stock: {d.quantity_in_stock})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Quantity *</label>
+            <input type="number" min="1" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Dosage Instructions</label>
+            <textarea value={form.dosage_instructions} onChange={e => setForm({ ...form, dosage_instructions: e.target.value })} rows={3} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" />
+          </div>
+          <div className="pt-4 flex gap-3">
+            <button onClick={handleSubmit} disabled={loading || !form.drug_id || Number(form.quantity) < 1} className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
+              Prescribe & Dispense
+            </button>
+            <button onClick={onClose} className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Pharmacy() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('inventory');
@@ -264,10 +331,12 @@ export default function Pharmacy() {
   const [lowStockCount, setLowStockCount] = useState(0);
   const [toast, setToast] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [pendingReferrals, setPendingReferrals] = useState([]);
 
   const [addModal, setAddModal] = useState(false);
   const [restockModal, setRestockModal] = useState({ open: false, drug: null });
   const [dispenseModal, setDispenseModal] = useState(false);
+  const [referralPrescriptionModal, setReferralPrescriptionModal] = useState({ open: false, referral: null });
   const [patientSearch, setPatientSearch] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
 
@@ -277,10 +346,10 @@ export default function Pharmacy() {
   const fetchInventory = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get('/pharmacy/drugs');
+      const res = await api.get('/pharmacy');
       if (res.data.success) {
         setDrugs(res.data.drugs);
-        setLowStockCount(res.data.lowStockCount);
+        setLowStockCount(res.data.lowStockCount || 0);
       }
     } catch {
       setToast({ type: 'error', message: 'Failed to load inventory' });
@@ -289,9 +358,21 @@ export default function Pharmacy() {
     }
   }, []);
 
+  const fetchPendingReferrals = useCallback(async () => {
+    try {
+      const res = await api.get('/referrals?type=pharmacy');
+      if (res.data.success) {
+        setPendingReferrals(res.data.referrals || []);
+      }
+    } catch {
+      setPendingReferrals([]);
+    }
+  }, []);
+
   useEffect(() => {
     fetchInventory();
-  }, [fetchInventory]);
+    if (isPharmacist) fetchPendingReferrals();
+  }, [fetchInventory, fetchPendingReferrals, isPharmacist]);
 
   const handleAddDrug = async (form) => {
     setActionLoading(true);
@@ -356,6 +437,25 @@ export default function Pharmacy() {
     } catch { setPatientSearch([]); }
   };
 
+  const handleCompleteReferral = async (referralId, prescriptionData) => {
+    setActionLoading(true);
+    try {
+      const res = await api.patch(`/referrals/${referralId}/complete`, prescriptionData);
+      if (res.data.success) {
+        setToast({ type: 'success', message: 'Prescription completed' });
+        setReferralPrescriptionModal({ open: false, referral: null });
+        fetchPendingReferrals();
+        fetchInventory();
+      } else {
+        setToast({ type: 'error', message: res.data.message });
+      }
+    } catch (err) {
+      setToast({ type: 'error', message: err.response?.data?.message || 'Failed to complete' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <div className="animate-in slide-in-from-bottom-4 fade-in duration-500">
       {lowStockCount > 0 && (
@@ -389,8 +489,38 @@ export default function Pharmacy() {
           <button onClick={() => setActiveTab('inventory')} className={`px-4 py-2 text-[13px] font-bold uppercase tracking-wider rounded-[10px] transition-all duration-300 ${activeTab === 'inventory' ? 'bg-white text-[var(--color-primary)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-ink-900)]'}`}>
             Inventory
           </button>
+          {isPharmacist && (
+            <button onClick={() => setActiveTab('referrals')} className={`px-4 py-2 text-[13px] font-bold uppercase tracking-wider rounded-[10px] transition-all duration-300 ${activeTab === 'referrals' ? 'bg-white text-[var(--color-primary)] shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-ink-900)]'}`}>
+              Referrals {pendingReferrals.length > 0 && <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full">{pendingReferrals.length}</span>}
+            </button>
+          )}
         </div>
       </div>
+
+      {activeTab === 'referrals' && isPharmacist ? (
+        <Card>
+          {pendingReferrals.length === 0 ? (
+            <div className="py-12 text-center text-slate-500">No pending pharmacy referrals</div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {pendingReferrals.map(rx => (
+                <div key={rx.referral_id} className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-slate-900">{rx.patient_name}</p>
+                    <p className="text-sm text-slate-500">{rx.item_description}</p>
+                    <p className="text-xs text-slate-400">From: Dr. {rx.doctor_name}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => setReferralPrescriptionModal({ open: true, referral: rx })} disabled={actionLoading} className="px-3 py-1.5 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 disabled:opacity-50">
+                      Prescribe
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      ) : (
 
       <Card noPadding className="mb-6">
         <div className="overflow-x-auto">
@@ -453,10 +583,12 @@ export default function Pharmacy() {
           </table>
         </div>
       </Card>
+      )}
 
       <AddDrugModal open={addModal} onClose={() => setAddModal(false)} onSubmit={handleAddDrug} loading={actionLoading} />
       <RestockModal open={restockModal.open} onClose={() => setRestockModal({ open: false, drug: null })} onSubmit={handleRestock} loading={actionLoading} drug={restockModal.drug} />
       <DispenseModal open={dispenseModal} onClose={() => { setDispenseModal(false); setSelectedPatient(null); }} onSubmit={handleDispense} loading={actionLoading} drugs={drugs} onSearchPatients={handleSearchPatients} searchResults={patientSearch} onSelectPatient={(p) => { setSelectedPatient(p); setPatientSearch([]); }} selectedPatient={selectedPatient} />
+      <ReferralPrescriptionModal open={referralPrescriptionModal.open} onClose={() => setReferralPrescriptionModal({ open: false, referral: null })} onSubmit={handleCompleteReferral} loading={actionLoading} referral={referralPrescriptionModal.referral} drugs={drugs} />
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );

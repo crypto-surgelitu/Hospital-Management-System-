@@ -1,6 +1,44 @@
 const { pool } = require('../config/db');
 const { validationResult } = require('express-validator');
 
+function normalizeBirthDate(input) {
+  if (!input || !String(input).trim()) {
+    return null;
+  }
+
+  const value = String(input).trim();
+  const parsed = new Date(`${value}T00:00:00Z`);
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) {
+    return { error: 'Date of birth must be a valid date' };
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  if (value > today) {
+    return { error: 'Date of birth cannot be in the future' };
+  }
+
+  return value;
+}
+
+function normalizePatientName(input) {
+  const name = String(input || '').trim().replace(/\s+/g, ' ');
+
+  if (!name) {
+    return { error: 'Full name is required' };
+  }
+
+  if (/\d/.test(name)) {
+    return { error: 'Patient name cannot contain numbers' };
+  }
+
+  if (!/[A-Za-z]/.test(name)) {
+    return { error: 'Patient name must contain letters' };
+  }
+
+  return name;
+}
+
 async function getAllPatients(req, res) {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -37,10 +75,10 @@ async function searchPatients(req, res) {
     }
 
     const [patients] = await pool.query(
-      `SELECT id, full_name, dob, gender, phone, national_id, created_at 
+      `SELECT patient_id, full_name, date_of_birth, gender, phone, national_id, created_at 
        FROM patients 
        WHERE deleted_at IS NULL 
-       AND (full_name LIKE ? OR national_id LIKE ? OR phone LIKE ?)
+       AND (LOWER(full_name) LIKE LOWER(?) OR LOWER(national_id) LIKE LOWER(?) OR LOWER(phone) LIKE LOWER(?))
        ORDER BY full_name ASC LIMIT 50`,
       [`%${q}%`, `%${q}%`, `%${q}%`]
     );
@@ -83,18 +121,20 @@ async function getPatientById(req, res) {
 async function createPatient(req, res) {
   try {
     const { full_name, phone, national_id } = req.body;
-    
-    if (!full_name || !full_name.trim()) {
-      return res.status(400).json({ success: false, message: 'Full name is required' });
+
+    const normalizedName = normalizePatientName(full_name);
+    if (normalizedName.error) {
+      return res.status(400).json({ success: false, message: normalizedName.error });
     }
+
     if (!phone || !phone.trim()) {
       return res.status(400).json({ success: false, message: 'Phone is required' });
     }
 
-    // Validate phone is numeric
+    // Validate phone is at least 10 digits
     const phoneClean = phone.replace(/\D/g, '');
-    if (phoneClean.length < 7) {
-      return res.status(400).json({ success: false, message: 'Phone number must be at least 7 digits' });
+    if (phoneClean.length < 10) {
+      return res.status(400).json({ success: false, message: 'Phone number must be at least 10 digits' });
     }
 
     // Validate national_id if provided
@@ -105,24 +145,26 @@ async function createPatient(req, res) {
       }
     }
 
-    const { date_of_birth, gender, address, email } = req.body;
+    const { gender, address, email } = req.body;
+    const birthDate = normalizeBirthDate(req.body.date_of_birth ?? req.body.dob);
+    if (birthDate?.error) {
+      return res.status(400).json({ success: false, message: birthDate.error });
+    }
     
     if (national_id && national_id.trim()) {
       const [existing] = await pool.query(
         'SELECT patient_id FROM patients WHERE national_id = ? AND deleted_at IS NULL',
-        [national_id]
+        [national_id.trim()]
       );
       if (existing.length > 0) {
         return res.status(409).json({ success: false, message: 'Patient already registered with this National ID' });
       }
     }
-    
-    const birthDate = date_of_birth && date_of_birth.trim() ? date_of_birth : null;
-    
+
     const [result] = await pool.query(
       `INSERT INTO patients (full_name, date_of_birth, gender, phone, national_id, address, email, created_at) 
        VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [full_name, birthDate, gender || null, phone, national_id || null, address || null, email || null]
+      [normalizedName, birthDate, gender || null, phone.trim(), national_id?.trim() || null, address || null, email || null]
     );
 
     const [newPatient] = await pool.query('SELECT * FROM patients WHERE patient_id = ?', [result.insertId]);
@@ -144,8 +186,13 @@ async function updatePatient(req, res) {
     const { id } = req.params;
     const { full_name, phone, address, email } = req.body;
 
+    const normalizedName = normalizePatientName(full_name);
+    if (normalizedName.error) {
+      return res.status(400).json({ success: false, message: normalizedName.error });
+    }
+
     const [existing] = await pool.query(
-      'SELECT id FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
+      'SELECT patient_id FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
       [id]
     );
 
@@ -155,7 +202,7 @@ async function updatePatient(req, res) {
 
     await pool.query(
       `UPDATE patients SET full_name = ?, phone = ?, address = ?, email = ? WHERE patient_id = ?`,
-      [full_name, phone, address || null, email || null, id]
+      [normalizedName, phone?.trim() || null, address || null, email || null, id]
     );
 
     const [updated] = await pool.query('SELECT * FROM patients WHERE patient_id = ?', [id]);
@@ -172,7 +219,7 @@ async function deletePatient(req, res) {
     const { id } = req.params;
 
     const [existing] = await pool.query(
-      'SELECT id FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
+      'SELECT patient_id FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
       [id]
     );
 

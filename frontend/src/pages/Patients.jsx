@@ -83,7 +83,7 @@ function PatientDrawer({ patient, onClose, onUpdate, onDelete, canEdit, canDelet
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs font-medium text-slate-400 uppercase mb-1">Date of Birth</p>
-              <p className="text-slate-900">{patient.dob ? new Date(patient.dob).toLocaleDateString() : '—'}</p>
+              <p className="text-slate-900">{patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString() : '—'}</p>
             </div>
             <div>
               <p className="text-xs font-medium text-slate-400 uppercase mb-1">Gender</p>
@@ -156,11 +156,30 @@ function PatientDrawer({ patient, onClose, onUpdate, onDelete, canEdit, canDelet
 }
 
 function NewPatientModal({ open, onClose, onSubmit, loading }) {
-  const [form, setForm] = useState({ full_name: '', dob: '', gender: '', phone: '', national_id: '' });
+  const [form, setForm] = useState({ full_name: '', date_of_birth: '', gender: '', phone: '', national_id: '' });
+  const [error, setError] = useState('');
+  const today = new Date().toISOString().split('T')[0];
+
+  useEffect(() => {
+    if (open) setError('');
+  }, [open]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(form);
+    const fullName = form.full_name.trim();
+
+    if (/\d/.test(fullName)) {
+      setError('Patient name cannot contain numbers');
+      return;
+    }
+
+    if (form.date_of_birth && form.date_of_birth > today) {
+      setError('Date of birth cannot be in the future');
+      return;
+    }
+
+    setError('');
+    onSubmit({ ...form, full_name: fullName });
   };
 
   if (!open) return null;
@@ -175,6 +194,11 @@ function NewPatientModal({ open, onClose, onSubmit, loading }) {
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+              {error}
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Full Name *</label>
             <input required value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
@@ -182,7 +206,7 @@ function NewPatientModal({ open, onClose, onSubmit, loading }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth *</label>
-              <input type="date" required value={form.dob} onChange={e => setForm({ ...form, dob: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              <input type="date" required max={today} value={form.date_of_birth} onChange={e => setForm({ ...form, date_of_birth: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Gender *</label>
@@ -227,8 +251,8 @@ export default function Patients() {
   const [toast, setToast] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const canCreate = user?.role === 'admin' || user?.role === 'receptionist' || user?.role === 'doctor';
-  const canEdit = user?.role === 'admin' || user?.role === 'receptionist' || user?.role === 'doctor';
+  const canCreate = user?.role === 'admin' || user?.role === 'receptionist';
+  const canEdit = user?.role === 'admin' || user?.role === 'receptionist';
   const canDelete = user?.role === 'admin';
 
   const fetchPatients = useCallback(async (pageNum = 1, searchTerm = '') => {
@@ -500,8 +524,10 @@ export default function Patients() {
                   <div className="space-y-2">
                     {patientHistory.prescriptions.map(rx => (
                       <div key={rx.referral_id} className="p-3 bg-slate-50 rounded-lg">
-                        <p className="text-sm font-medium">{rx.item_description}</p>
-                        <p className="text-xs text-slate-500">Qty: {rx.quantity} - {new Date(rx.created_at).toLocaleDateString()}</p>
+                        <p className="text-sm font-medium">{rx.item_description || rx.item_description || 'Medication'}</p>
+                        <p className="text-xs text-slate-500">Qty: {rx.quantity} - {new Date(rx.completed_at || rx.created_at).toLocaleDateString()}</p>
+                        {rx.dosage_instructions && <p className="text-xs text-slate-400 mt-1">Dosage: {rx.dosage_instructions}</p>}
+                        {rx.status && <span className={`text-xs px-2 py-0.5 mt-1 inline-block rounded-full ${rx.status === 'completed' ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'}`}>{rx.status}</span>}
                       </div>
                     ))}
                   </div>
@@ -517,7 +543,7 @@ export default function Patients() {
                           <p className="text-sm font-medium">KES {bill.total_amount}</p>
                           <p className="text-xs text-slate-500">{new Date(bill.bill_date).toLocaleDateString()}</p>
                         </div>
-                        <span className={`text-xs px-2 py-1 rounded-full ${bill.payment_status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>{bill.payment_status}</span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${bill.payment_status === 'Paid' ? 'bg-green-50 text-green-600' : bill.payment_status === 'Partial' ? 'bg-yellow-50 text-yellow-600' : 'bg-red-50 text-red-600'}`}>{bill.payment_status || 'Unpaid'}</span>
                       </div>
                     ))}
                   </div>

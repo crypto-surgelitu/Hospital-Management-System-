@@ -86,21 +86,37 @@ export default function Queue() {
   };
 
   const handleCallPatient = async (queueId) => {
+    console.log('Calling patient:', queueId);
     try {
-      await api.patch(`/queue/${queueId}/call`);
-      fetchQueue();
+      const res = await api.patch(`/queue/${queueId}/call`);
+      console.log('Call response:', res.data);
+      if (res.data.success) {
+        alert('Patient called!');
+        fetchQueue();
+      } else {
+        alert(res.data.message);
+      }
     } catch (err) {
-      console.error('Failed to call patient:', err);
+      console.error('Call error:', err);
+      alert(err.response?.data?.message || 'Failed to call patient');
     }
   };
 
   const handleRemove = async (queueId) => {
     if (!confirm('Remove this patient from queue?')) return;
+    console.log('Removing patient:', queueId);
     try {
-      await api.delete(`/queue/${queueId}`);
-      fetchQueue();
+      const res = await api.delete(`/queue/${queueId}`);
+      console.log('Remove response:', res.data);
+      if (res.data.success) {
+        alert('Patient removed!');
+        fetchQueue();
+      } else {
+        alert(res.data.message);
+      }
     } catch (err) {
-      console.error('Failed to remove:', err);
+      console.error('Remove error:', err);
+      alert(err.response?.data?.message || 'Failed to remove');
     }
   };
 

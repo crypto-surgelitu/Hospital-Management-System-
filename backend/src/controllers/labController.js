@@ -136,6 +136,21 @@ async function enterLabResults(req, res) {
       [id]
     );
 
+    if (updated[0]) {
+      await pool.query(
+        `UPDATE doctor_referrals
+         SET status = 'completed', completed_at = NOW()
+         WHERE patient_id = ?
+           AND doctor_id = ?
+           AND referral_type = 'lab'
+           AND item_description = ?
+           AND status = 'pending'
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [updated[0].patient_id, updated[0].requested_by, updated[0].test_type]
+      );
+    }
+
     res.json({ success: true, request: updated[0] });
   } catch (error) {
     console.error('enterLabResults error:', error);

@@ -28,11 +28,11 @@ router.get('/', verifyToken, requireRole(['admin', 'doctor', 'receptionist']), g
 
 router.get('/search', verifyToken, requireRole(['admin', 'doctor', 'receptionist']), searchPatients);
 
-router.get('/:id', verifyToken, requireRole(['admin', 'doctor']), getPatientById);
+router.get('/:id', verifyToken, requireRole(['admin', 'doctor', 'receptionist']), getPatientById);
 
 router.get('/:id/history', verifyToken, requireRole(['admin', 'doctor']), require('../controllers/patientController').getPatientHistory);
 
-router.post('/', verifyToken, requireRole(['admin', 'receptionist', 'doctor']), createPatient);
+router.post('/', verifyToken, requireRole(['admin', 'receptionist']), createPatient);
 
 router.put('/:id', verifyToken, requireRole(['admin', 'receptionist']), updateValidation, updatePatient);
 

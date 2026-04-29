@@ -28,12 +28,12 @@ router.post('/', verifyToken, requireRole(['admin', 'receptionist']), addValidat
 
 router.patch('/:id/assign', verifyToken, requireRole(['admin', 'receptionist']), assignDoctor);
 
-router.patch('/:id/call', verifyToken, requireRole(['admin', 'doctor']), callPatient);
+router.patch('/:id/call', verifyToken, requireRole(['admin', 'doctor', 'receptionist', 'nurse']), callPatient);
 
 router.patch('/:id/start', verifyToken, requireRole(['admin', 'doctor']), startConsultation);
 
 router.patch('/:id/complete', verifyToken, requireRole(['admin', 'doctor']), completeConsultation);
 
-router.delete('/:id', verifyToken, requireRole(['admin']), removeFromQueue);
+router.delete('/:id', verifyToken, requireRole(['admin', 'receptionist']), removeFromQueue);
 
 module.exports = router;

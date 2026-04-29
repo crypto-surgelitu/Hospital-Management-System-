@@ -13,12 +13,12 @@ async function getQueue(req, res) {
     `;
     const params = [];
 
-    if (doctor_id) {
+    if (req.user.role === 'doctor') {
+      query += ' AND (q.doctor_id = ? OR q.doctor_id IS NULL)';
+      params.push(req.user.id);
+    } else if (doctor_id) {
       query += ' AND q.doctor_id = ?';
       params.push(doctor_id);
-    } else if (req.user.role === 'doctor') {
-      query += ' AND q.doctor_id = ?';
-      params.push(req.user.id);
     }
 
     if (status) {
@@ -51,9 +51,35 @@ async function getQueue(req, res) {
 async function addToQueue(req, res) {
   try {
     const { patient_id, doctor_id, priority, chief_complaint } = req.body;
+    const hasDoctorId = doctor_id !== undefined && doctor_id !== null && String(doctor_id).trim() !== '';
+    const assignedDoctorId = hasDoctorId ? Number(doctor_id) : null;
 
     if (!patient_id) {
       return res.status(400).json({ success: false, message: 'Patient ID is required' });
+    }
+
+    if (hasDoctorId && (!Number.isInteger(assignedDoctorId) || assignedDoctorId <= 0)) {
+      return res.status(400).json({ success: false, message: 'Assigned doctor ID is invalid' });
+    }
+
+    const [[patient]] = await pool.query(
+      'SELECT patient_id FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
+      [patient_id]
+    );
+
+    if (!patient) {
+      return res.status(404).json({ success: false, message: 'Patient not found' });
+    }
+
+    if (assignedDoctorId) {
+      const [[doctor]] = await pool.query(
+        "SELECT user_id FROM users WHERE user_id = ? AND role = 'doctor' AND is_active = 1",
+        [assignedDoctorId]
+      );
+
+      if (!doctor) {
+        return res.status(400).json({ success: false, message: 'Assigned doctor was not found' });
+      }
     }
 
     const [[existing]] = await pool.query(
@@ -74,7 +100,7 @@ async function addToQueue(req, res) {
     const [result] = await pool.query(
       `INSERT INTO patient_queue (patient_id, doctor_id, priority, chief_complaint, queue_number, status)
        VALUES (?, ?, ?, ?, ?, 'waiting')`,
-      [patient_id, doctor_id || null, priority || 'normal', chief_complaint || null, queueNum.next_num]
+      [patient_id, assignedDoctorId, priority || 'normal', chief_complaint || null, queueNum.next_num]
     );
 
     const [newEntry] = await pool.query(
@@ -108,6 +134,10 @@ async function getQueueById(req, res) {
 
     if (!entry) {
       return res.status(404).json({ success: false, message: 'Queue entry not found' });
+    }
+
+    if (req.user.role === 'doctor' && entry.doctor_id && entry.doctor_id !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'This patient is assigned to another doctor' });
     }
 
     res.json({ success: true, queue: entry });
@@ -148,8 +178,8 @@ async function callPatient(req, res) {
     const { id } = req.params;
 
     await pool.query(
-      'UPDATE patient_queue SET called_at = NOW(), status = \'waiting\', updated_at = NOW() WHERE queue_id = ?',
-      [id]
+      'UPDATE patient_queue SET called_at = NOW(), status = ?, updated_at = NOW() WHERE queue_id = ?',
+      ['waiting', id]
     );
 
     res.json({ success: true, message: 'Patient called' });
@@ -163,12 +193,31 @@ async function startConsultation(req, res) {
   try {
     const { id } = req.params;
 
-    await pool.query(
-      `UPDATE patient_queue 
-       SET status = 'in_progress', started_at = NOW(), updated_at = NOW() 
-       WHERE queue_id = ?`,
-      [id]
-    );
+    let result;
+    if (req.user.role === 'doctor') {
+      [result] = await pool.query(
+        `UPDATE patient_queue 
+         SET status = 'in_progress',
+             doctor_id = ?,
+             started_at = NOW(),
+             updated_at = NOW()
+         WHERE queue_id = ?
+           AND status = 'waiting'
+           AND (doctor_id IS NULL OR doctor_id = ?)`,
+        [req.user.id, id, req.user.id]
+      );
+    } else {
+      [result] = await pool.query(
+        `UPDATE patient_queue 
+         SET status = 'in_progress', started_at = NOW(), updated_at = NOW() 
+         WHERE queue_id = ? AND status = 'waiting'`,
+        [id]
+      );
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(409).json({ success: false, message: 'Patient is not available for this doctor' });
+    }
 
     res.json({ success: true, message: 'Consultation started' });
   } catch (error) {
@@ -180,7 +229,36 @@ async function startConsultation(req, res) {
 async function completeConsultation(req, res) {
   try {
     const { id } = req.params;
-    const { notes } = req.body;
+    const { notes, referral_type, referral_data } = req.body;
+
+    const [[queueEntry]] = await pool.query(
+      'SELECT queue_id, patient_id, doctor_id, status FROM patient_queue WHERE queue_id = ?',
+      [id]
+    );
+
+    if (!queueEntry) {
+      return res.status(404).json({ success: false, message: 'Queue entry not found' });
+    }
+
+    if (req.user.role === 'doctor' && queueEntry.doctor_id !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'This patient is assigned to another doctor' });
+    }
+
+    if (queueEntry.status !== 'in_progress') {
+      return res.status(409).json({ success: false, message: 'Consultation must be started before it can be completed' });
+    }
+
+    if (referral_type === 'lab' && !referral_data?.test_type) {
+      return res.status(400).json({ success: false, message: 'Lab test type is required' });
+    }
+
+    if (referral_type === 'pharmacy' && !String(referral_data?.medication_requirements || '').trim()) {
+      return res.status(400).json({ success: false, message: 'Medication requirements are required' });
+    }
+
+    if (referral_type === 'nurse' && !referral_data?.task_description) {
+      return res.status(400).json({ success: false, message: 'Nurse task description is required' });
+    }
 
     await pool.query(
       `UPDATE patient_queue 
@@ -188,6 +266,41 @@ async function completeConsultation(req, res) {
        WHERE queue_id = ?`,
       [notes || null, id]
     );
+
+    // Create referral if provided
+    if (referral_type && referral_data) {
+      const doctor_id = req.user.id;
+      const patient_id = queueEntry.patient_id;
+
+      if (referral_type === 'lab') {
+        const labPriority = ['routine', 'urgent', 'stat'].includes(referral_data.priority) ? referral_data.priority : 'routine';
+        await pool.query(
+          `INSERT INTO doctor_referrals (queue_id, patient_id, doctor_id, referral_type, item_description)
+           VALUES (?, ?, ?, 'lab', ?)`,
+          [id, patient_id, doctor_id, referral_data.test_type]
+        );
+
+        await pool.query(
+          `INSERT INTO lab_requests (patient_id, requested_by, test_type, priority, notes, status, created_at)
+           VALUES (?, ?, ?, ?, ?, 'pending', NOW())`,
+          [patient_id, doctor_id, referral_data.test_type, labPriority, referral_data.notes || null]
+        );
+      } else if (referral_type === 'pharmacy') {
+        const requirements = String(referral_data.medication_requirements).trim();
+
+        await pool.query(
+          `INSERT INTO doctor_referrals (queue_id, patient_id, doctor_id, referral_type, item_description)
+           VALUES (?, ?, ?, 'pharmacy', ?)`,
+          [id, patient_id, doctor_id, requirements]
+        );
+      } else if (referral_type === 'nurse') {
+        await pool.query(
+          `INSERT INTO doctor_referrals (queue_id, patient_id, doctor_id, referral_type, item_description, quantity)
+           VALUES (?, ?, ?, 'nurse', ?, ?)`,
+          [id, patient_id, doctor_id, referral_data.task_description, referral_data.quantity || 1]
+        );
+      }
+    }
 
     res.json({ success: true, message: 'Consultation completed' });
   } catch (error) {

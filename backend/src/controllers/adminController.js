@@ -10,7 +10,7 @@ async function getDashboardStats(req, res) {
       const todayAppointments = await pool.query('SELECT COUNT(*) as cnt FROM appointments WHERE DATE(appointment_date) = CURDATE()');
       const pendingLabTests = await pool.query("SELECT COUNT(*) as cnt FROM lab_requests WHERE status = 'pending'");
       const lowStockDrugs = await pool.query('SELECT COUNT(*) as cnt FROM pharmacy_inventory WHERE quantity_in_stock <= reorder_level AND is_active = 1');
-      const pendingPayments = await pool.query("SELECT COUNT(*) as cnt FROM bills WHERE payment_status = 'pending'");
+      const pendingPayments = await pool.query("SELECT COUNT(*) as cnt FROM bills WHERE payment_status IN ('Unpaid', 'Partial')");
       const invoicesToday = await pool.query('SELECT COUNT(*) as cnt FROM bills WHERE DATE(bill_date) = CURDATE()');
 
       return res.json({ success: true, stats: {

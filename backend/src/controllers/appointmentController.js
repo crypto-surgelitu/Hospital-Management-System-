@@ -1,5 +1,4 @@
 const { pool } = require('../config/db');
-const { validationResult } = require('express-validator');
 
 async function getAppointments(req, res) {
   try {
@@ -61,9 +60,10 @@ async function createAppointment(req, res) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
-    const [patients] = await pool.query('SELECT patient_id FROM patients WHERE patient_id = ? AND deleted_at IS NULL', [patient_id]);
+    // Validate patient exists
+    const [patients] = await pool.query('SELECT patient_id, full_name FROM patients WHERE patient_id = ? AND deleted_at IS NULL', [patient_id]);
     if (patients.length === 0) {
-      return res.status(400).json({ success: false, message: 'Patient not found' });
+      return res.status(400).json({ success: false, message: 'Patient not found. Please select an existing patient.' });
     }
 
     const [doctors] = await pool.query("SELECT user_id FROM users WHERE user_id = ? AND role = 'doctor' AND is_active = 1", [doctor_id]);

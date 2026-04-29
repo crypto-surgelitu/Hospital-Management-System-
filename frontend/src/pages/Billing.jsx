@@ -25,12 +25,14 @@ function NewInvoiceModal({ open, onClose, onSubmit, loading }) {
   const [searchResults, setSearchResults] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [items, setItems] = useState([{ description: '', quantity: 1, unit_price: '' }]);
+  const [error, setError] = useState('');
 
   const resetForm = useCallback(() => {
     setPatientSearch('');
     setSearchResults([]);
     setSelectedPatient(null);
     setItems([{ description: '', quantity: 1, unit_price: '' }]);
+    setError('');
   }, []);
 
   useEffect(() => {
@@ -64,11 +66,21 @@ function NewInvoiceModal({ open, onClose, onSubmit, loading }) {
 
   const total = items.reduce((sum, item) => sum + (parseFloat(item.quantity || 0) * parseFloat(item.unit_price || 0)), 0);
 
-  const handleSubmit = () => {
-    if (!selectedPatient || items.filter(i => i.description && i.quantity > 0).length === 0) return;
+  const handleSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (!selectedPatient) {
+      setError('Please select a patient from the search results');
+      return;
+    }
+    const validItems = items.filter(i => i.description && i.quantity > 0);
+    if (validItems.length === 0) {
+      setError('Please add at least one invoice item with a description and quantity');
+      return;
+    }
+    setError('');
     onSubmit({
-      patient_id: selectedPatient.id,
-      items: items.filter(i => i.description && i.quantity > 0)
+      patient_id: selectedPatient.patient_id,
+      items: validItems
     });
   };
 
@@ -84,13 +96,18 @@ function NewInvoiceModal({ open, onClose, onSubmit, loading }) {
           </button>
         </div>
         <div className="p-6 space-y-4">
+          {error && (
+            <div className="px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+              {error}
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Patient *</label>
             <input type="text" value={patientSearch} onChange={e => setPatientSearch(e.target.value)} placeholder="Search patient..." className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" />
             {searchResults.length > 0 && (
               <div className="border border-slate-200 rounded-lg mt-1 max-h-32 overflow-y-auto">
                 {searchResults.map(p => (
-                  <div key={p.id} onClick={() => { setSelectedPatient(p); setPatientSearch(p.full_name); setSearchResults([]); }} className="px-3 py-2 hover:bg-slate-50 cursor-pointer text-sm">{p.full_name}</div>
+                  <div key={p.patient_id} onClick={() => { setSelectedPatient(p); setPatientSearch(p.full_name); setSearchResults([]); }} className="px-3 py-2 hover:bg-slate-50 cursor-pointer text-sm">{p.full_name} ({p.phone})</div>
                 ))}
               </div>
             )}
@@ -115,7 +132,7 @@ function NewInvoiceModal({ open, onClose, onSubmit, loading }) {
           </div>
 
           <div className="pt-4 flex gap-3">
-            <button onClick={handleSubmit} disabled={loading || !selectedPatient} className="flex-1 px-4 py-2 bg-violet-600 text-white rounded-lg text-sm font-medium hover:bg-violet-700 disabled:opacity-50">Create Invoice</button>
+            <button onClick={handleSubmit} disabled={loading} className="flex-1 px-4 py-2 bg-violet-600 text-white rounded-lg text-sm font-medium hover:bg-violet-700 disabled:opacity-50">Create Invoice</button>
             <button onClick={onClose} className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50">Cancel</button>
           </div>
         </div>
@@ -131,7 +148,7 @@ function PaymentModal({ open, onClose, onSubmit, loading, invoice }) {
 
   const resetPaymentForm = useCallback(() => {
     if (invoice) {
-      const remaining = invoice.total - (invoice.amount_paid || 0);
+      const remaining = Number(invoice.total_amount || 0) - Number(invoice.amount_paid || 0);
       setAmount(remaining.toFixed(2));
       setPaymentMethod('cash');
       setReferenceNumber('');
@@ -153,7 +170,7 @@ function PaymentModal({ open, onClose, onSubmit, loading, invoice }) {
 
   if (!open || !invoice) return null;
 
-  const remaining = invoice.total - (invoice.amount_paid || 0);
+  const remaining = Number(invoice.total_amount || 0) - Number(invoice.amount_paid || 0);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
@@ -166,8 +183,8 @@ function PaymentModal({ open, onClose, onSubmit, loading, invoice }) {
         </div>
         <div className="p-6 space-y-4">
           <div className="bg-slate-50 p-3 rounded-lg">
-            <p className="text-sm font-medium text-slate-900">Invoice: {invoice.invoice_number}</p>
-            <p className="text-xs text-slate-500">Total: KES {invoice.total?.toFixed(2)} | Paid: KES {(invoice.amount_paid || 0).toFixed(2)} | Due: KES {remaining.toFixed(2)}</p>
+            <p className="text-sm font-medium text-slate-900">Invoice #{invoice.bill_id}</p>
+            <p className="text-xs text-slate-500">Total: KES {Number(invoice.total_amount || 0).toFixed(2)} | Paid: KES {Number(invoice.amount_paid || 0).toFixed(2)} | Due: KES {remaining.toFixed(2)}</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Amount *</label>
@@ -208,10 +225,9 @@ function InvoiceDrawer({ open, onClose, invoice, items, payments, onRecordPaymen
   if (!open || !invoice) return null;
 
   const statusColors = {
-    pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    paid: 'bg-green-50 text-green-700 border-green-200',
-    partial: 'bg-orange-50 text-orange-700 border-orange-200',
-    waived: 'bg-slate-100 text-slate-600 border-slate-200'
+    Unpaid: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+    Paid: 'bg-green-50 text-green-700 border-green-200',
+    Partial: 'bg-orange-50 text-orange-700 border-orange-200'
   };
 
   const formatDate = (dateStr) => {
@@ -223,7 +239,7 @@ function InvoiceDrawer({ open, onClose, invoice, items, payments, onRecordPaymen
     window.print();
   };
 
-  const remaining = invoice.total - (invoice.amount_paid || 0);
+  const remaining = Number(invoice.total_amount || 0) - Number(invoice.amount_paid || 0);
 
   return (
     <div className="fixed inset-0 z-50">
@@ -240,27 +256,27 @@ function InvoiceDrawer({ open, onClose, invoice, items, payments, onRecordPaymen
           <div className="print:hidden space-y-4 mb-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-900">{invoice.invoice_number}</p>
+                <p className="text-sm font-medium text-slate-900">Invoice #{invoice.bill_id}</p>
                 <p className="text-sm text-slate-500">{invoice.patient_name}</p>
-                <p className="text-xs text-slate-400">{formatDate(invoice.created_at)}</p>
+                <p className="text-xs text-slate-400">{formatDate(invoice.bill_date)}</p>
               </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statusColors[invoice.status]}`}>
-                {invoice.status}
+              <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statusColors[invoice.payment_status] || statusColors.Unpaid}`}>
+                {invoice.payment_status}
               </span>
             </div>
 
             <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50 rounded-lg">
               <div className="text-center">
                 <p className="text-xs text-slate-500">Total</p>
-                <p className="text-sm font-bold text-slate-900">KES {invoice.total?.toFixed(2)}</p>
+                <p className="text-sm font-bold text-slate-900">KES {Number(invoice.total_amount || 0).toFixed(2)}</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-slate-500">Paid</p>
-                <p className="text-sm font-bold text-green-600">KES {(invoice.amount_paid || 0).toFixed(2)}</p>
+                <p className="text-sm font-bold text-green-600">KES {Number(invoice.amount_paid || 0).toFixed(2)}</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-slate-500">Due</p>
-                <p className="text-sm font-bold text-red-600">KES {remaining.toFixed(2)}</p>
+                <p className="text-sm font-bold text-red-600">KES {Number(remaining).toFixed(2)}</p>
               </div>
             </div>
 
@@ -307,7 +323,7 @@ function InvoiceDrawer({ open, onClose, invoice, items, payments, onRecordPaymen
                 {payments.map((payment, idx) => (
                   <div key={idx} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                     <div>
-                      <p className="text-sm font-medium text-slate-900">KES {payment.amount_paid?.toFixed(2)}</p>
+                      <p className="text-sm font-medium text-slate-900">KES {Number(payment.amount_paid || 0).toFixed(2)}</p>
                       <p className="text-xs text-slate-500">{payment.payment_method} {payment.reference_number ? `• ${payment.reference_number}` : ''}</p>
                     </div>
                     <p className="text-xs text-slate-400">{formatDate(payment.created_at)}</p>
@@ -360,25 +376,32 @@ export default function Billing() {
     setActionLoading(true);
     try {
       const res = await api.post('/billing', data);
-      if (res.data.success) {
+      if (res.data?.success) {
         setToast({ type: 'success', message: 'Invoice created successfully' });
         setNewInvoiceModal(false);
         fetchInvoices();
       } else {
-        setToast({ type: 'error', message: res.data.message });
+        setToast({ type: 'error', message: res.data?.message || 'Operation failed' });
       }
     } catch (err) {
-      setToast({ type: 'error', message: err.response?.data?.message || 'Failed to create invoice' });
+      const msg = err.response?.data?.message || err.message || 'Failed to create invoice';
+      setToast({ type: 'error', message: msg });
     } finally {
       setActionLoading(false);
     }
   };
 
-  const openInvoiceDrawer = async (invoice) => {
+  const openInvoiceDrawer = async (inv) => {
     try {
-      const res = await api.get(`/billing/${invoice.id}`);
+      const billId = inv.bill_id;
+      const res = await api.get(`/billing/${billId}`);
       if (res.data.success) {
-        setDrawer({ open: true, invoice: res.data.invoice, items: res.data.items, payments: res.data.payments });
+        setDrawer({ 
+          open: true, 
+          invoice: res.data.invoice, 
+          items: res.data.items, 
+          payments: res.data.payments 
+        });
       }
     } catch {
       setToast({ type: 'error', message: 'Failed to load invoice details' });
@@ -388,7 +411,7 @@ export default function Billing() {
   const handleRecordPayment = async (paymentData) => {
     setActionLoading(true);
     try {
-      const res = await api.post(`/billing/${drawer.invoice.id}/payment`, paymentData);
+      const res = await api.post(`/billing/${drawer.invoice.bill_id}/payment`, paymentData);
       if (res.data.success) {
         setToast({ type: 'success', message: 'Payment recorded successfully' });
         setDrawer({ open: false, invoice: null, items: [], payments: [] });
@@ -451,14 +474,14 @@ export default function Billing() {
                 <tr><td colSpan={6} className="px-6 py-12 text-center text-[var(--color-text-muted)]">No invoices found</td></tr>
               ) : (
                 invoices.map(inv => (
-                  <tr key={inv.id} className="hover:bg-[var(--color-surface-low)] transition-colors">
-                    <td className="px-6 py-4 text-sm font-mono font-bold text-[var(--color-ink-900)]">{inv.invoice_number}</td>
+                  <tr key={inv.bill_id} className="hover:bg-[var(--color-surface-low)] transition-colors">
+                    <td className="px-6 py-4 text-sm font-mono font-bold text-[var(--color-ink-900)]">#{inv.bill_id}</td>
                     <td className="px-6 py-4 text-sm font-semibold text-[var(--color-ink-900)]">{inv.patient_name}</td>
-                    <td className="px-6 py-4 text-[13px] text-[var(--color-text-muted)] font-mono">{formatDate(inv.created_at)}</td>
-                    <td className="px-6 py-4 text-sm font-mono font-bold text-[var(--color-primary-container)]">KES {inv.total?.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-[13px] text-[var(--color-text-muted)] font-mono">{formatDate(inv.bill_date)}</td>
+                    <td className="px-6 py-4 text-sm font-mono font-bold text-[var(--color-primary-container)]">KES {Number(inv.total_amount || 0).toFixed(2)}</td>
                     <td className="px-6 py-4">
-                      <Badge variant={inv.status === 'paid' ? 'success' : inv.status === 'pending' ? 'warning' : inv.status === 'partial' ? 'info' : 'default'}>
-                        {inv.status}
+                      <Badge variant={inv.payment_status === 'Paid' ? 'success' : inv.payment_status === 'Partial' ? 'info' : 'warning'}>
+                        {inv.payment_status}
                       </Badge>
                     </td>
                     <td className="px-6 py-4 text-right">
