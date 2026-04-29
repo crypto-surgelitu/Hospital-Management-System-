@@ -64,11 +64,11 @@ function NewAppointmentModal({ open, onClose, onSubmit, loading }) {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Patient *</label>
-            <input type="text" value={searchPatient} onChange={e => setSearchPatient(e.target.value)} placeholder="Search patient..." className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" />
+            <input type="text" value={searchPatient} onChange={e => setSearchPatient(e.target.value)} placeholder="Search existing patient by name or phone..." className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" />
             {patientResults.length > 0 && (
               <div className="border border-slate-200 rounded-lg mt-1 max-h-32 overflow-y-auto">
                 {patientResults.map(p => (
-                  <div key={p.id} onClick={() => { setForm({ ...form, patient_id: p.id }); setSearchPatient(p.full_name); setPatientResults([]); }} className="px-3 py-2 hover:bg-slate-50 cursor-pointer text-sm">{p.full_name}</div>
+                  <div key={p.patient_id} onClick={() => { setForm({ ...form, patient_id: p.patient_id }); setSearchPatient(p.full_name); setPatientResults([]); }} className="px-3 py-2 hover:bg-slate-50 cursor-pointer text-sm">{p.full_name} ({p.phone})</div>
                 ))}
               </div>
             )}

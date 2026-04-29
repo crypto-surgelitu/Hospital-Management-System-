@@ -12,8 +12,8 @@ const {
 const createValidation = [
   body('patient_id').isInt().withMessage('Valid patient ID required'),
   body('doctor_id').isInt().withMessage('Valid doctor ID required'),
-  body('appointment_date').isISO8601().withMessage('Valid date required'),
-  body('appointment_time').matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Valid time required (HH:MM)'),
+  body('appointment_date').notEmpty().withMessage('Date is required'),
+  body('appointment_time').notEmpty().withMessage('Time is required'),
   body('notes').optional().trim()
 ];
 

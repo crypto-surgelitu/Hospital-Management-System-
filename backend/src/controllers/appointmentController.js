@@ -55,12 +55,11 @@ JOIN patients p ON a.patient_id = p.patient_id
 
 async function createAppointment(req, res) {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, errors: errors.array() });
-    }
-
     const { patient_id, doctor_id, appointment_date, appointment_time, notes } = req.body;
+
+    if (!patient_id || !doctor_id || !appointment_date || !appointment_time) {
+      return res.status(400).json({ success: false, message: 'All fields are required' });
+    }
 
     const [patients] = await pool.query('SELECT patient_id FROM patients WHERE patient_id = ? AND deleted_at IS NULL', [patient_id]);
     if (patients.length === 0) {
@@ -80,7 +79,7 @@ async function createAppointment(req, res) {
     }
 
     const [existing] = await pool.query(
-      'SELECT id FROM appointments WHERE doctor_id = ? AND appointment_date = ? AND appointment_time = ? AND status != "cancelled"',
+      'SELECT appointment_id FROM appointments WHERE doctor_id = ? AND appointment_date = ? AND appointment_time = ? AND status != "cancelled"',
       [doctor_id, appointment_date, appointment_time]
     );
 
@@ -89,9 +88,9 @@ async function createAppointment(req, res) {
     }
 
     const [result] = await pool.query(
-      `INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, reason, notes, status, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())`,
-      [patient_id, doctor_id, appointment_date, appointment_time, notes || null, notes || null]
+      `INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, reason, status, created_at)
+       VALUES (?, ?, ?, ?, ?, 'pending', NOW())`,
+      [patient_id, doctor_id, appointment_date, appointment_time, notes || null]
     );
 
 const [newAppointment] = await pool.query(
