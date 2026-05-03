@@ -124,41 +124,62 @@ CREATE TABLE IF NOT EXISTS stock_log (
     FOREIGN KEY (performed_by) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ─── Invoices (Billing) ─────────────────────────────────────
+-- ─── Bills (Billing) ──────────────────────────────────────────
 
-CREATE TABLE IF NOT EXISTS invoices (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    invoice_number VARCHAR(20) NOT NULL UNIQUE,
+CREATE TABLE IF NOT EXISTS bills (
+    bill_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
-    total DECIMAL(10,2) NOT NULL DEFAULT 0,
+    total_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
     amount_paid DECIMAL(10,2) DEFAULT 0,
-    status ENUM('pending','partial','paid','waived') DEFAULT 'pending',
+    payment_status ENUM('Unpaid','Partial','Paid','Waived') DEFAULT 'Unpaid',
+    payment_method VARCHAR(50),
+    bill_date DATE NOT NULL,
     generated_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE RESTRICT,
     FOREIGN KEY (generated_by) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS invoice_items (
+CREATE TABLE IF NOT EXISTS bill_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    invoice_id INT NOT NULL,
+    bill_id INT NOT NULL,
     description VARCHAR(200),
     quantity INT DEFAULT 1,
     unit_price DECIMAL(10,2),
     subtotal DECIMAL(10,2),
-    FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
+    FOREIGN KEY (bill_id) REFERENCES bills(bill_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS payments (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    invoice_id INT NOT NULL,
+    bill_id INT NOT NULL,
     amount_paid DECIMAL(10,2) NOT NULL,
-    payment_method ENUM('cash','mpesa','insurance','card') NOT NULL DEFAULT 'cash',
+    payment_method ENUM('cash','mpesa','insurance','card', 'other', 'Cash', 'M-Pesa', 'Insurance', 'Card', 'Other') NOT NULL DEFAULT 'Cash',
     reference_number VARCHAR(100),
     received_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,
+    FOREIGN KEY (bill_id) REFERENCES bills(bill_id) ON DELETE CASCADE,
     FOREIGN KEY (received_by) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ─── Pricing Reference Tables ────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS service_prices (
+    service_id INT AUTO_INCREMENT PRIMARY KEY,
+    service_name VARCHAR(150) NOT NULL,
+    service_type ENUM('consultation', 'procedure', 'other') DEFAULT 'consultation',
+    unit_price DECIMAL(10,2) NOT NULL DEFAULT 0,
+    is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS lab_test_types (
+    test_type_id INT AUTO_INCREMENT PRIMARY KEY,
+    test_name VARCHAR(150) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    price DECIMAL(10,2) NOT NULL DEFAULT 0,
+    is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================
@@ -241,3 +262,15 @@ INSERT INTO users (full_name, username, password_hash, role, department) VALUES
 ('Sam Oduor',       's.oduor',     NULL, 'lab',          'Laboratory'),
 ('Grace Akinyi',    'g.akinyi',    NULL, 'pharmacy',   'Pharmacy'),
 ('Nurse Faith Njeri','f.njeri',    NULL, 'nurse',        'Nursing');
+
+INSERT INTO service_prices (service_name, service_type, unit_price) VALUES
+('General Consultation', 'consultation', 1500.00),
+('Specialist Consultation', 'consultation', 3000.00),
+('Wound Dressing', 'procedure', 800.00);
+
+INSERT INTO lab_test_types (test_name, category, price) VALUES
+('Complete Blood Count (CBC)', 'Hematology', 1200.00),
+('Malaria Test (BS)', 'Parasitology', 500.00),
+('Urinalysis', 'Microbiology', 600.00),
+('Liver Function Test', 'Biochemistry', 2500.00),
+('Renal Profile', 'Biochemistry', 2000.00);

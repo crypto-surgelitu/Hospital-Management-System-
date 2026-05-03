@@ -58,6 +58,41 @@ async function createLabReferral(req, res) {
         [patient_id, doctor_id, test_type, labPriority, notes || null]
       );
 
+      // Append Lab Fee to Bill
+      const [[testPrice]] = await connection.query(
+        `SELECT price FROM lab_test_types WHERE test_name = ? AND is_active = 1`,
+        [test_type]
+      );
+      
+      if (testPrice) {
+        const labFee = Number(testPrice.price) || 0;
+        const [[existingBill]] = await connection.query(
+          `SELECT bill_id FROM bills WHERE patient_id = ? AND payment_status = 'Unpaid' AND bill_date = CURDATE() ORDER BY bill_id DESC LIMIT 1`,
+          [patient_id]
+        );
+
+        let billId;
+        if (existingBill) {
+          billId = existingBill.bill_id;
+          await connection.query(
+            `UPDATE bills SET total_amount = total_amount + ? WHERE bill_id = ?`,
+            [labFee, billId]
+          );
+        } else {
+          const [newBill] = await connection.query(
+            `INSERT INTO bills (patient_id, total_amount, payment_status, bill_date, generated_by)
+             VALUES (?, ?, 'Unpaid', CURDATE(), ?)`,
+            [patient_id, labFee, doctor_id]
+          );
+          billId = newBill.insertId;
+        }
+
+        await connection.query(
+          `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal)
+           VALUES (?, ?, 1, ?, ?)`,
+          [billId, `Lab: ${test_type}`, labFee, labFee]
+        );
+      }
       await connection.commit();
     } catch (error) {
       await connection.rollback();
@@ -252,16 +287,31 @@ async function completeReferral(req, res) {
         );
 
         if (totalCost > 0) {
-          const [billResult] = await connection.query(
-            `INSERT INTO bills (patient_id, total_amount, payment_status, bill_date, generated_by)
-             VALUES (?, ?, 'Unpaid', CURDATE(), ?)`,
-            [referral.patient_id, totalCost, req.user.id]
+          const [[existingBill]] = await connection.query(
+            `SELECT bill_id FROM bills WHERE patient_id = ? AND payment_status = 'Unpaid' AND bill_date = CURDATE() ORDER BY bill_id DESC LIMIT 1`,
+            [referral.patient_id]
           );
+
+          let billId;
+          if (existingBill) {
+            billId = existingBill.bill_id;
+            await connection.query(
+              `UPDATE bills SET total_amount = total_amount + ? WHERE bill_id = ?`,
+              [totalCost, billId]
+            );
+          } else {
+            const [billResult] = await connection.query(
+              `INSERT INTO bills (patient_id, total_amount, payment_status, bill_date, generated_by)
+               VALUES (?, ?, 'Unpaid', CURDATE(), ?)`,
+              [referral.patient_id, totalCost, req.user.id]
+            );
+            billId = billResult.insertId;
+          }
 
           await connection.query(
             `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal)
              VALUES (?, ?, ?, ?, ?)`,
-            [billResult.insertId, drug.drug_name, quantity, drug.unit_price, totalCost]
+            [billId, drug.drug_name, quantity, drug.unit_price, totalCost]
           );
         }
 

@@ -302,6 +302,42 @@ async function completeConsultation(req, res) {
       }
     }
 
+    // Append Consultation Fee to Bill
+    const [[servicePrice]] = await pool.query(
+      `SELECT unit_price FROM service_prices WHERE service_name = 'General Consultation' AND is_active = 1`
+    );
+
+    if (servicePrice) {
+      const consultationFee = Number(servicePrice.unit_price) || 0;
+      
+      const [[existingBill]] = await pool.query(
+        `SELECT bill_id FROM bills WHERE patient_id = ? AND payment_status = 'Unpaid' AND bill_date = CURDATE() ORDER BY bill_id DESC LIMIT 1`,
+        [queueEntry.patient_id]
+      );
+
+      let billId;
+      if (existingBill) {
+        billId = existingBill.bill_id;
+        await pool.query(
+          `UPDATE bills SET total_amount = total_amount + ? WHERE bill_id = ?`,
+          [consultationFee, billId]
+        );
+      } else {
+        const [newBill] = await pool.query(
+          `INSERT INTO bills (patient_id, total_amount, payment_status, bill_date, generated_by)
+           VALUES (?, ?, 'Unpaid', CURDATE(), ?)`,
+          [queueEntry.patient_id, consultationFee, req.user.id]
+        );
+        billId = newBill.insertId;
+      }
+
+      await pool.query(
+        `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal)
+         VALUES (?, 'General Consultation', 1, ?, ?)`,
+        [billId, consultationFee, consultationFee]
+      );
+    }
+
     res.json({ success: true, message: 'Consultation completed' });
   } catch (error) {
     console.error('completeConsultation error:', error);

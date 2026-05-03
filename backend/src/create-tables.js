@@ -116,36 +116,34 @@ async function createTables() {
 
   try {
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS invoices (
-        invoice_id INT AUTO_INCREMENT PRIMARY KEY,
-        invoice_number VARCHAR(20) NOT NULL UNIQUE,
-        patient_id INT NOT NULL,
-        total DECIMAL(10,2) NOT NULL DEFAULT 0,
-        amount_paid DECIMAL(10,2) DEFAULT 0,
-        status ENUM('pending','partial','paid','waived') DEFAULT 'pending',
-        generated_by INT NOT NULL,
+      CREATE TABLE IF NOT EXISTS service_prices (
+        service_id INT AUTO_INCREMENT PRIMARY KEY,
+        service_name VARCHAR(150) NOT NULL,
+        service_type ENUM('consultation', 'procedure', 'other') DEFAULT 'consultation',
+        unit_price DECIMAL(10,2) NOT NULL DEFAULT 0,
+        is_active TINYINT(1) DEFAULT 1,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    console.log('✅ invoices table created');
+    console.log('✅ service_prices table created');
   } catch (e) {
-    console.log('invoices:', e.message);
+    console.log('service_prices:', e.message);
   }
 
   try {
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS invoice_items (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        invoice_id INT NOT NULL,
-        description VARCHAR(200),
-        quantity INT DEFAULT 1,
-        unit_price DECIMAL(10,2),
-        subtotal DECIMAL(10,2)
+      CREATE TABLE IF NOT EXISTS lab_test_types (
+        test_type_id INT AUTO_INCREMENT PRIMARY KEY,
+        test_name VARCHAR(150) NOT NULL,
+        category VARCHAR(100) NOT NULL,
+        price DECIMAL(10,2) NOT NULL DEFAULT 0,
+        is_active TINYINT(1) DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    console.log('✅ invoice_items table created');
+    console.log('✅ lab_test_types table created');
   } catch (e) {
-    console.log('invoice_items:', e.message);
+    console.log('lab_test_types:', e.message);
   }
 
   try {
