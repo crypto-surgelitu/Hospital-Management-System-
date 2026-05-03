@@ -253,8 +253,8 @@ async function completeReferral(req, res) {
 
         if (totalCost > 0) {
           const [billResult] = await connection.query(
-            `INSERT INTO bills (patient_id, total_amount, payment_status, bill_date, created_by, created_at)
-             VALUES (?, ?, 'Unpaid', CURDATE(), ?, NOW())`,
+            `INSERT INTO bills (patient_id, total_amount, payment_status, bill_date, generated_by)
+             VALUES (?, ?, 'Unpaid', CURDATE(), ?)`,
             [referral.patient_id, totalCost, req.user.id]
           );
 
