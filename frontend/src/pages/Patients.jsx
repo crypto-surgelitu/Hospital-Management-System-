@@ -38,11 +38,18 @@ function ConfirmDialog({ open, title, message, onConfirm, onCancel }) {
 
 function PatientDrawer({ patient, onClose, onUpdate, onDelete, canEdit, canDelete, loading }) {
   const [editMode, setEditMode] = useState(false);
-  const [form, setForm] = useState({ full_name: '', phone: '', address: '', emergency_contact: '' });
+  const [form, setForm] = useState({ full_name: '', phone: '', address: '', emergency_contact: '', date_of_birth: '' });
+  const today = new Date().toISOString().split('T')[0];
 
   const resetForm = useCallback(() => {
     if (patient) {
-      setForm({ full_name: patient.full_name || '', phone: patient.phone || '', address: patient.address || '', emergency_contact: patient.emergency_contact || '' });
+      setForm({
+        full_name: patient.full_name || '',
+        phone: patient.phone || '',
+        address: patient.address || '',
+        emergency_contact: patient.emergency_contact || '',
+        date_of_birth: patient.date_of_birth ? patient.date_of_birth.split('T')[0] : ''
+      });
     }
   }, [patient]);
 
@@ -83,7 +90,15 @@ function PatientDrawer({ patient, onClose, onUpdate, onDelete, canEdit, canDelet
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs font-medium text-slate-400 uppercase mb-1">Date of Birth</p>
-              <p className="text-slate-900">{patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString() : '—'}</p>
+              {editMode ? (
+                <input
+                  type="date"
+                  max={today}
+                  value={form.date_of_birth}
+                  onChange={e => setForm({ ...form, date_of_birth: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              ) : <p className="text-slate-900">{patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString() : '—'}</p>}
             </div>
             <div>
               <p className="text-xs font-medium text-slate-400 uppercase mb-1">Gender</p>

@@ -3,10 +3,19 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import Card from '../components/ui/Card';
 
+function calculateWaitTime(createdAt) {
+  if (!createdAt) return '—';
+  const minutes = Math.floor((Date.now() - new Date(createdAt)) / 60000);
+  if (minutes < 1) return 'Just now';
+  if (minutes === 1) return '1 minute';
+  return `${minutes} minutes`;
+}
+
 export default function DoctorQueue() {
   const { user } = useAuth();
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(Date.now());
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [consultationNotes, setConsultationNotes] = useState('');
   const [saving, setSaving] = useState(false);
@@ -49,6 +58,13 @@ export default function DoctorQueue() {
   useEffect(() => {
     fetchQueue();
     fetchLabTestTypes();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleStartConsultation = async (queueId) => {
@@ -210,7 +226,7 @@ export default function DoctorQueue() {
                     {patient.priority === 'urgent' && (
                       <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">Urgent</span>
                     )}
-                    <span className="text-xs text-slate-400">Wait: {patient.wait_time}</span>
+                    <span className="text-xs text-slate-400">Wait: {calculateWaitTime(patient.created_at)}</span>
                   </div>
                 </div>
                 <button

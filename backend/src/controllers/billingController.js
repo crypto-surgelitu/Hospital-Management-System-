@@ -87,6 +87,7 @@ async function getInvoiceById(req, res) {
       if (!['ER_NO_SUCH_TABLE', 'ER_BAD_FIELD_ERROR'].includes(paymentError.code)) {
         throw paymentError;
       }
+      console.warn('WARNING: payments table may not exist or have incorrect schema. Payment history will not be available. Please run database migrations.');
     }
 
     res.json({

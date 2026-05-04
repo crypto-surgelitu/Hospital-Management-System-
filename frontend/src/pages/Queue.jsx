@@ -3,10 +3,19 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import Card from '../components/ui/Card';
 
+function calculateWaitTime(createdAt) {
+  if (!createdAt) return '—';
+  const minutes = Math.floor((Date.now() - new Date(createdAt)) / 60000);
+  if (minutes < 1) return 'Just now';
+  if (minutes === 1) return '1 minute';
+  return `${minutes} minutes`;
+}
+
 export default function Queue() {
   const { user } = useAuth();
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(Date.now());
   const [doctors, setDoctors] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [patients, setPatients] = useState([]);
@@ -66,6 +75,13 @@ export default function Queue() {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleAddToQueue = async () => {
     if (!form.patient_id) return;
@@ -205,7 +221,7 @@ export default function Queue() {
                       <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">Normal</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-slate-500 text-sm">{entry.wait_time}</td>
+                  <td className="px-4 py-3 text-slate-500 text-sm">{calculateWaitTime(entry.created_at)}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 text-xs rounded-full font-medium ${
                       entry.status === 'waiting' ? 'bg-yellow-100 text-yellow-700' :

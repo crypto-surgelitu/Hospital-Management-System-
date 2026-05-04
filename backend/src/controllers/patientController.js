@@ -184,11 +184,16 @@ async function updatePatient(req, res) {
     }
 
     const { id } = req.params;
-    const { full_name, phone, address, email } = req.body;
+    const { full_name, phone, address, email, date_of_birth } = req.body;
 
     const normalizedName = normalizePatientName(full_name);
     if (normalizedName.error) {
       return res.status(400).json({ success: false, message: normalizedName.error });
+    }
+
+    const birthDate = date_of_birth ? normalizeBirthDate(date_of_birth) : null;
+    if (birthDate?.error) {
+      return res.status(400).json({ success: false, message: birthDate.error });
     }
 
     const [existing] = await pool.query(
@@ -201,8 +206,8 @@ async function updatePatient(req, res) {
     }
 
     await pool.query(
-      `UPDATE patients SET full_name = ?, phone = ?, address = ?, email = ? WHERE patient_id = ?`,
-      [normalizedName, phone?.trim() || null, address || null, email || null, id]
+      `UPDATE patients SET full_name = ?, phone = ?, address = ?, email = ?, date_of_birth = ? WHERE patient_id = ?`,
+      [normalizedName, phone?.trim() || null, address || null, email || null, birthDate, id]
     );
 
     const [updated] = await pool.query('SELECT * FROM patients WHERE patient_id = ?', [id]);
@@ -211,28 +216,6 @@ async function updatePatient(req, res) {
   } catch (error) {
     console.error('updatePatient error:', error);
     res.status(500).json({ success: false, message: 'Failed to update patient' });
-  }
-}
-
-async function deletePatient(req, res) {
-  try {
-    const { id } = req.params;
-
-    const [existing] = await pool.query(
-      'SELECT patient_id FROM patients WHERE patient_id = ? AND deleted_at IS NULL',
-      [id]
-    );
-
-    if (existing.length === 0) {
-      return res.status(404).json({ success: false, message: 'Patient not found' });
-    }
-
-    await pool.query('UPDATE patients SET deleted_at = NOW() WHERE patient_id = ?', [id]);
-
-    res.json({ success: true, message: 'Patient archived' });
-  } catch (error) {
-    console.error('deletePatient error:', error);
-    res.status(500).json({ success: false, message: 'Failed to archive patient' });
   }
 }
 

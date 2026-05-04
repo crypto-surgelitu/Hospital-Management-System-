@@ -333,6 +333,8 @@ async function completeReferral(req, res) {
     res.json({ success: true, message: 'Referral completed' });
   } catch (error) {
     console.error('completeReferral error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error code:', error.code);
     res.status(500).json({ success: false, message: 'Failed to complete referral' });
   }
 }

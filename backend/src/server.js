@@ -55,6 +55,23 @@ const PORT = Number.parseInt(process.env.PORT, 10) || 5000;
 const server = app.listen(PORT, async () => {
   console.log(`🏥 HMS Meru server running on port ${PORT}`);
   await testConnection();
+  
+  // Run migrations
+  try {
+    const { pool } = require('./config/db');
+    try {
+      await pool.query('ALTER TABLE bills ADD COLUMN generated_by INT NOT NULL DEFAULT 1');
+      console.log('✅ Migration: added generated_by to bills');
+    } catch(e) {
+      if (e.code === 'ER_DUP_FIELDNAME' || e.message.includes('Duplicate')) {
+        console.log('✅ Migration: generated_by column already exists');
+      } else {
+        throw e;
+      }
+    }
+  } catch(e) {
+    console.log('Migration error:', e.message);
+  }
 });
 
 server.on('error', (error) => {

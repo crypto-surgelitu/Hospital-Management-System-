@@ -32,15 +32,10 @@ async function getQueue(req, res) {
 
     const [queue] = await pool.query(query, params);
 
-    const queueWithWaitTime = queue.map(entry => {
-      const waitTime = Math.floor((Date.now() - new Date(entry.created_at)) / 60000);
-      return { ...entry, wait_time: waitTime + ' minutes' };
-    });
-
     res.json({
       success: true,
-      queue: queueWithWaitTime,
-      count: queueWithWaitTime.length
+      queue,
+      count: queue.length
     });
   } catch (error) {
     console.error('getQueue error:', error);

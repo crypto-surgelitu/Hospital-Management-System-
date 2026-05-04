@@ -72,9 +72,9 @@ function NewInvoiceModal({ open, onClose, onSubmit, loading }) {
       setError('Please select a patient from the search results');
       return;
     }
-    const validItems = items.filter(i => i.description && i.quantity > 0);
+    const validItems = items.filter(i => i.description && i.quantity > 0 && parseFloat(i.unit_price) > 0);
     if (validItems.length === 0) {
-      setError('Please add at least one invoice item with a description and quantity');
+      setError('Please add at least one invoice item with description, quantity, and a valid unit price greater than 0');
       return;
     }
     setError('');

@@ -148,6 +148,29 @@ async function createTables() {
 
   try {
     await pool.query(`
+      CREATE TABLE IF NOT EXISTS patient_queue (
+        queue_id INT AUTO_INCREMENT PRIMARY KEY,
+        patient_id INT NOT NULL,
+        doctor_id INT,
+        status ENUM('waiting', 'in_progress', 'completed', 'cancelled', 'no_show') DEFAULT 'waiting',
+        priority ENUM('normal', 'urgent') DEFAULT 'normal',
+        chief_complaint TEXT,
+        notes TEXT,
+        queue_number INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        called_at TIMESTAMP NULL,
+        started_at TIMESTAMP NULL,
+        completed_at TIMESTAMP NULL
+      )
+    `);
+    console.log('✅ patient_queue table created');
+  } catch (e) {
+    console.log('patient_queue:', e.message);
+  }
+
+  try {
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS bills (
         bill_id INT AUTO_INCREMENT PRIMARY KEY,
         patient_id INT NOT NULL,
@@ -156,6 +179,7 @@ async function createTables() {
         payment_status ENUM('Unpaid', 'Partial', 'Paid', 'Waived') DEFAULT 'Unpaid',
         bill_date DATE NOT NULL,
         created_by INT NOT NULL,
+        generated_by INT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);

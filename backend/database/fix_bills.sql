@@ -1,0 +1,1 @@
+ALTER TABLE bills ADD COLUMN generated_by INT NOT NULL DEFAULT 1 AFTER bill_date;
