@@ -46,7 +46,7 @@ app.use('/api/nurse',       require('./routes/nurse'));
 // ─── Global Error Handler ───────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('❌ Error:', err.message);
-  res.status(500).json({ success: false, message: err.message });
+  res.status(500).json({ success: false, message: 'Internal server error' });
 });
 
 // ─── Start Server ────────────────────────────────────────────

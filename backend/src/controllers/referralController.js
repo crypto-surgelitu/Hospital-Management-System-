@@ -63,8 +63,8 @@ async function createLabReferral(req, res) {
         `SELECT price FROM lab_test_types WHERE test_name = ? AND is_active = 1`,
         [test_type]
       );
-      
-      if (testPrice) {
+
+      if (testPrice && testPrice.price) {
         const labFee = Number(testPrice.price) || 0;
         const [[existingBill]] = await connection.query(
           `SELECT bill_id FROM bills WHERE patient_id = ? AND payment_status = 'Unpaid' AND bill_date = CURDATE() ORDER BY bill_id DESC LIMIT 1`,
