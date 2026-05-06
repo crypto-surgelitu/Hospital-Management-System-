@@ -64,7 +64,7 @@ async function createLabReferral(req, res) {
         [test_type]
       );
 
-      if (testPrice && testPrice.price) {
+      if (testPrice && testPrice.price !== undefined && testPrice.price !== null) {
         const labFee = Number(testPrice.price) || 0;
         const [[existingBill]] = await connection.query(
           `SELECT bill_id FROM bills WHERE patient_id = ? AND payment_status = 'Unpaid' AND bill_date = CURDATE() ORDER BY bill_id DESC LIMIT 1`,
@@ -262,9 +262,9 @@ async function completeReferral(req, res) {
         );
 
         const [dispenseResult] = await connection.query(
-          `INSERT INTO dispensing (patient_id, pharmacist_id, created_at)
-           VALUES (?, ?, NOW())`,
-          [referral.patient_id, req.user.id]
+          `INSERT INTO dispensing (drug_id, patient_id, pharmacist_id, quantity_issued, dispense_date)
+           VALUES (?, ?, ?, ?, CURDATE())`,
+          [prescribedDrugId, referral.patient_id, req.user.id, quantity]
         );
 
         await connection.query(
@@ -274,8 +274,8 @@ async function completeReferral(req, res) {
         );
 
         await connection.query(
-          `INSERT INTO stock_log (drug_id, quantity_change, reason, performed_by, created_at)
-           VALUES (?, ?, ?, ?, NOW())`,
+          `INSERT INTO stock_log (drug_id, quantity_change, reason, performed_by)
+           VALUES (?, ?, ?, ?)`,
           [prescribedDrugId, -quantity, `Dispensed referral ${referral.referral_id}`, req.user.id]
         );
 

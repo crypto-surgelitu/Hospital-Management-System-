@@ -26,7 +26,7 @@ const updateValidation = [
 
 router.get('/', verifyToken, requireRole(['admin', 'doctor', 'receptionist']), getAllPatients);
 
-router.get('/search', verifyToken, requireRole(['admin', 'doctor', 'receptionist']), searchPatients);
+router.get('/search', verifyToken, requireRole(['admin', 'doctor', 'receptionist', 'pharmacy']), searchPatients);
 
 router.get('/:id', verifyToken, requireRole(['admin', 'doctor', 'receptionist']), getPatientById);
 

@@ -101,8 +101,8 @@ async function updateStock(req, res) {
     );
 
     await pool.query(
-      `INSERT INTO stock_log (drug_id, quantity_change, reason, performed_by, created_at)
-       VALUES (?, ?, ?, ?, NOW())`,
+      `INSERT INTO stock_log (drug_id, quantity_change, reason, performed_by)
+       VALUES (?, ?, ?, ?)`,
       [id, quantity_change, reason, performed_by]
     );
 
@@ -128,14 +128,6 @@ async function dispenseMedication(req, res) {
     try {
       await connection.beginTransaction();
 
-      // Create the dispense record
-      const [dispenseResult] = await connection.query(
-        `INSERT INTO dispensing (patient_id, pharmacist_id, created_at)
-         VALUES (?, ?, NOW())`,
-        [patient_id, pharmacist_id]
-      );
-
-      const dispense_id = dispenseResult.insertId;
       const dispensedItems = [];
       const errors = [];
 
@@ -167,15 +159,21 @@ async function dispenseMedication(req, res) {
           [quantity, drug_id]
         );
 
-        await connection.query(
-          `INSERT INTO dispensing_items (dispense_id, drug_id, quantity, dosage_instructions)
-           VALUES (?, ?, ?, ?)`,
-          [dispense_id, drug_id, quantity, dosage_instructions || null]
+        const [dispenseResult] = await connection.query(
+          `INSERT INTO dispensing (drug_id, patient_id, pharmacist_id, quantity_issued, dispense_date)
+           VALUES (?, ?, ?, ?, CURDATE())`,
+          [drug_id, patient_id, pharmacist_id, quantity]
         );
 
         await connection.query(
-          `INSERT INTO stock_log (drug_id, quantity_change, reason, performed_by, created_at)
-           VALUES (?, ?, ?, ?, NOW())`,
+          `INSERT INTO dispensing_items (dispense_id, drug_id, quantity, dosage_instructions)
+           VALUES (?, ?, ?, ?)`,
+          [dispenseResult.insertId, drug_id, quantity, dosage_instructions || null]
+        );
+
+        await connection.query(
+          `INSERT INTO stock_log (drug_id, quantity_change, reason, performed_by)
+           VALUES (?, ?, ?, ?)`,
           [drug_id, -quantity, `Dispensed to patient ${patient_id}`, pharmacist_id]
         );
 
@@ -191,7 +189,6 @@ async function dispenseMedication(req, res) {
 
       res.json({
         success: true,
-        dispense_id,
         dispensed: dispensedItems,
         errors: errors.length > 0 ? errors : undefined
       });
@@ -203,6 +200,7 @@ async function dispenseMedication(req, res) {
     }
   } catch (error) {
     console.error('dispenseMedication error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ success: false, message: 'Failed to dispense medication' });
   }
 }
