@@ -1,6 +1,7 @@
 # AGENTS.md
 
 ## Rules
+- When user states you fix an issue, fix that issue alone - do not do other things or tamper with other parts of the codebase
 - Never claim an issue is fixed unless you have verified it directly.
 - Do not hallucinate logs, outputs, screenshots, or test results.
 - Do not create random files, code, configs, or dependencies unless required.

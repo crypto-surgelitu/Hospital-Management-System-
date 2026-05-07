@@ -147,9 +147,9 @@ async function createInvoice(req, res) {
         const price = parseFloat(item.unit_price) || 0;
         const subtotal = qty * price;
         await connection.query(
-          `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal)
-           VALUES (?, ?, ?, ?, ?)`,
-          [bill_id, item.description, qty, price, subtotal]
+          `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal, category)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [bill_id, item.description, qty, price, subtotal, service_type || 'Other']
         );
       }
 
@@ -339,9 +339,9 @@ async function createBillFromServices(req, res) {
           total += itemTotal;
 
           await connection.query(
-            `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal)
-             VALUES (?, ?, ?, ?, ?)`,
-            [bill_id, service.service_name, svc.quantity || 1, service.unit_price, itemTotal]
+            `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal, category)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [bill_id, service.service_name, svc.quantity || 1, service.unit_price, itemTotal, service.service_type || 'Other']
           );
         }
       }

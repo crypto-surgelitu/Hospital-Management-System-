@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import Card from '../components/ui/Card';
@@ -294,26 +294,75 @@ function InvoiceDrawer({ open, onClose, invoice, items, payments, onRecordPaymen
 
           <div className="border-t border-slate-200 pt-4">
             <h3 className="text-sm font-bold text-slate-700 mb-3">Line Items</h3>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="text-left py-2 text-xs font-medium text-slate-500">Description</th>
-                  <th className="text-right py-2 text-xs font-medium text-slate-500">Qty</th>
-                  <th className="text-right py-2 text-xs font-medium text-slate-500">Price</th>
-                  <th className="text-right py-2 text-xs font-medium text-slate-500">Subtotal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items?.map((item, idx) => (
-                  <tr key={idx} className="border-b border-slate-100">
-                    <td className="py-2">{item.description}</td>
-                    <td className="py-2 text-right">{item.quantity}</td>
-                    <td className="py-2 text-right">KES {parseFloat(item.unit_price || 0).toFixed(2)}</td>
-                    <td className="py-2 text-right">KES {parseFloat(item.subtotal || 0).toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            
+            {(() => {
+              const grouped = items?.reduce((acc, item) => {
+                const cat = item.category || 'Other';
+                if (!acc[cat]) acc[cat] = [];
+                acc[cat].push(item);
+                return acc;
+              }, {});
+              
+              const categories = ['Consultation', 'Lab', 'Pharmacy', 'Other'];
+              const hasMultiple = new Set(items?.map(i => i.category || 'Other')).size > 1;
+              
+              return (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200">
+                      <th className="text-left py-2 text-xs font-medium text-slate-500">Description</th>
+                      <th className="text-right py-2 text-xs font-medium text-slate-500">Qty</th>
+                      <th className="text-right py-2 text-xs font-medium text-slate-500">Price</th>
+                      <th className="text-right py-2 text-xs font-medium text-slate-500">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {hasMultiple ? (
+                      <>
+                        {categories.map(cat => {
+                          const catItems = grouped[cat] || [];
+                          if (catItems.length === 0) return null;
+                          const catTotal = catItems.reduce((s, i) => s + parseFloat(i.subtotal || 0), 0);
+                          return (
+                            <React.Fragment key={cat}>
+                              <tr className="border-b border-slate-300 bg-slate-50">
+                                <td colSpan={4} className="py-2 px-2 font-semibold text-slate-700">
+                                  {cat === 'Consultation' ? '👨‍⚕️ Consultation Charges' : 
+                                   cat === 'Lab' ? '🔬 Laboratory Charges' : 
+                                   cat === 'Pharmacy' ? '💊 Pharmacy Charges' : 
+                                   'Other Charges'}
+                                </td>
+                              </tr>
+                              {catItems.map((item, idx) => (
+                                <tr key={idx} className="border-b border-slate-100">
+                                  <td className="py-2 pl-4">{item.description}</td>
+                                  <td className="py-2 text-right">{item.quantity}</td>
+                                  <td className="py-2 text-right">KES {parseFloat(item.unit_price || 0).toFixed(2)}</td>
+                                  <td className="py-2 text-right">KES {parseFloat(item.subtotal || 0).toFixed(2)}</td>
+                                </tr>
+                              ))}
+                              <tr className="border-b border-slate-200">
+                                <td colSpan={3} className="py-2 text-right font-semibold text-slate-700">Total {cat}</td>
+                                <td className="py-2 text-right font-bold text-slate-900">KES {catTotal.toFixed(2)}</td>
+                              </tr>
+                            </React.Fragment>
+                          );
+                        })}
+                      </>
+                    ) : (
+                      items?.map((item, idx) => (
+                        <tr key={idx} className="border-b border-slate-100">
+                          <td className="py-2">{item.description}</td>
+                          <td className="py-2 text-right">{item.quantity}</td>
+                          <td className="py-2 text-right">KES {parseFloat(item.unit_price || 0).toFixed(2)}</td>
+                          <td className="py-2 text-right">KES {parseFloat(item.subtotal || 0).toFixed(2)}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              );
+            })()}
           </div>
 
           {payments?.length > 0 && (

@@ -88,8 +88,8 @@ async function createLabReferral(req, res) {
         }
 
         await connection.query(
-          `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal)
-           VALUES (?, ?, 1, ?, ?)`,
+          `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal, category)
+           VALUES (?, ?, 1, ?, ?, 'Lab')`,
           [billId, `Lab: ${test_type}`, labFee, labFee]
         );
       }
@@ -309,8 +309,8 @@ async function completeReferral(req, res) {
           }
 
           await connection.query(
-            `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal)
-             VALUES (?, ?, ?, ?, ?)`,
+            `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal, category)
+             VALUES (?, ?, ?, ?, ?, 'Pharmacy')`,
             [billId, drug.drug_name, quantity, drug.unit_price, totalCost]
           );
         }

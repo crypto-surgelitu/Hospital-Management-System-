@@ -120,6 +120,15 @@ async function enterLabResults(req, res) {
       return res.status(400).json({ success: false, message: 'Results are required' });
     }
 
+    const [[labRequest]] = await pool.query(
+      'SELECT * FROM lab_requests WHERE lab_request_id = ?',
+      [id]
+    );
+
+    if (!labRequest) {
+      return res.status(404).json({ success: false, message: 'Lab request not found' });
+    }
+
     await pool.query(
       `UPDATE lab_requests 
        SET results = ?, status = 'completed', completed_at = NOW()
@@ -149,6 +158,75 @@ async function enterLabResults(req, res) {
          LIMIT 1`,
         [updated[0].patient_id, updated[0].requested_by, updated[0].test_type]
       );
+
+      // Generate lab fee billing - try exact match first, then partial match
+    let labFee = 0;
+    let labServiceName = null;
+    
+    // Try exact match first
+    const [[exactMatch]] = await pool.query(
+      'SELECT service_name, unit_price FROM service_prices WHERE service_type = ? AND service_name = ? AND is_active = 1 LIMIT 1',
+      ['Lab', updated[0].test_type]
+    );
+    
+    if (exactMatch && exactMatch.unit_price > 0) {
+      labFee = Number(exactMatch.unit_price);
+      labServiceName = exactMatch.service_name;
+    } else {
+      // Try partial match
+      const [[partialMatch]] = await pool.query(
+        'SELECT service_name, unit_price FROM service_prices WHERE service_type = ? AND service_name LIKE ? AND is_active = 1 LIMIT 1',
+        ['Lab', `%${updated[0].test_type}%`]
+      );
+      
+      if (partialMatch && partialMatch.unit_price > 0) {
+        labFee = Number(partialMatch.unit_price);
+        labServiceName = partialMatch.service_name;
+      }
+    }
+
+    if (labFee > 0) {
+        const patient_id = updated[0].patient_id;
+        const testDesc = labServiceName ? `Lab: ${labServiceName}` : `Lab: ${updated[0].test_type}`;
+
+        // Check if already billed (avoid duplicate)
+        const [[existingItem]] = await pool.query(
+          `SELECT bi.item_id FROM bill_items bi
+           JOIN bills b ON bi.bill_id = b.bill_id
+           WHERE b.patient_id = ? AND b.bill_date = CURDATE() 
+           AND bi.description = ? AND bi.category = 'Lab'`,
+          [patient_id, testDesc]
+        );
+
+        if (!existingItem) {
+          const [[existingBill]] = await pool.query(
+            `SELECT bill_id FROM bills WHERE patient_id = ? AND payment_status = 'Unpaid' AND bill_date = CURDATE() ORDER BY bill_id DESC LIMIT 1`,
+            [patient_id]
+          );
+
+          let bill_id;
+          if (existingBill) {
+            bill_id = existingBill.bill_id;
+            await pool.query(
+              'UPDATE bills SET total_amount = total_amount + ? WHERE bill_id = ?',
+              [labFee, bill_id]
+            );
+          } else {
+            const [billResult] = await pool.query(
+              `INSERT INTO bills (patient_id, total_amount, payment_status, bill_date, generated_by)
+               VALUES (?, ?, 'Unpaid', CURDATE(), ?)`,
+              [patient_id, labFee, updated[0].requested_by]
+            );
+            bill_id = billResult.insertId;
+          }
+
+          await pool.query(
+            `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal, category)
+             VALUES (?, ?, 1, ?, ?, 'Lab')`,
+            [bill_id, testDesc, labFee, labFee]
+          );
+        }
+      }
     }
 
     res.json({ success: true, request: updated[0] });

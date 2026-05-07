@@ -224,7 +224,7 @@ async function startConsultation(req, res) {
 async function completeConsultation(req, res) {
   try {
     const { id } = req.params;
-    const { notes, referral_type, referral_data } = req.body;
+    const { notes, referral_type, referral_data, consultation_type } = req.body;
 
     const [[queueEntry]] = await pool.query(
       'SELECT queue_id, patient_id, doctor_id, status FROM patient_queue WHERE queue_id = ?',
@@ -262,6 +262,46 @@ async function completeConsultation(req, res) {
       [notes || null, id]
     );
 
+    // Generate consultation fee billing
+    const consultationType = consultation_type || 'Follow-up';
+    const [[service]] = await pool.query(
+      'SELECT service_id, service_name, unit_price FROM service_prices WHERE service_type = ? AND service_name LIKE ? AND is_active = 1 LIMIT 1',
+      ['Consultation', `%${consultationType}%`]
+    );
+
+    if (service && service.unit_price > 0) {
+      const patient_id = queueEntry.patient_id;
+      const doctor_id = req.user.id;
+      
+      // Check for existing unpaid bill today
+      const [[existingBill]] = await pool.query(
+        `SELECT bill_id FROM bills WHERE patient_id = ? AND payment_status = 'Unpaid' AND bill_date = CURDATE() ORDER BY bill_id DESC LIMIT 1`,
+        [patient_id]
+      );
+
+      let bill_id;
+      if (existingBill) {
+        bill_id = existingBill.bill_id;
+        await pool.query(
+          'UPDATE bills SET total_amount = total_amount + ? WHERE bill_id = ?',
+          [service.unit_price, bill_id]
+        );
+      } else {
+        const [billResult] = await pool.query(
+          `INSERT INTO bills (patient_id, total_amount, payment_status, bill_date, generated_by)
+           VALUES (?, ?, 'Unpaid', CURDATE(), ?)`,
+          [patient_id, service.unit_price, doctor_id]
+        );
+        bill_id = billResult.insertId;
+      }
+
+      await pool.query(
+        `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal, category)
+         VALUES (?, ?, 1, ?, ?, 'Consultation')`,
+        [bill_id, service.service_name, service.unit_price, service.unit_price]
+      );
+    }
+
     // Create referral if provided
     if (referral_type && referral_data) {
       const doctor_id = req.user.id;
@@ -280,6 +320,42 @@ async function completeConsultation(req, res) {
            VALUES (?, ?, ?, ?, ?, 'pending', NOW())`,
           [patient_id, doctor_id, referral_data.test_type, labPriority, referral_data.notes || null]
         );
+
+        // Generate lab fee billing
+        const [[labService]] = await pool.query(
+          'SELECT service_id, service_name, unit_price FROM service_prices WHERE service_type = ? AND service_name LIKE ? AND is_active = 1 LIMIT 1',
+          ['Lab', `%${referral_data.test_type}%`]
+        );
+
+        if (labService && labService.unit_price > 0) {
+          const labFee = Number(labService.unit_price);
+          const [[existingLabBill]] = await pool.query(
+            `SELECT bill_id FROM bills WHERE patient_id = ? AND payment_status = 'Unpaid' AND bill_date = CURDATE() ORDER BY bill_id DESC LIMIT 1`,
+            [patient_id]
+          );
+
+          let billId;
+          if (existingLabBill) {
+            billId = existingLabBill.bill_id;
+            await pool.query(
+              `UPDATE bills SET total_amount = total_amount + ? WHERE bill_id = ?`,
+              [labFee, billId]
+            );
+          } else {
+            const [billResult] = await pool.query(
+              `INSERT INTO bills (patient_id, total_amount, payment_status, bill_date, generated_by)
+               VALUES (?, ?, 'Unpaid', CURDATE(), ?)`,
+              [patient_id, labFee, doctor_id]
+            );
+            billId = billResult.insertId;
+          }
+
+          await pool.query(
+            `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal, category)
+             VALUES (?, ?, 1, ?, ?, 'Lab')`,
+            [billId, labService.service_name, labFee, labFee]
+          );
+        }
       } else if (referral_type === 'pharmacy') {
         const requirements = String(referral_data.medication_requirements).trim();
 
@@ -295,42 +371,6 @@ async function completeConsultation(req, res) {
           [id, patient_id, doctor_id, referral_data.task_description, referral_data.quantity || 1]
         );
       }
-    }
-
-    // Append Consultation Fee to Bill
-    const [[servicePrice]] = await pool.query(
-      `SELECT unit_price FROM service_prices WHERE service_name = 'General Consultation' AND is_active = 1`
-    );
-
-    if (servicePrice) {
-      const consultationFee = Number(servicePrice.unit_price) || 0;
-      
-      const [[existingBill]] = await pool.query(
-        `SELECT bill_id FROM bills WHERE patient_id = ? AND payment_status = 'Unpaid' AND bill_date = CURDATE() ORDER BY bill_id DESC LIMIT 1`,
-        [queueEntry.patient_id]
-      );
-
-      let billId;
-      if (existingBill) {
-        billId = existingBill.bill_id;
-        await pool.query(
-          `UPDATE bills SET total_amount = total_amount + ? WHERE bill_id = ?`,
-          [consultationFee, billId]
-        );
-      } else {
-        const [newBill] = await pool.query(
-          `INSERT INTO bills (patient_id, total_amount, payment_status, bill_date, generated_by)
-           VALUES (?, ?, 'Unpaid', CURDATE(), ?)`,
-          [queueEntry.patient_id, consultationFee, req.user.id]
-        );
-        billId = newBill.insertId;
-      }
-
-      await pool.query(
-        `INSERT INTO bill_items (bill_id, description, quantity, unit_price, subtotal)
-         VALUES (?, 'General Consultation', 1, ?, ?)`,
-        [billId, consultationFee, consultationFee]
-      );
     }
 
     res.json({ success: true, message: 'Consultation completed' });
